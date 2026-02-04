@@ -1,4 +1,4 @@
-# Summer Camp Scheduler
+# CampSchedulerHost
 
 A comprehensive scheduling system for summer camp activities with constraint validation, preference optimization, and staff workload balancing.
 
