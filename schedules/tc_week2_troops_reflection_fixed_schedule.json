@@ -329,5 +329,21 @@
       "slot": 1
     }
   ],
-  "unscheduled": {}
+  "unscheduled": {
+    "Taskalusa": {
+      "top5": [],
+      "top10": [],
+      "has_reflection": true
+    },
+    "Massasoit": {
+      "top5": [],
+      "top10": [],
+      "has_reflection": true
+    },
+    "Black Hawk": {
+      "top5": [],
+      "top10": [],
+      "has_reflection": true
+    }
+  }
 }

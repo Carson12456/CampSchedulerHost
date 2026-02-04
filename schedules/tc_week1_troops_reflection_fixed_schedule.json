@@ -173,31 +173,13 @@
       "slot": 1
     },
     {
-      "troop_name": "Sequoyah",
-      "activity_name": "Reflection",
-      "day": "FRIDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Samoset",
       "activity_name": "Reflection",
       "day": "FRIDAY",
       "slot": 2
     },
     {
-      "troop_name": "Red Cloud",
-      "activity_name": "Reflection",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Massasoit",
-      "activity_name": "Reflection",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "Reflection",
       "day": "FRIDAY",
       "slot": 3
@@ -552,6 +534,12 @@
     },
     {
       "troop_name": "Red Cloud",
+      "activity_name": "Troop Shotgun",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Red Cloud",
       "activity_name": "Hemp Craft",
       "day": "WEDNESDAY",
       "slot": 2
@@ -667,55 +655,52 @@
     {
       "troop_name": "Red Cloud",
       "activity_name": "Canoe Snorkel",
-      "day": "MONDAY",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Chopped!",
+      "day": "FRIDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "9 Square",
+      "day": "FRIDAY",
+      "slot": 3
     }
   ],
   "unscheduled": {
+    "Tamanend": {
+      "top5": [],
+      "top10": [],
+      "has_reflection": true
+    },
     "Sequoyah": {
       "top5": [],
-      "top10": [
-        {
-          "name": "History Center",
-          "rank": 7,
-          "is_exempt": true
-        }
-      ]
+      "top10": [],
+      "has_reflection": false
     },
     "Samoset": {
       "top5": [],
-      "top10": [
-        {
-          "name": "Sailing",
-          "rank": 9,
-          "is_exempt": false
-        }
-      ]
+      "top10": [],
+      "has_reflection": true
     },
     "Red Cloud": {
-      "top5": [
-        {
-          "name": "Troop Shotgun",
-          "rank": 2,
-          "is_exempt": false
-        }
-      ],
-      "top10": []
+      "top5": [],
+      "top10": [],
+      "has_reflection": false
     },
     "Massasoit": {
       "top5": [],
-      "top10": [
-        {
-          "name": "Troop Shotgun",
-          "rank": 6,
-          "is_exempt": false
-        },
-        {
-          "name": "Greased Watermelon",
-          "rank": 10,
-          "is_exempt": false
-        }
-      ]
+      "top10": [],
+      "has_reflection": true
+    },
+    "Black Hawk": {
+      "top5": [],
+      "top10": [],
+      "has_reflection": false
     }
   }
 }

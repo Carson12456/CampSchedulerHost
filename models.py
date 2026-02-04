@@ -275,6 +275,10 @@ class Schedule:
         - Troops with 17+ scouts+adults need exclusive use of both trampolines
         """
         slot_entries = self.get_slot_activities(time_slot)
+
+        # Reflection can be shared by multiple troops in the same slot
+        if activity.name == "Reflection":
+            return True
         
         # Find which exclusive area this activity belongs to
         activity_area = None

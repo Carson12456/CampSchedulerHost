@@ -202,6 +202,82 @@ def apply_reflection_patch():
     else:
         print("  WARNING: Some troops still missing Reflection")
     
+    return all_have_reflection
+    
+    # Create the new method content
+    new_method = '''def _schedule_friday_reflection(self):
+    """FIXED VERSION - Ensure ALL troops get Reflection on Friday.
+    
+    The original method had issues with campsite grouping logic.
+    This version uses a simpler, more reliable approach.
+    """
+    print("\\\\n--- Scheduling Friday Reflection for ALL troops (FIXED VERSION) ---")
+    
+    # Get Reflection activity
+    from activities import get_activity_by_name
+    reflection = get_activity_by_name("Reflection")
+    if not reflection:
+        print("  ERROR: Reflection activity not found!")
+        return False
+    
+    # Get all Friday slots
+    friday_slots = [s for s in self.time_slots if s.day.name == "FRIDAY"]
+    if not friday_slots:
+        print("  ERROR: No Friday slots found!")
+        return False
+    
+    print(f"  Found {len(friday_slots)} Friday slots: {[str(s) for s in friday_slots]}")
+    
+    success_count = 0
+    force_count = 0
+    
+    # Simple approach: assign each troop to a Friday slot
+    for i, troop in enumerate(self.troops):
+        scheduled = False
+        
+        # Try each Friday slot in order
+        for slot in friday_slots:
+            if self.schedule.is_troop_free(slot, troop):
+                self.schedule.add_entry(slot, reflection, troop)
+                print(f"  {troop.name}: Reflection -> {slot}")
+                success_count += 1
+                scheduled = True
+                break
+        
+        # Force schedule if all slots are busy (override conflicts)
+        if not scheduled:
+            # Use the last slot and force it
+            force_slot = friday_slots[-1]
+            
+            # Check if there's already something there and remove it if needed
+            existing_entries = [e for e in self.schedule.entries 
+                              if e.time_slot == force_slot and e.troop == troop]
+            if existing_entries:
+                # Remove existing entry
+                self.schedule.entries.remove(existing_entries[0])
+                print(f"  [REMOVED] {troop.name}: {existing_entries[0].activity.name} from {force_slot}")
+            
+            # Add Reflection
+            self.schedule.add_entry(force_slot, reflection, troop)
+            print(f"  [FORCE] {troop.name}: Reflection -> {force_slot} (overrode existing)")
+            force_count += 1
+    
+    print(f"  Reflection scheduling complete: {success_count} normal, {force_count} forced")
+    
+    # Verify all troops have Reflection
+    all_have_reflection = True
+    for troop in self.troops:
+        has_reflection = any(e.activity.name == "Reflection" and e.troop == troop 
+                           for e in self.schedule.entries)
+        if not has_reflection:
+            all_have_reflection = False
+            print(f"  ERROR: {troop.name} still missing Reflection!")
+    
+    if all_have_reflection:
+        print("  SUCCESS: All troops have Reflection scheduled!")
+    else:
+        print("  WARNING: Some troops still missing Reflection")
+    
     return all_have_reflection'''
     
     # Replace the method

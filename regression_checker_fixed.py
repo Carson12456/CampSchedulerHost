@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Any
 from core.services.unscheduled_analyzer import UnscheduledAnalyzer
+from models import generate_time_slots
 
 
 class FixedRegressionChecker:
@@ -73,6 +74,11 @@ class FixedRegressionChecker:
         # Check for regressions
         print("Checking for regressions...")
         self._check_top5_regressions()
+        self._check_reflection_regressions(schedules_dir)
+        self._check_friday_gap_regressions(schedules_dir)
+        self._check_empty_slot_regressions(schedules_dir)
+        self._check_overlap_regressions(schedules_dir)
+        self._check_invalid_entry_regressions(schedules_dir)
         self._check_quality_regressions()
         self._check_data_consistency()
         
@@ -165,6 +171,271 @@ class FixedRegressionChecker:
         # This would integrate with evaluate_week_success.py results
         # For now, we'll focus on Top 5 since that's the primary concern
         pass
+
+    def _load_schedule_snapshot(self, schedule_path: Path) -> Dict[str, Any]:
+        """Load schedule JSON and normalize troop names + entries."""
+        with open(schedule_path, 'r', encoding='utf-8') as f:
+            schedule_data = json.load(f)
+
+        troops = [t.get("name") for t in schedule_data.get("troops", []) if t.get("name")]
+        entries = schedule_data.get("entries", [])
+
+        return {
+            "troops": troops,
+            "entries": entries,
+            "raw": schedule_data
+        }
+
+    def _check_reflection_regressions(self, schedules_dir: str):
+        """Ensure every troop has Reflection scheduled (regression if missing)."""
+        schedules_path = Path(schedules_dir)
+
+        for week_name in self.target_weeks:
+            schedule_path = schedules_path / f"{week_name}_schedule.json"
+            if not schedule_path.exists():
+                continue
+
+            try:
+                snapshot = self._load_schedule_snapshot(schedule_path)
+            except Exception as e:
+                self.regressions_detected.append({
+                    "type": "Reflection Check",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "description": f"Failed to parse schedule for reflection check: {e}"
+                })
+                continue
+
+            troops = snapshot["troops"]
+            entries = snapshot["entries"]
+
+            reflections = {
+                entry.get("troop_name")
+                for entry in entries
+                if entry.get("activity_name") == "Reflection"
+            }
+
+            missing_reflection = [troop for troop in troops if troop not in reflections]
+            if missing_reflection:
+                self.regressions_detected.append({
+                    "type": "Reflection Missing",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "count": len(missing_reflection),
+                    "description": (
+                        f"{len(missing_reflection)} troops missing Reflection in {week_name}"
+                    ),
+                    "details": missing_reflection
+                })
+
+    def _check_friday_gap_regressions(self, schedules_dir: str):
+        """Detect empty Friday slots per troop (regression if gaps exist)."""
+        schedules_path = Path(schedules_dir)
+
+        for week_name in self.target_weeks:
+            schedule_path = schedules_path / f"{week_name}_schedule.json"
+            if not schedule_path.exists():
+                continue
+
+            try:
+                snapshot = self._load_schedule_snapshot(schedule_path)
+            except Exception as e:
+                self.regressions_detected.append({
+                    "type": "Friday Gaps",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "description": f"Failed to parse schedule for Friday gaps check: {e}"
+                })
+                continue
+
+            troops = snapshot["troops"]
+            entries = snapshot["entries"]
+
+            friday_by_troop = {troop: set() for troop in troops}
+            for entry in entries:
+                if entry.get("day") == "FRIDAY":
+                    troop_name = entry.get("troop_name")
+                    slot = entry.get("slot")
+                    if troop_name in friday_by_troop and slot is not None:
+                        friday_by_troop[troop_name].add(slot)
+
+            troops_with_gaps = {}
+            for troop, slots in friday_by_troop.items():
+                missing_slots = [slot for slot in [1, 2, 3] if slot not in slots]
+                if missing_slots:
+                    troops_with_gaps[troop] = missing_slots
+
+            if troops_with_gaps:
+                self.regressions_detected.append({
+                    "type": "Friday Slot Gaps",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "count": len(troops_with_gaps),
+                    "description": (
+                        f"{len(troops_with_gaps)} troops have empty Friday slots in {week_name}"
+                    ),
+                    "details": troops_with_gaps
+                })
+
+    def _check_empty_slot_regressions(self, schedules_dir: str):
+        """Detect any empty slots across the full week for each troop."""
+        schedules_path = Path(schedules_dir)
+        expected_slots = {(slot.day.name, slot.slot_number) for slot in generate_time_slots()}
+
+        for week_name in self.target_weeks:
+            schedule_path = schedules_path / f"{week_name}_schedule.json"
+            if not schedule_path.exists():
+                continue
+
+            try:
+                snapshot = self._load_schedule_snapshot(schedule_path)
+            except Exception as e:
+                self.regressions_detected.append({
+                    "type": "Empty Slot Check",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "description": f"Failed to parse schedule for empty slot check: {e}"
+                })
+                continue
+
+            troops = snapshot["troops"]
+            entries = snapshot["entries"]
+
+            slots_by_troop = {troop: set() for troop in troops}
+            for entry in entries:
+                troop_name = entry.get("troop_name")
+                day = entry.get("day")
+                slot = entry.get("slot")
+                if troop_name in slots_by_troop and day and slot is not None:
+                    slots_by_troop[troop_name].add((day, slot))
+
+            troops_with_gaps = {}
+            for troop, occupied_slots in slots_by_troop.items():
+                missing_slots = sorted(list(expected_slots - occupied_slots))
+                if missing_slots:
+                    troops_with_gaps[troop] = missing_slots
+
+            if troops_with_gaps:
+                self.regressions_detected.append({
+                    "type": "Empty Slots",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "count": len(troops_with_gaps),
+                    "description": (
+                        f"{len(troops_with_gaps)} troops have empty slots in {week_name}"
+                    ),
+                    "details": troops_with_gaps
+                })
+
+    def _check_overlap_regressions(self, schedules_dir: str):
+        """Detect overlapping activities (same troop, same slot)."""
+        schedules_path = Path(schedules_dir)
+
+        for week_name in self.target_weeks:
+            schedule_path = schedules_path / f"{week_name}_schedule.json"
+            if not schedule_path.exists():
+                continue
+
+            try:
+                snapshot = self._load_schedule_snapshot(schedule_path)
+            except Exception as e:
+                self.regressions_detected.append({
+                    "type": "Overlap Check",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "description": f"Failed to parse schedule for overlap check: {e}"
+                })
+                continue
+
+            overlaps = {}
+            for entry in snapshot["entries"]:
+                troop_name = entry.get("troop_name")
+                day = entry.get("day")
+                slot = entry.get("slot")
+                activity = entry.get("activity_name")
+                if not (troop_name and day and slot is not None):
+                    continue
+                key = (troop_name, day, slot)
+                overlaps.setdefault(key, []).append(activity)
+
+            overlap_details = {
+                f"{troop} {day}-{slot}": activities
+                for (troop, day, slot), activities in overlaps.items()
+                if len(activities) > 1
+            }
+
+            if overlap_details:
+                self.regressions_detected.append({
+                    "type": "Overlapping Activities",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "count": len(overlap_details),
+                    "description": (
+                        f"{len(overlap_details)} overlapping slots detected in {week_name}"
+                    ),
+                    "details": overlap_details
+                })
+
+    def _check_invalid_entry_regressions(self, schedules_dir: str):
+        """Detect entries with unknown troops or invalid slot/day values."""
+        schedules_path = Path(schedules_dir)
+        expected_slots = {(slot.day.name, slot.slot_number) for slot in generate_time_slots()}
+
+        for week_name in self.target_weeks:
+            schedule_path = schedules_path / f"{week_name}_schedule.json"
+            if not schedule_path.exists():
+                continue
+
+            try:
+                snapshot = self._load_schedule_snapshot(schedule_path)
+            except Exception as e:
+                self.regressions_detected.append({
+                    "type": "Invalid Entries",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "description": f"Failed to parse schedule for invalid entry check: {e}"
+                })
+                continue
+
+            troops = set(snapshot["troops"])
+            invalid_entries = []
+
+            for entry in snapshot["entries"]:
+                troop_name = entry.get("troop_name")
+                day = entry.get("day")
+                slot = entry.get("slot")
+                activity = entry.get("activity_name")
+
+                if troop_name not in troops:
+                    invalid_entries.append({
+                        "issue": "Unknown troop",
+                        "troop": troop_name,
+                        "activity": activity,
+                        "day": day,
+                        "slot": slot
+                    })
+                    continue
+
+                if day is None or slot is None or (day, slot) not in expected_slots:
+                    invalid_entries.append({
+                        "issue": "Invalid day/slot",
+                        "troop": troop_name,
+                        "activity": activity,
+                        "day": day,
+                        "slot": slot
+                    })
+
+            if invalid_entries:
+                self.regressions_detected.append({
+                    "type": "Invalid Entries",
+                    "severity": "HIGH",
+                    "week": week_name,
+                    "count": len(invalid_entries),
+                    "description": (
+                        f"{len(invalid_entries)} invalid entries detected in {week_name}"
+                    ),
+                    "details": invalid_entries
+                })
     
     def _check_data_consistency(self):
         """Check for data consistency issues."""

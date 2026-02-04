@@ -128,12 +128,6 @@
       "slot": 3
     },
     {
-      "troop_name": "Black Hawk",
-      "activity_name": "Reflection",
-      "day": "FRIDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Tecumseh",
       "activity_name": "History Center",
       "day": "TUESDAY",
@@ -197,12 +191,6 @@
       "troop_name": "Samoset",
       "activity_name": "Float for Floats",
       "day": "THURSDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Canoe Snorkel",
-      "day": "FRIDAY",
       "slot": 2
     },
     {
@@ -444,58 +432,40 @@
       "activity_name": "Gaga Ball",
       "day": "TUESDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Canoe Snorkel",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Canoe Snorkel",
+      "day": "FRIDAY",
+      "slot": 2
     }
   ],
   "unscheduled": {
     "Tecumseh": {
       "top5": [],
-      "top10": [
-        {
-          "name": "Aqua Trampoline",
-          "rank": 10,
-          "is_exempt": false
-        }
-      ]
+      "top10": [],
+      "has_reflection": true
     },
     "Taskalusa": {
       "top5": [],
-      "top10": [
-        {
-          "name": "9 Square",
-          "rank": 7,
-          "is_exempt": false
-        }
-      ]
+      "top10": [],
+      "has_reflection": true
     },
     "Samoset": {
       "top5": [],
-      "top10": [
-        {
-          "name": "Troop Shotgun",
-          "rank": 8,
-          "is_exempt": false
-        },
-        {
-          "name": "GPS & Geocaching",
-          "rank": 9,
-          "is_exempt": false
-        }
-      ]
+      "top10": [],
+      "has_reflection": true
     },
     "Black Hawk": {
       "top5": [],
-      "top10": [
-        {
-          "name": "Sauna",
-          "rank": 9,
-          "is_exempt": false
-        },
-        {
-          "name": "Climbing Tower",
-          "rank": 10,
-          "is_exempt": false
-        }
-      ]
+      "top10": [],
+      "has_reflection": false
     }
   }
 }

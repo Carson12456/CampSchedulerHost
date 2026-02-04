@@ -46,7 +46,7 @@ def run_all_weeks():
         stats = scheduler.get_stats()
         
         # Save schedule
-        save_schedule_to_json(schedule, f'schedules/week{week_num}_schedule.json')
+        save_schedule_to_json(schedule, troops, f'schedules/week{week_num}_schedule.json')
         
         # Collect results
         week_results = {
@@ -70,7 +70,7 @@ def run_all_weeks():
         print(f'Week {week_num}: {len(troops)} troops')
         print(f'  Top 5: {total_top5}/{total_possible} ({top5_rate:.1f}%)')
         print(f'  Friday Reflection: {total_reflection}/{len(troops)} ({reflection_rate:.1f}%)')
-        print(f'  Violations: {week_results[\"violations\"]}')
+        print(f'  Violations: {week_results["violations"]}')
         
         # Save schedule entries
         schedule_data = []
@@ -136,12 +136,15 @@ def run_all_weeks():
 def implement_recommendations(results):
     """Implement recommendations based on results"""
     
-    print(f'\\n=== IMPLEMENTING RECOMMENDATIONS ===')
+    print(f'\n=== IMPLEMENTING RECOMMENDATIONS ===')
+
+    weekly_results = results.get('weekly_results', results) if isinstance(results, dict) else results
+    activities = get_all_activities()
     
     # Recommendation 1: Ensure Friday Reflection for all troops
     print('1. Ensuring Friday Reflection for all troops...')
     
-    for result in results:
+    for result in weekly_results:
         week_num = result['week']
         print(f'  Week {week_num}: Checking Friday Reflection...')
         
@@ -150,14 +153,21 @@ def implement_recommendations(results):
         from io_handler import load_schedule_from_json
         
         try:
-            schedule = load_schedule_from_json(f'schedules/week{week_num}_schedule.json')
             troops = load_troops_from_json(f'tc_week{week_num}_troops.json')
+            schedule = load_schedule_from_json(
+                f'schedules/week{week_num}_schedule.json',
+                troops,
+                activities
+            )
             
             # Find troops without Friday Reflection
             missing_reflection = []
             for troop in troops:
-                troop_activities = {e.activity.name for e in schedule.entries if e.troop == troop}
-                if "Reflection" not in troop_activities:
+                has_reflection = any(
+                    e.activity.name == "Reflection" and e.time_slot.day == Day.FRIDAY
+                    for e in schedule.entries if e.troop == troop
+                )
+                if not has_reflection:
                     missing_reflection.append(troop)
             
             if missing_reflection:
@@ -183,7 +193,7 @@ def implement_recommendations(results):
                             print(f'    Added Friday Reflection for {troop.name} at {slot.day.value}-{slot.slot_number}')
             
             # Save updated schedule
-            save_schedule_to_json(schedule, f'schedules/week{week_num}_schedule_fixed.json')
+            save_schedule_to_json(schedule, troops, f'schedules/week{week_num}_schedule_fixed.json')
             print(f'    Fixed schedule saved')
             
         except Exception as e:

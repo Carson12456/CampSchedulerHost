@@ -1,10 +1,10 @@
 {
-  "timestamp": "C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler",
-  "season_success_rate": 91.80722891566265,
+  "timestamp": "C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampSchedulers\\CampSchedulerHost",
+  "season_success_rate": 92.28915662650603,
   "total_top5_slots": 415,
   "total_exempt_misses": 0,
-  "total_counted_misses": 34,
-  "weeks_with_issues": 8,
+  "total_counted_misses": 32,
+  "weeks_with_issues": 7,
   "week_details": {
     "tc_week1_troops": {
       "total_troops": 6,
@@ -50,9 +50,9 @@
       "total_troops": 10,
       "total_top5_slots": 50,
       "exempt_misses": 0,
-      "counted_misses": 3,
-      "success_rate": 94.0,
-      "non_exempt_misses": 3
+      "counted_misses": 2,
+      "success_rate": 96.0,
+      "non_exempt_misses": 2
     },
     "tc_week7_troops": {
       "total_troops": 11,
@@ -66,9 +66,9 @@
       "total_troops": 4,
       "total_top5_slots": 20,
       "exempt_misses": 0,
-      "counted_misses": 1,
-      "success_rate": 95.0,
-      "non_exempt_misses": 1
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
     },
     "voyageur_week1_troops": {
       "total_troops": 10,

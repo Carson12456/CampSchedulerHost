@@ -1,0 +1,590 @@
+[
+  {
+    "troop": "Tamanend",
+    "activity": "Reflection",
+    "day": "Friday",
+    "slot": 1,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Reflection",
+    "day": "Friday",
+    "slot": 1,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Reflection",
+    "day": "Friday",
+    "slot": 2,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Reflection",
+    "day": "Friday",
+    "slot": 2,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Reflection",
+    "day": "Friday",
+    "slot": 3,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Reflection",
+    "day": "Friday",
+    "slot": 3,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Super Troop",
+    "day": "Wednesday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Disc Golf",
+    "day": "Tuesday",
+    "slot": 1,
+    "zone": "OFF_CAMP"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Disc Golf",
+    "day": "Tuesday",
+    "slot": 2,
+    "zone": "OFF_CAMP"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Aqua Trampoline",
+    "day": "Monday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Aqua Trampoline",
+    "day": "Tuesday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Greased Watermelon",
+    "day": "Tuesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Float for Floats",
+    "day": "Tuesday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Float for Floats",
+    "day": "Tuesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Climbing Tower",
+    "day": "Monday",
+    "slot": 2,
+    "zone": "TOWER"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Climbing Tower",
+    "day": "Wednesday",
+    "slot": 1,
+    "zone": "TOWER"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Climbing Tower",
+    "day": "Monday",
+    "slot": 3,
+    "zone": "TOWER"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Troop Rifle",
+    "day": "Monday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Ultimate Survivor",
+    "day": "Tuesday",
+    "slot": 1,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "What's Cooking",
+    "day": "Tuesday",
+    "slot": 2,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Ultimate Survivor",
+    "day": "Monday",
+    "slot": 1,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Knots and Lashings",
+    "day": "Wednesday",
+    "slot": 3,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Archery",
+    "day": "Friday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Archery",
+    "day": "Friday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Archery",
+    "day": "Friday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Gaga Ball",
+    "day": "Tuesday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "9 Square",
+    "day": "Friday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Greased Watermelon",
+    "day": "Thursday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Delta",
+    "day": "Monday",
+    "slot": 2,
+    "zone": "DELTA"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Trading Post",
+    "day": "Wednesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Troop Canoe",
+    "day": "Friday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "What's Cooking",
+    "day": "Thursday",
+    "slot": 2,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Troop Swim",
+    "day": "Friday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Aqua Trampoline",
+    "day": "Wednesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Gaga Ball",
+    "day": "Friday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "GPS & Geocaching",
+    "day": "Friday",
+    "slot": 3,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Campsite Free Time",
+    "day": "Wednesday",
+    "slot": 1,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Greased Watermelon",
+    "day": "Wednesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Gaga Ball",
+    "day": "Wednesday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Fishing",
+    "day": "Wednesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Dr. DNA",
+    "day": "Monday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Shower House",
+    "day": "Tuesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Delta",
+    "day": "Friday",
+    "slot": 1,
+    "zone": "DELTA"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Gaga Ball",
+    "day": "Thursday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Campsite Free Time",
+    "day": "Thursday",
+    "slot": 2,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Disc Golf",
+    "day": "Tuesday",
+    "slot": 3,
+    "zone": "OFF_CAMP"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Monkey's Fist",
+    "day": "Tuesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Super Troop",
+    "day": "Monday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Itasca State Park",
+    "day": "Tuesday",
+    "slot": 1,
+    "zone": "OFF_CAMP"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Itasca State Park",
+    "day": "Tuesday",
+    "slot": 2,
+    "zone": "OFF_CAMP"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Itasca State Park",
+    "day": "Tuesday",
+    "slot": 3,
+    "zone": "OFF_CAMP"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Super Troop",
+    "day": "Monday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Water Polo",
+    "day": "Thursday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Aqua Trampoline",
+    "day": "Monday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Troop Swim",
+    "day": "Wednesday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Dr. DNA",
+    "day": "Thursday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Ultimate Survivor",
+    "day": "Friday",
+    "slot": 2,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Aqua Trampoline",
+    "day": "Monday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Climbing Tower",
+    "day": "Tuesday",
+    "slot": 1,
+    "zone": "TOWER"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Archery",
+    "day": "Thursday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Trading Post",
+    "day": "Friday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Archery",
+    "day": "Wednesday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Black Hawk",
+    "activity": "Fishing",
+    "day": "Friday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Ultimate Survivor",
+    "day": "Monday",
+    "slot": 2,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Hemp Craft",
+    "day": "Wednesday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Fishing",
+    "day": "Monday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Troop Shotgun",
+    "day": "Monday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Campsite Free Time",
+    "day": "Thursday",
+    "slot": 1,
+    "zone": "CAMPSITE"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Troop Shotgun",
+    "day": "Thursday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "GPS & Geocaching",
+    "day": "Wednesday",
+    "slot": 2,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Climbing Tower",
+    "day": "Monday",
+    "slot": 1,
+    "zone": "TOWER"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Troop Shotgun",
+    "day": "Wednesday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "GPS & Geocaching",
+    "day": "Thursday",
+    "slot": 1,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Tie Dye",
+    "day": "Monday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Massasoit",
+    "activity": "Chopped!",
+    "day": "Wednesday",
+    "slot": 1,
+    "zone": "OUTDOOR_SKILLS"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Tie Dye",
+    "day": "Wednesday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Super Troop",
+    "day": "Wednesday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "Super Troop",
+    "day": "Monday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Super Troop",
+    "day": "Thursday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Tamanend",
+    "activity": "Tie Dye",
+    "day": "Wednesday",
+    "slot": 3,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "9 Square",
+    "day": "Thursday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Sequoyah",
+    "activity": "Gaga Ball",
+    "day": "Tuesday",
+    "slot": 1,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Samoset",
+    "activity": "9 Square",
+    "day": "Tuesday",
+    "slot": 2,
+    "zone": "BEACH"
+  },
+  {
+    "troop": "Red Cloud",
+    "activity": "Canoe Snorkel",
+    "day": "Monday",
+    "slot": 1,
+    "zone": "BEACH"
+  }
+]

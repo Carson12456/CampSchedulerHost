@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-02-02T12:14:40.578537",
+  "timestamp": "2026-02-04T11:02:30.352816",
   "total_weeks": 8,
   "total_troops": 65,
   "overall_metrics": {
-    "top5_satisfaction": 106.46153846153845,
-    "reflection_compliance": 30.76923076923077,
+    "top5_satisfaction": 107.38461538461539,
+    "reflection_compliance": 100.0,
     "total_violations": 40
   },
   "weekly_results": [
@@ -23,25 +23,25 @@
           "Sequoyah": {
             "total_scheduled": 14,
             "top5_achieved": 5,
-            "top10_achieved": 11,
-            "has_reflection": false
+            "top10_achieved": 10,
+            "has_reflection": true
           },
           "Samoset": {
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 9,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Red Cloud": {
             "total_scheduled": 14,
-            "top5_achieved": 6,
-            "top10_achieved": 11,
-            "has_reflection": false
+            "top5_achieved": 4,
+            "top10_achieved": 9,
+            "has_reflection": true
           },
           "Massasoit": {
             "total_scheduled": 14,
             "top5_achieved": 5,
-            "top10_achieved": 11,
+            "top10_achieved": 10,
             "has_reflection": true
           },
           "Black Hawk": {
@@ -52,7 +52,8 @@
           }
         }
       },
-      "violations": 5
+      "violations": 5,
+      "gaps": 0
     },
     {
       "week": 2,
@@ -80,7 +81,8 @@
           }
         }
       },
-      "violations": 5
+      "violations": 5,
+      "gaps": 0
     },
     {
       "week": 3,
@@ -103,48 +105,49 @@
           "Tamanend": {
             "total_scheduled": 14,
             "top5_achieved": 7,
-            "top10_achieved": 8,
+            "top10_achieved": 11,
             "has_reflection": true
           },
           "Sequoyah": {
             "total_scheduled": 14,
             "top5_achieved": 6,
             "top10_achieved": 9,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Samoset": {
             "total_scheduled": 14,
             "top5_achieved": 6,
-            "top10_achieved": 11,
-            "has_reflection": false
+            "top10_achieved": 10,
+            "has_reflection": true
           },
           "Red Cloud": {
             "total_scheduled": 14,
             "top5_achieved": 6,
-            "top10_achieved": 11,
-            "has_reflection": false
+            "top10_achieved": 12,
+            "has_reflection": true
           },
           "Powhatan": {
             "total_scheduled": 14,
             "top5_achieved": 4,
             "top10_achieved": 8,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Pontiac": {
             "total_scheduled": 14,
             "top5_achieved": 6,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Black Hawk": {
             "total_scheduled": 13,
             "top5_achieved": 5,
             "top10_achieved": 9,
-            "has_reflection": false
+            "has_reflection": true
           }
         }
       },
-      "violations": 5
+      "violations": 5,
+      "gaps": 0
     },
     {
       "week": 4,
@@ -156,7 +159,7 @@
             "total_scheduled": 14,
             "top5_achieved": 7,
             "top10_achieved": 12,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Taskalusa": {
             "total_scheduled": 14,
@@ -166,33 +169,33 @@
           },
           "Tamanend": {
             "total_scheduled": 13,
-            "top5_achieved": 5,
+            "top5_achieved": 6,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Skenandoa": {
             "total_scheduled": 13,
             "top5_achieved": 5,
             "top10_achieved": 9,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Samoset": {
             "total_scheduled": 14,
             "top5_achieved": 7,
-            "top10_achieved": 11,
-            "has_reflection": false
+            "top10_achieved": 10,
+            "has_reflection": true
           },
           "Powhatan": {
             "total_scheduled": 13,
             "top5_achieved": 3,
-            "top10_achieved": 7,
-            "has_reflection": false
+            "top10_achieved": 8,
+            "has_reflection": true
           },
           "Pontiac": {
             "total_scheduled": 13,
             "top5_achieved": 5,
-            "top10_achieved": 10,
-            "has_reflection": false
+            "top10_achieved": 11,
+            "has_reflection": true
           },
           "Massasoit": {
             "total_scheduled": 14,
@@ -203,81 +206,82 @@
           "Joseph": {
             "total_scheduled": 14,
             "top5_achieved": 5,
-            "top10_achieved": 10,
-            "has_reflection": false
+            "top10_achieved": 9,
+            "has_reflection": true
           },
           "Cochise": {
             "total_scheduled": 14,
-            "top5_achieved": 5,
-            "top10_achieved": 10,
-            "has_reflection": false
+            "top5_achieved": 6,
+            "top10_achieved": 11,
+            "has_reflection": true
           },
           "Black Hawk": {
             "total_scheduled": 14,
-            "top5_achieved": 4,
+            "top5_achieved": 3,
             "top10_achieved": 8,
-            "has_reflection": false
+            "has_reflection": true
           }
         }
       },
-      "violations": 5
+      "violations": 5,
+      "gaps": 0
     },
     {
       "week": 5,
       "troops": 11,
       "stats": {
-        "total_entries": 151,
+        "total_entries": 152,
         "troops": {
           "Tecumseh": {
             "total_scheduled": 14,
             "top5_achieved": 6,
             "top10_achieved": 8,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Taskalusa": {
             "total_scheduled": 13,
             "top5_achieved": 5,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Tamanend": {
             "total_scheduled": 14,
-            "top5_achieved": 5,
-            "top10_achieved": 8,
-            "has_reflection": false
+            "top5_achieved": 6,
+            "top10_achieved": 9,
+            "has_reflection": true
           },
           "Skenandoa": {
             "total_scheduled": 14,
             "top5_achieved": 8,
             "top10_achieved": 12,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Sequoyah": {
             "total_scheduled": 13,
             "top5_achieved": 5,
-            "top10_achieved": 9,
-            "has_reflection": false
+            "top10_achieved": 8,
+            "has_reflection": true
           },
           "Samoset": {
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Red Cloud": {
             "total_scheduled": 14,
             "top5_achieved": 6,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Pontiac": {
             "total_scheduled": 14,
             "top5_achieved": 5,
-            "top10_achieved": 8,
-            "has_reflection": false
+            "top10_achieved": 6,
+            "has_reflection": true
           },
           "Massasoit": {
-            "total_scheduled": 13,
+            "total_scheduled": 14,
             "top5_achieved": 4,
             "top10_achieved": 8,
             "has_reflection": true
@@ -286,29 +290,30 @@
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 9,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Black Hawk": {
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           }
         }
       },
-      "violations": 5
+      "violations": 5,
+      "gaps": 0
     },
     {
       "week": 6,
       "troops": 10,
       "stats": {
-        "total_entries": 139,
+        "total_entries": 140,
         "troops": {
           "Tecumseh": {
             "total_scheduled": 14,
             "top5_achieved": 5,
-            "top10_achieved": 8,
-            "has_reflection": false
+            "top10_achieved": 9,
+            "has_reflection": true
           },
           "Taskalusa": {
             "total_scheduled": 14,
@@ -320,25 +325,25 @@
             "total_scheduled": 14,
             "top5_achieved": 6,
             "top10_achieved": 11,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Samoset": {
             "total_scheduled": 14,
             "top5_achieved": 6,
-            "top10_achieved": 11,
-            "has_reflection": false
+            "top10_achieved": 10,
+            "has_reflection": true
           },
           "Red Cloud": {
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Powhatan": {
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Massasoit": {
             "total_scheduled": 14,
@@ -356,17 +361,18 @@
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 9,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Black Hawk": {
-            "total_scheduled": 13,
-            "top5_achieved": 3,
-            "top10_achieved": 9,
-            "has_reflection": false
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 7,
+            "has_reflection": true
           }
         }
       },
-      "violations": 5
+      "violations": 5,
+      "gaps": 0
     },
     {
       "week": 7,
@@ -382,67 +388,68 @@
           },
           "Tamanend": {
             "total_scheduled": 14,
-            "top5_achieved": 5,
-            "top10_achieved": 9,
-            "has_reflection": false
+            "top5_achieved": 6,
+            "top10_achieved": 11,
+            "has_reflection": true
           },
           "Samoset": {
             "total_scheduled": 14,
             "top5_achieved": 6,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Roman Nose": {
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Red Cloud": {
             "total_scheduled": 14,
             "top5_achieved": 4,
             "top10_achieved": 9,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Powhatan": {
-            "total_scheduled": 14,
+            "total_scheduled": 13,
             "top5_achieved": 5,
-            "top10_achieved": 11,
-            "has_reflection": false
+            "top10_achieved": 9,
+            "has_reflection": true
           },
           "Massasoit": {
             "total_scheduled": 14,
             "top5_achieved": 5,
-            "top10_achieved": 10,
+            "top10_achieved": 9,
             "has_reflection": true
           },
           "Joseph": {
             "total_scheduled": 14,
             "top5_achieved": 6,
-            "top10_achieved": 11,
+            "top10_achieved": 10,
             "has_reflection": true
           },
           "Cochise": {
             "total_scheduled": 14,
             "top5_achieved": 5,
-            "top10_achieved": 10,
-            "has_reflection": false
+            "top10_achieved": 9,
+            "has_reflection": true
           },
           "Black Hawk": {
-            "total_scheduled": 13,
+            "total_scheduled": 14,
             "top5_achieved": 7,
-            "top10_achieved": 10,
-            "has_reflection": false
+            "top10_achieved": 11,
+            "has_reflection": true
           },
           "Tecumseh": {
             "total_scheduled": 14,
             "top5_achieved": 7,
-            "top10_achieved": 12,
-            "has_reflection": false
+            "top10_achieved": 11,
+            "has_reflection": true
           }
         }
       },
-      "violations": 5
+      "violations": 5,
+      "gaps": 0
     },
     {
       "week": 8,
@@ -459,14 +466,14 @@
           "Taskalusa": {
             "total_scheduled": 14,
             "top5_achieved": 5,
-            "top10_achieved": 9,
-            "has_reflection": false
+            "top10_achieved": 10,
+            "has_reflection": true
           },
           "Samoset": {
             "total_scheduled": 14,
             "top5_achieved": 5,
             "top10_achieved": 10,
-            "has_reflection": false
+            "has_reflection": true
           },
           "Black Hawk": {
             "total_scheduled": 14,
@@ -476,7 +483,8 @@
           }
         }
       },
-      "violations": 5
+      "violations": 5,
+      "gaps": 0
     }
   ]
 }

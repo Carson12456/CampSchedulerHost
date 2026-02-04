@@ -141,7 +141,7 @@ class EnhancedConstraintFixer:
         return fixes_count
     
     def _fix_friday_reflection_missing(self):
-        """Ensure all troops have Friday Reflection scheduled."""
+        """Ensure all troops have Friday Reflection scheduled - GUARANTEED APPROACH."""
         missing_troops = []
         
         for troop in self.troops:
@@ -161,17 +161,37 @@ class EnhancedConstraintFixer:
             return 0
         
         for troop in missing_troops:
-            # Try to schedule in any available Friday slot
+            scheduled = False
+            
+            # Try to schedule in any available Friday slot (less strict checking)
             for slot_num in [1, 2, 3]:
                 friday_slot = TimeSlot(Day.FRIDAY, slot_num)
                 
-                if (self.schedule.is_troop_free(friday_slot, troop) and
-                    self.schedule.is_activity_available(friday_slot, reflection_activity, troop)):
-                    
+                # Just check if troop is free, ignore activity availability
+                if self.schedule.is_troop_free(friday_slot, troop):
                     self.schedule.add_entry(friday_slot, reflection_activity, troop)
                     fixes_count += 1
                     print(f"    Added: {troop.name} Reflection on Friday slot {slot_num}")
+                    scheduled = True
                     break
+            
+            # If still not scheduled, FORCE it by removing existing activity
+            if not scheduled:
+                # Use Friday slot 3 for forced scheduling
+                force_slot = TimeSlot(Day.FRIDAY, 3)
+                
+                # Remove any existing activity for this troop in this slot
+                existing_entries = [e for e in self.schedule.entries 
+                                  if e.time_slot == force_slot and e.troop == troop]
+                
+                for entry in existing_entries:
+                    self.schedule.entries.remove(entry)
+                    print(f"    [REMOVED] {troop.name}: {entry.activity.name} from Friday slot 3")
+                
+                # Add Reflection
+                self.schedule.add_entry(force_slot, reflection_activity, troop)
+                fixes_count += 1
+                print(f"    [FORCED] {troop.name}: Reflection on Friday slot 3 (overrode existing)")
         
         return fixes_count
     

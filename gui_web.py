@@ -5,6 +5,7 @@ This generates an HTML interface that properly displays 1.5-slot activities.
 from flask import Flask, render_template, send_from_directory, request, jsonify
 from pathlib import Path
 import json
+import threading
 
 from models import Day, TimeSlot, generate_time_slots, ScheduleEntry, Troop, Schedule
 from activities import get_all_activities
@@ -156,9 +157,50 @@ def generate_schedule(troops_file):
     # vital: return scheduler.troops because they might have been split
     return scheduler.troops, schedule, unscheduled_data
 
+def refresh_all_week_schedules(troop_files):
+    """Regenerate all week schedules and overwrite cached files."""
+    with REFRESH_STATUS_LOCK:
+        REFRESH_STATUS['running'] = True
+        REFRESH_STATUS['completed'] = False
+        REFRESH_STATUS['errors'] = []
+
+    print("Refreshing schedules for all weeks...")
+    SCHEDULES_DIR.mkdir(exist_ok=True)
+    errors = []
+    for troops_file in troop_files:
+        week_id = troops_file.stem
+        schedule_file = SCHEDULES_DIR / f"{week_id}_schedule.json"
+        try:
+            troops, schedule, unscheduled_data = generate_schedule(troops_file)
+            save_schedule_to_json(schedule, troops, str(schedule_file), unscheduled_data)
+            print(f"  Updated {week_id} -> {schedule_file.name}")
+        except Exception as e:
+            errors.append(f"{week_id}: {e}")
+            print(f"  Failed to update {week_id}: {e}")
+
+    with REFRESH_STATUS_LOCK:
+        REFRESH_STATUS['running'] = False
+        REFRESH_STATUS['completed'] = True
+        REFRESH_STATUS['errors'] = errors
+
+def start_background_refresh(troop_files):
+    """Start refresh in a background thread so the UI can load immediately."""
+    print("Starting background schedule refresh...")
+    refresh_thread = threading.Thread(
+        target=refresh_all_week_schedules,
+        args=(troop_files,),
+        daemon=True
+    )
+    refresh_thread.start()
+
 # Auto-discover all troop files (LAZY LOADING - only get names, don't load yet)
 print("Discovering available weeks...")
 troop_files = sorted(SCRIPT_DIR.glob("*_troops.json"))
+
+# Always refresh schedules on startup so GUI reflects the latest scheduler logic
+REFRESH_STATUS = {'running': False, 'completed': False, 'errors': []}
+REFRESH_STATUS_LOCK = threading.Lock()
+start_background_refresh(troop_files)
 
 # Just store metadata, not actual schedules
 WEEK_METADATA = {}
@@ -1398,4 +1440,4 @@ if __name__ == '__main__':
     print("\nPress Ctrl+C to stop the server")
     print("="*60 + "\n")
     
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, use_reloader=False, threaded=True)

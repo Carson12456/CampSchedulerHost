@@ -77,19 +77,19 @@
   ],
   "entries": [
     {
-      "troop_name": "Massasoit",
+      "troop_name": "Taskalusa",
       "activity_name": "Reflection",
       "day": "FRIDAY",
       "slot": 1
     },
     {
-      "troop_name": "Black Hawk",
+      "troop_name": "Massasoit",
       "activity_name": "Reflection",
       "day": "FRIDAY",
       "slot": 2
     },
     {
-      "troop_name": "Taskalusa",
+      "troop_name": "Black Hawk",
       "activity_name": "Reflection",
       "day": "FRIDAY",
       "slot": 3
@@ -206,13 +206,13 @@
       "troop_name": "Taskalusa",
       "activity_name": "Sauna",
       "day": "FRIDAY",
-      "slot": 1
+      "slot": 2
     },
     {
       "troop_name": "Taskalusa",
       "activity_name": "Archery",
       "day": "FRIDAY",
-      "slot": 2
+      "slot": 3
     },
     {
       "troop_name": "Taskalusa",
@@ -242,7 +242,7 @@
       "troop_name": "Massasoit",
       "activity_name": "Gaga Ball",
       "day": "FRIDAY",
-      "slot": 2
+      "slot": 1
     },
     {
       "troop_name": "Massasoit",
@@ -252,15 +252,15 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Gaga Ball",
+      "activity_name": "Greased Watermelon",
       "day": "FRIDAY",
       "slot": 1
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Greased Watermelon",
+      "activity_name": "Gaga Ball",
       "day": "FRIDAY",
-      "slot": 3
+      "slot": 2
     },
     {
       "troop_name": "Black Hawk",
@@ -329,21 +329,5 @@
       "slot": 1
     }
   ],
-  "unscheduled": {
-    "Taskalusa": {
-      "top5": [],
-      "top10": [],
-      "has_reflection": true
-    },
-    "Massasoit": {
-      "top5": [],
-      "top10": [],
-      "has_reflection": true
-    },
-    "Black Hawk": {
-      "top5": [],
-      "top10": [],
-      "has_reflection": true
-    }
-  }
+  "unscheduled": {}
 }
