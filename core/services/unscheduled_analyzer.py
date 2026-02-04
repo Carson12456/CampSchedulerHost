@@ -81,8 +81,9 @@ class UnscheduledAnalyzer:
         
         week_name = schedule_path.stem.replace("_schedule", "")
         unscheduled = schedule_data.get('unscheduled', {})
+        troops = schedule_data.get('troops', [])
         
-        return self._analyze_week_unscheduled(week_name, unscheduled)
+        return self._analyze_week_unscheduled(week_name, unscheduled, troops)
     
     def analyze_all_weeks(self, schedules_dir: str = "schedules") -> Dict[str, WeekAnalysis]:
         """
@@ -110,17 +111,19 @@ class UnscheduledAnalyzer:
         
         return self.week_analyses
     
-    def _analyze_week_unscheduled(self, week_name: str, unscheduled: Dict) -> WeekAnalysis:
+    def _analyze_week_unscheduled(self, week_name: str, unscheduled: Dict, troops: List[Dict]) -> WeekAnalysis:
         """Analyze unscheduled activities for a single week."""
         missed_top5 = []
-        total_troops = len(unscheduled)
-        total_top5_slots = 0
+        
+        # Get troop count from schedule data, not unscheduled data
+        total_troops = len(troops)
+        
+        # Each troop has 5 Top 5 slots, regardless of how many they missed
+        total_top5_slots = total_troops * 5
         
         # Analyze each troop's unscheduled activities
         for troop_name, troop_data in unscheduled.items():
             top5_data = troop_data.get('top5', [])
-            # Each troop has 5 Top 5 slots, regardless of how many they missed
-            total_top5_slots += 5
             
             for activity_data in top5_data:
                 missed = self._create_missed_top5(

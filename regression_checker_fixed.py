@@ -480,8 +480,27 @@ class FixedRegressionChecker:
         print("FIXED REGRESSION CHECK SUMMARY")
         print("=" * 60)
         
+        # Always show Top 5 summary first
+        print("TOP 5 PERFORMANCE SUMMARY:")
+        print(f"   Season Success Rate: {self.current_results.get('season_success_rate', 0):.1f}%")
+        print(f"   Total Top 5 Misses: {self.current_results.get('total_counted_misses', 0)}")
+        print(f"   Total Top 5 Slots: {self.current_results.get('total_top5_slots', 0)}")
+        print(f"   Weeks with Issues: {self.current_results.get('weeks_with_issues', 0)}")
+        
+        # Show weekly breakdown
+        week_details = self.current_results.get('week_details', {})
+        if week_details:
+            print("\nWEEKLY TOP 5 BREAKDOWN:")
+            for week_name in sorted(week_details.keys()):
+                details = week_details[week_name]
+                success_rate = details.get('success_rate', 0)
+                counted_misses = details.get('counted_misses', 0)
+                total_slots = details.get('total_top5_slots', 0)
+                status = "ISSUE" if counted_misses > 0 else "OK"
+                print(f"   {week_name}: {success_rate:.1f}% ({counted_misses}/{total_slots} missed) [{status}]")
+        
         if self.regressions_detected:
-            print(f"REGRESSIONS DETECTED: {len(self.regressions_detected)}")
+            print(f"\nREGRESSIONS DETECTED: {len(self.regressions_detected)}")
             print(f"   High Severity: {report['summary']['high_severity']}")
             print(f"   Medium Severity: {report['summary']['medium_severity']}")
             print("\nREGRESSION DETAILS:")
@@ -489,9 +508,7 @@ class FixedRegressionChecker:
                 severity_emoji = "HIGH" if regression.get("severity") == "HIGH" else "MEDIUM"
                 print(f"   {i}. {severity_emoji} {regression['type']}: {regression['description']}")
         else:
-            print("NO REGRESSIONS DETECTED")
-            print(f"   Top 5 Success Rate: {self.current_results.get('season_success_rate', 0):.1f}%")
-            print(f"   Total Top 5 Misses: {self.current_results.get('total_counted_misses', 0)}")
+            print("\nNO REGRESSIONS DETECTED")
         
         print("=" * 60)
         

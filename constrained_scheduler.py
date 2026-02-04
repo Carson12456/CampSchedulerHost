@@ -567,6 +567,11 @@ class ConstrainedScheduler:
         
         # Final safety check for exclusivity violations
         self._sanitize_exclusivity()
+
+        # Recover Top 5 removed by exclusivity cleanup and ensure gaps are filled
+        self._recover_top5_from_recovery_list("Post-Sanitize Cleanup")
+        self._enforce_mandatory_top5()
+        self._guarantee_no_gaps()
         print("  [Cleanup Complete]")
 
     def _comprehensive_gap_check(self, phase_name: str) -> int:
@@ -981,17 +986,6 @@ class ConstrainedScheduler:
         self.logger.subsection("Final Reflection guarantee")
         self._guarantee_friday_reflection()
         
-        # Final comprehensive validation
-        self._final_comprehensive_validation()
-
-        # Final exclusivity sanitization after all post-processing
-        self._sanitize_exclusivity()
-        
-        return self.schedule
-    
-    def _final_comprehensive_validation(self):
-        """Perform final comprehensive validation of the schedule."""
-        print("  [Final Validation] Checking schedule integrity...")
         
         # ALWAYS run gap guarantee - ensures 100% slot completeness (Spine: No Empty Slots)
         gaps = self._comprehensive_gap_check("Final Validation")
@@ -1003,6 +997,8 @@ class ConstrainedScheduler:
         self._validate_critical_constraints()
         
         print("  [Final Validation] Complete")
+        
+        return self.schedule
     
     def _validate_critical_constraints(self):
         """Validate critical constraints are satisfied."""
@@ -3248,7 +3244,14 @@ class ConstrainedScheduler:
                     # Remove and try to place
                     self.schedule.entries.remove(entry)
                     
-                    if self._can_schedule(troop, activity, slot, slot.day, relax_constraints=True):
+                    if self._can_schedule(
+                        troop,
+                        activity,
+                        slot,
+                        slot.day,
+                        relax_constraints=True,
+                        allow_top1_beach_slot2=(rank == 0),
+                    ):
                         self._add_to_schedule(slot, activity, troop)
                         print(f"  [ENFORCED] {troop.name}: {missing_pref} (Top {rank+1}) <- {entry.activity.name} @ {slot}")
                         enforcements += 1
@@ -3267,7 +3270,14 @@ class ConstrainedScheduler:
                     
                     # Try placing Top 5 in ANY slot
                     for slot in self.time_slots:
-                        if self._can_schedule(troop, activity, slot, slot.day, relax_constraints=True):
+                        if self._can_schedule(
+                            troop,
+                            activity,
+                            slot,
+                            slot.day,
+                            relax_constraints=True,
+                            allow_top1_beach_slot2=(rank == 0),
+                        ):
                             self._add_to_schedule(slot, activity, troop)
                             print(f"  [ENFORCED-ANY] {troop.name}: {missing_pref} (Top {rank+1}) @ {slot} <- {entry.activity.name} from {removed_slot}")
                             enforcements += 1
@@ -3378,6 +3388,75 @@ class ConstrainedScheduler:
         
         print(f"    [Top 5 Recovery] Recovered {recoveries} out of {total_missing} missing Top 5 preferences")
         return recoveries
+
+    def _recover_top5_from_recovery_list(self, context_label: str = "Top 5 Recovery") -> int:
+        """Recover Top 5 activities removed during cleanup/sanitization passes."""
+        if not hasattr(self, "_top5_to_recover") or not self._top5_to_recover:
+            return 0
+
+        print(f"  [{context_label}] Attempting to recover {len(self._top5_to_recover)} removed Top 5 activities...")
+        self._top5_to_recover.sort(key=lambda x: x[2])
+        recovered_count = 0
+
+        for troop, activity, rank in list(self._top5_to_recover):
+            if self._troop_has_activity(troop, activity):
+                if (troop, activity, rank) in self._top5_to_recover:
+                    self._top5_to_recover.remove((troop, activity, rank))
+                continue
+
+            recovered = False
+            for recovery_slot in self.time_slots:
+                if self._can_schedule(troop, activity, recovery_slot, recovery_slot.day):
+                    self._add_to_schedule(recovery_slot, activity, troop)
+                    print(
+                        f"    [RECOVERED] {troop.name}: {activity.name} (#{rank + 1}) -> "
+                        f"{recovery_slot.day.name[:3]}-{recovery_slot.slot_number}"
+                    )
+                    self._top5_to_recover.remove((troop, activity, rank))
+                    recovered_count += 1
+                    recovered = True
+                    break
+
+            if recovered:
+                continue
+
+            for recovery_slot in self.time_slots:
+                blocking = [
+                    e for e in self.schedule.entries
+                    if e.troop == troop and e.time_slot == recovery_slot
+                ]
+                if blocking and all(troop.get_priority(e.activity.name) > 5 for e in blocking):
+                    removed_blocking = []
+                    for entry in list(blocking):
+                        if entry in self.schedule.entries:
+                            self.schedule.entries.remove(entry)
+                            removed_blocking.append(entry)
+
+                    if self._can_schedule(troop, activity, recovery_slot, recovery_slot.day):
+                        self._add_to_schedule(recovery_slot, activity, troop)
+                        print(
+                            f"    [RECOVERED-DISPLACE] {troop.name}: {activity.name} (#{rank + 1}) -> "
+                            f"{recovery_slot.day.name[:3]}-{recovery_slot.slot_number}"
+                        )
+                        if (troop, activity, rank) in self._top5_to_recover:
+                            self._top5_to_recover.remove((troop, activity, rank))
+                        recovered_count += 1
+                        recovered = True
+                    else:
+                        for entry in removed_blocking:
+                            self.schedule.entries.append(entry)
+
+                if recovered:
+                    break
+
+            if (troop, activity, rank) in self._top5_to_recover:
+                print(f"    [FAILED] Could not recover {troop.name}: {activity.name} (#{rank + 1})")
+
+        self._top5_to_recover = []
+        if recovered_count > 0:
+            print(f"  [{context_label}] Successfully recovered {recovered_count} Top 5 activities")
+
+        return recovered_count
     
     def _smart_same_day_swap(self, troop, missing_pref, rank):
         """Strategy 1: Smart swap with same-day activity."""
@@ -9656,7 +9735,27 @@ class ConstrainedScheduler:
                                 # Not actually a gap - might be occupied by multi-slot activity
                                 # Update filled_slots to avoid re-checking
                                 filled_slots.add((day, slot_num))
+                                print(f"  [DEBUG] {troop.name}: {day.name[:3]}-{slot_num} already occupied (skipping)")
                                 continue
+                            
+                            # ULTRA-AGGRESSIVE: Always fill Friday slots as highest priority (run FIRST, before any other logic)
+                            if day.name == "FRIDAY" and slot_num >= 2:
+                                fill_name = "Campsite Free Time"
+                                activity = get_activity_by_name(fill_name)
+                                if activity:
+                                    added = self.schedule.add_entry(slot, activity, troop)
+                                    if not added:
+                                        # Last resort: direct append (bypass add_entry checks)
+                                        from models import ScheduleEntry
+                                        self.schedule.entries.append(ScheduleEntry(slot, activity, troop))
+                                        added = True
+                                    if added:
+                                        print(f"  [FRIDAY FORCE] {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
+                                        filled = True
+                                        iteration_fills += 1
+                                        gaps_filled += 1
+                                        filled_slots.add((day, slot_num))
+                                        continue  # Skip to next slot
                             
                             # SPECIAL HANDLING: Check if this gap should be filled as a continuation of a 1.5-slot activity
                             should_fill_as_continuation = False

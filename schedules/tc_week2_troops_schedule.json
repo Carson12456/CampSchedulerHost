@@ -204,25 +204,19 @@
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Sauna",
+      "activity_name": "Campsite Free Time",
       "day": "FRIDAY",
       "slot": 2
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Archery",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Campsite Free Time",
+      "activity_name": "Sauna",
       "day": "THURSDAY",
       "slot": 1
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Climbing Tower",
+      "activity_name": "Archery",
       "day": "THURSDAY",
       "slot": 2
     },
@@ -246,7 +240,7 @@
     },
     {
       "troop_name": "Massasoit",
-      "activity_name": "Fishing",
+      "activity_name": "Campsite Free Time",
       "day": "FRIDAY",
       "slot": 3
     },
@@ -259,20 +253,20 @@
     {
       "troop_name": "Black Hawk",
       "activity_name": "Gaga Ball",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Tie Dye",
       "day": "THURSDAY",
       "slot": 1
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Campsite Free Time",
+      "activity_name": "Tie Dye",
       "day": "THURSDAY",
       "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 1
     },
     {
       "troop_name": "Black Hawk",
@@ -291,12 +285,6 @@
       "activity_name": "Troop Rifle",
       "day": "MONDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Campsite Free Time",
-      "day": "TUESDAY",
-      "slot": 3
     },
     {
       "troop_name": "Black Hawk",
@@ -325,8 +313,20 @@
     {
       "troop_name": "Taskalusa",
       "activity_name": "Super Troop",
-      "day": "MONDAY",
-      "slot": 1
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "9 Square",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Campsite Free Time",
+      "day": "FRIDAY",
+      "slot": 2
     }
   ],
   "unscheduled": {}
