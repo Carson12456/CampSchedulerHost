@@ -1,0 +1,107 @@
+{
+  "troops": [
+    {
+      "name": "Tecumseh",
+      "campsite": "Tecumseh",
+      "commissioner": "Commissioner A",
+      "scouts": 10,
+      "adults": 4,
+      "preferences": [
+        "Hemp Craft",
+        "Delta",
+        "What's Cooking",
+        "Tie Dye",
+        "Greased Watermelon",
+        "Dr. DNA",
+        "9 Square",
+        "Climbing Tower",
+        "Canoe Snorkel",
+        "Aqua Trampoline",
+        "Monkey's Fist",
+        "History Center",
+        "Back of the Moon",
+        "Nature Canoe",
+        "Gaga Ball"
+      ]
+    },
+    {
+      "name": "Taskalusa",
+      "campsite": "Taskalusa",
+      "commissioner": "Commissioner C",
+      "scouts": 5,
+      "adults": 3,
+      "preferences": [
+        "Climbing Tower",
+        "Delta",
+        "Aqua Trampoline",
+        "Archery",
+        "Greased Watermelon",
+        "Gaga Ball",
+        "9 Square",
+        "Sailing",
+        "Troop Rifle",
+        "Water Polo",
+        "Troop Shotgun",
+        "Monkey's Fist",
+        "Canoe Snorkel",
+        "Ultimate Survivor",
+        "Trading Post",
+        "GPS & Geocaching",
+        "Woggle Neckerchief Slide",
+        "Chopped!",
+        "Float for Floats",
+        "Knots and Lashings"
+      ]
+    },
+    {
+      "name": "Samoset",
+      "campsite": "Samoset",
+      "commissioner": "Commissioner B",
+      "scouts": 21,
+      "adults": 2,
+      "preferences": [
+        "Ultimate Survivor",
+        "Troop Rifle",
+        "Greased Watermelon",
+        "Delta",
+        "Knots and Lashings",
+        "Float for Floats",
+        "Orienteering",
+        "Troop Shotgun",
+        "GPS & Geocaching",
+        "Climbing Tower",
+        "Aqua Trampoline",
+        "Fishing",
+        "Chopped!",
+        "Woggle Neckerchief Slide"
+      ]
+    },
+    {
+      "name": "Black Hawk",
+      "campsite": "Black Hawk",
+      "commissioner": "Commissioner B",
+      "scouts": 21,
+      "adults": 1,
+      "preferences": [
+        "Aqua Trampoline",
+        "Greased Watermelon",
+        "Gaga Ball",
+        "Campsite Free Time",
+        "Troop Shotgun",
+        "Archery",
+        "Canoe Snorkel",
+        "Sailing",
+        "Sauna",
+        "Climbing Tower",
+        "Water Polo",
+        "Troop Canoe",
+        "Float for Floats",
+        "Disc Golf",
+        "Fishing",
+        "GPS & Geocaching",
+        "Delta",
+        "Knots and Lashings"
+      ]
+    }
+  ]
+}

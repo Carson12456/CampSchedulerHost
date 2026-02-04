@@ -1,0 +1,102 @@
+{
+  "timestamp": "C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler",
+  "season_success_rate": 91.80722891566265,
+  "total_top5_slots": 415,
+  "total_exempt_misses": 0,
+  "total_counted_misses": 34,
+  "weeks_with_issues": 8,
+  "week_details": {
+    "tc_week1_troops": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_troops": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week3_troops": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 93.33333333333333,
+      "non_exempt_misses": 3
+    },
+    "tc_week4_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 8,
+      "success_rate": 85.45454545454545,
+      "non_exempt_misses": 8
+    },
+    "tc_week5_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 6,
+      "success_rate": 89.0909090909091,
+      "non_exempt_misses": 6
+    },
+    "tc_week6_troops": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 94.0,
+      "non_exempt_misses": 3
+    },
+    "tc_week7_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 5,
+      "success_rate": 90.9090909090909,
+      "non_exempt_misses": 5
+    },
+    "tc_week8_troops": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 95.0,
+      "non_exempt_misses": 1
+    },
+    "voyageur_week1_troops": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 5,
+      "success_rate": 90.0,
+      "non_exempt_misses": 5
+    },
+    "voyageur_week3_troops": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 92.5,
+      "non_exempt_misses": 3
+    }
+  },
+  "target_weeks": [
+    "tc_week1_troops",
+    "tc_week2_troops",
+    "tc_week3_troops",
+    "tc_week4_troops",
+    "tc_week5_troops",
+    "tc_week6_troops",
+    "tc_week7_troops",
+    "tc_week8_troops",
+    "voyageur_week1_troops",
+    "voyageur_week3_troops"
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "troops": [
+    {
+      "name": "Taskalusa",
+      "campsite": "Taskalusa",
+      "commissioner": "Commissioner C",
+      "scouts": 7,
+      "adults": 2,
+      "preferences": [
+        "Aqua Trampoline",
+        "Gaga Ball",
+        "Sauna",
+        "Monkey's Fist",
+        "What's Cooking",
+        "Itasca State Park",
+        "Archery",
+        "Campsite Free Time",
+        "Climbing Tower",
+        "Disc Golf",
+        "GPS & Geocaching",
+        "9 Square",
+        "Canoe Snorkel",
+        "Troop Canoe",
+        "Chopped!",
+        "Troop Swim",
+        "Tamarac Wildlife Refuge",
+        "Dr. DNA"
+      ]
+    },
+    {
+      "name": "Massasoit",
+      "campsite": "Massasoit",
+      "commissioner": "Commissioner A",
+      "scouts": 12,
+      "adults": 1,
+      "preferences": [
+        "Sauna",
+        "Troop Rifle",
+        "Archery",
+        "What's Cooking",
+        "Canoe Snorkel",
+        "Delta",
+        "Monkey's Fist",
+        "Hemp Craft"
+      ]
+    },
+    {
+      "name": "Black Hawk",
+      "campsite": "Black Hawk",
+      "commissioner": "Commissioner B",
+      "scouts": 22,
+      "adults": 2,
+      "preferences": [
+        "Aqua Trampoline",
+        "Archery",
+        "Gaga Ball",
+        "Climbing Tower",
+        "Float for Floats",
+        "Campsite Free Time",
+        "Troop Rifle",
+        "Greased Watermelon",
+        "Tie Dye",
+        "Shower House",
+        "9 Square",
+        "Troop Canoe",
+        "Disc Golf",
+        "Sailing",
+        "Dr. DNA",
+        "GPS & Geocaching",
+        "Loon Lore",
+        "Troop Shotgun"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,273 @@
+{
+  "troops": [
+    {
+      "name": "Taskalusa",
+      "campsite": "Taskalusa",
+      "commissioner": "Commissioner C",
+      "preferences": [
+        "Chopped!",
+        "Campsite Free Time",
+        "Aqua Trampoline",
+        "Greased Watermelon",
+        "Gaga Ball",
+        "Fishing",
+        "Water Polo",
+        "Sailing",
+        "Loon Lore",
+        "Shower House",
+        "Disc Golf",
+        "History Center",
+        "GPS & Geocaching",
+        "Delta",
+        "Sauna",
+        "Nature Canoe",
+        "Troop Rifle",
+        "Itasca State Park",
+        "9 Square",
+        "Troop Canoe"
+      ],
+      "scouts": 9,
+      "adults": 4
+    },
+    {
+      "name": "Tamanend",
+      "campsite": "Tamanend",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Aqua Trampoline",
+        "Canoe Snorkel",
+        "Delta",
+        "Climbing Tower",
+        "Archery",
+        "Sailing",
+        "9 Square",
+        "Chopped!",
+        "Gaga Ball",
+        "Shower House",
+        "Troop Canoe",
+        "Campsite Free Time",
+        "History Center",
+        "Ultimate Survivor"
+      ],
+      "scouts": 7,
+      "adults": 1
+    },
+    {
+      "name": "Samoset",
+      "campsite": "Samoset",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Ultimate Survivor",
+        "Canoe Snorkel",
+        "Archery",
+        "9 Square",
+        "Gaga Ball",
+        "Water Polo",
+        "Troop Canoe",
+        "Shower House",
+        "Climbing Tower",
+        "Sailing",
+        "Trading Post",
+        "Aqua Trampoline",
+        "GPS & Geocaching",
+        "Itasca State Park",
+        "Tamarac Wildlife Refuge",
+        "Back of the Moon",
+        "Monkey's Fist",
+        "Troop Swim",
+        "Float for Floats"
+      ],
+      "day_requests": {
+        "Friday": [
+          "Shower House"
+        ]
+      },
+      "scouts": 8,
+      "adults": 2
+    },
+    {
+      "name": "Roman Nose",
+      "campsite": "Roman Nose",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Aqua Trampoline",
+        "Greased Watermelon",
+        "9 Square",
+        "Delta",
+        "Gaga Ball",
+        "Climbing Tower",
+        "Shower House",
+        "Water Polo",
+        "Troop Rifle",
+        "Archery",
+        "GPS & Geocaching",
+        "Fishing",
+        "Sauna",
+        "Chopped!",
+        "Trading Post"
+      ],
+      "scouts": 10,
+      "adults": 4
+    },
+    {
+      "name": "Red Cloud",
+      "campsite": "Red Cloud",
+      "commissioner": "Commissioner A",
+      "preferences": [
+        "Aqua Trampoline",
+        "Greased Watermelon",
+        "Climbing Tower",
+        "Sailing",
+        "Troop Swim",
+        "Gaga Ball",
+        "Ultimate Survivor",
+        "Water Polo",
+        "Shower House",
+        "9 Square",
+        "Campsite Free Time",
+        "Delta",
+        "Knots and Lashings"
+      ],
+      "scouts": 7,
+      "adults": 4
+    },
+    {
+      "name": "Powhatan",
+      "campsite": "Powhatan",
+      "commissioner": "Commissioner C",
+      "preferences": [
+        "Aqua Trampoline",
+        "Archery",
+        "Gaga Ball",
+        "9 Square",
+        "Greased Watermelon",
+        "Troop Shotgun",
+        "Sailing",
+        "Chopped!",
+        "Delta",
+        "Float for Floats",
+        "Climbing Tower",
+        "Campsite Free Time",
+        "Troop Rifle"
+      ],
+      "scouts": 17,
+      "adults": 4
+    },
+    {
+      "name": "Massasoit",
+      "campsite": "Massasoit",
+      "commissioner": "Commissioner A",
+      "preferences": [
+        "Delta",
+        "History Center",
+        "Shower House",
+        "9 Square",
+        "Gaga Ball",
+        "Climbing Tower",
+        "Troop Canoe",
+        "Nature Canoe",
+        "Disc Golf",
+        "Aqua Trampoline",
+        "Troop Shotgun",
+        "Sailing",
+        "Water Polo"
+      ],
+      "scouts": 21,
+      "adults": 3
+    },
+    {
+      "name": "Joseph",
+      "campsite": "Joseph",
+      "commissioner": "Commissioner A",
+      "preferences": [
+        "Aqua Trampoline",
+        "Greased Watermelon",
+        "Gaga Ball",
+        "Sailing",
+        "Sauna",
+        "9 Square",
+        "Campsite Free Time",
+        "Archery",
+        "Knots and Lashings",
+        "Delta"
+      ],
+      "scouts": 22,
+      "adults": 1
+    },
+    {
+      "name": "Cochise",
+      "campsite": "Cochise",
+      "commissioner": "Commissioner C",
+      "preferences": [
+        "Aqua Trampoline",
+        "Troop Swim",
+        "Troop Shotgun",
+        "Archery",
+        "Troop Canoe",
+        "Climbing Tower",
+        "Greased Watermelon",
+        "Knots and Lashings",
+        "Gaga Ball",
+        "Monkey's Fist",
+        "Campsite Free Time",
+        "Shower House"
+      ],
+      "scouts": 8,
+      "adults": 3
+    },
+    {
+      "name": "Black Hawk",
+      "campsite": "Black Hawk",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Shower House",
+        "Aqua Trampoline",
+        "Itasca State Park",
+        "Climbing Tower",
+        "Archery",
+        "Troop Canoe",
+        "9 Square",
+        "Float for Floats",
+        "Gaga Ball",
+        "Nature Canoe",
+        "Water Polo",
+        "What's Cooking",
+        "Canoe Snorkel",
+        "Back of the Moon",
+        "Chopped!",
+        "Orienteering"
+      ],
+      "scouts": 15,
+      "adults": 1
+    },
+    {
+      "name": "Tecumseh",
+      "campsite": "Tecumseh",
+      "commissioner": "Commissioner A",
+      "preferences": [
+        "Climbing Tower",
+        "Archery",
+        "Itasca State Park",
+        "Aqua Trampoline",
+        "9 Square",
+        "Delta",
+        "Gaga Ball",
+        "Troop Rifle",
+        "Trading Post",
+        "History Center",
+        "Shower House",
+        "Back of the Moon",
+        "Campsite Free Time",
+        "Ultimate Survivor",
+        "What's Cooking",
+        "Nature Canoe",
+        "Chopped!",
+        "Disc Golf",
+        "Orienteering",
+        "Tamarac Wildlife Refuge"
+      ],
+      "scouts": 14,
+      "adults": 4
+    }
+  ]
+}

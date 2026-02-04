@@ -1,0 +1,329 @@
+{
+  "entries": [
+    {
+      "troop": "Tecumseh",
+      "activity": "Reflection",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Reflection",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "History Center",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Aqua Trampoline",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Aqua Trampoline",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Sailing",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Sailing",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Canoe Snorkel",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Canoe Snorkel",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Float for Floats",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Float for Floats",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Canoe Snorkel",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Canoe Snorkel",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Climbing Tower",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Troop Shotgun",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Ultimate Survivor",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "What's Cooking",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Knots and Lashings",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Orienteering",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Hemp Craft",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Tie Dye",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Archery",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Delta",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Greased Watermelon",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Dr. DNA",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "9 Square",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Greased Watermelon",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Troop Rifle",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Water Polo",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Delta",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Gaga Ball",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Greased Watermelon",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Campsite Free Time",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Archery",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Gaga Ball",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Sailing",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Sailing",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Sauna",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Monkey's Fist",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Monkey's Fist",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Super Troop",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Woggle Neckerchief Slide",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Gaga Ball",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Woggle Neckerchief Slide",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Fishing",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Climbing Tower",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Climbing Tower",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Delta",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Climbing Tower",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Super Troop",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Troop Rifle",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Greased Watermelon",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Super Troop",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Super Troop",
+      "day": "Monday",
+      "slot": 3
+    }
+  ],
+  "unscheduled": {}
+}

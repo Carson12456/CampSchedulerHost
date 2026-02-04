@@ -1,0 +1,92 @@
+======================================================================
+SCHEDULE QUALITY REPORT: voyageur_week1_troops.json
+======================================================================
+
+PREFERENCE SATISFACTION
+----------------------------------------------------------------------
+  Top 5      (Raw)      90.0% ( 45/ 50) [OK]
+  Top 10     (Raw)      86.6% ( 84/ 97) [OK]
+  Top 5      (Adj)      93.8% ( 45/ 48) [WARN]
+  Top 10     (Adj)      91.3% ( 84/ 92) [OK]
+  Weighted Score        88.6% (482/544) [OK]
+
+  [NOTE] Capacity-Constrained Activities (excluded from adjusted %):
+    Trading Post: 2 troops excluded (demand=3, scheduled=2)
+    Chopped!: 1 troops excluded (demand=4, scheduled=3)
+    Orienteering: 1 troops excluded (demand=1, scheduled=0)
+
+  Missing Top 5 Activities (Adjusted):
+    Vermillion: Aqua Trampoline (#2)
+    Quetico: Sailing (#3)
+    Two Harbors 2: Sailing (#3)
+
+  Missing Top 6-10 Activities (Adjusted):
+    Chisholm: Climbing Tower (#8)
+    Quetico: Itasca State Park (#8)
+    Chisholm: Sailing (#9)
+    Hibbing: Canoe Snorkel (#9)
+    Ft. William: Itasca State Park (#10)
+
+CONSTRAINT COMPLIANCE
+----------------------------------------------------------------------
+  Beach Slot Rule:     [WARN] 1 violations
+  Rifle+Shotgun Day:   [OK] All compliant
+  Accuracy Limit:      [OK] All compliant
+  Friday Reflection:   [FAIL] 3 missing
+
+SCHEDULE GAPS (Empty Slots)
+----------------------------------------------------------------------
+  [OK] No gaps - all troops have complete schedules
+
+WET/DRY CONSTRAINT VIOLATIONS
+----------------------------------------------------------------------
+  Wet -> Tower/ODS:    0 violations
+  Tower/ODS -> Wet:    0 violations
+  2+ Major Wet/Day:    1 violations
+  Wet-Dry-Wet Pattern: 0 violations
+  TOTAL:               1 violations [WARN]
+
+DELTA WALKING CONSTRAINT
+----------------------------------------------------------------------
+  [OK] No Delta walking violations
+
+DRY DAYS TRACKING (excl. Thursday)
+----------------------------------------------------------------------
+  Average dry days per troop: 1.9
+  Troops with 2+ dry days (6):
+    Ely: 3 dry days
+    Vermillion: 3 dry days
+    Fond Du Lac: 3 dry days
+    Hibbing: 2 dry days
+    Two Harbors 2: 2 dry days
+    Ft. Francis: 2 dry days
+
+STAFF CLUSTERING EFFICIENCY
+----------------------------------------------------------------------
+  Tower                3 days (min: 3, excess: 0, gaps: 0) [OK]
+  Rifle Range          4 days (min: 3, excess: 1, gaps: 1) [INFO]
+  Outdoor Skills       4 days (min: 3, excess: 1, gaps: 0) [INFO]
+  Handicrafts          3 days (min: 2, excess: 1, gaps: 1) [INFO]
+
+STAFF WORKLOAD DISTRIBUTION (Exponential)
+----------------------------------------------------------------------
+  Beach Staff          avg=2.1/slot, max=4, slots=12/14, need=3 staff [WARN]
+  Tower Director       avg=0.5/slot, max=1, slots=7/14, need=1 staff [OK]
+  Rifle Director       avg=0.6/slot, max=1, slots=8/14, need=1 staff [OK]
+  ODS Director         avg=0.5/slot, max=1, slots=7/14, need=1 staff [OK]
+
+  ALL-STAFF DISTRIBUTION SCORE:
+    Total staff-requiring activities: 51
+    Average per slot: 3.6, Peak: 5, Empty slots: 0
+    Variance: 1.09
+    Distribution Score: 89/100 [EXCELLENT]
+
+COMMISSIONER LOAD BALANCE
+----------------------------------------------------------------------
+  Voyageur A      3 troops, 4 days worked, 2/3 Reflections [WARN]
+  Voyageur B      4 troops, 3 days worked, 3/3 Reflections [OK]
+  Voyageur C      3 troops, 4 days worked, 2/3 Reflections [WARN]
+
+======================================================================
+Total Activities Scheduled: 136
+======================================================================

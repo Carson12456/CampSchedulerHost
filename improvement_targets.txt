@@ -1,0 +1,12 @@
+IMPROVEMENT TARGETS
+========================================
+tc_week3: Score -823, Gaps 126, Violations 9, Top5 45
+tc_week8: Score -503, Gaps 2, Violations 1, Top5 0
+tc_week1: Score -438, Gaps 1, Violations 1, Top5 0
+voyageur_week3: Score -404, Gaps 2, Violations 2, Top5 1
+voyageur_week1: Score -360, Gaps 4, Violations 4, Top5 4
+tc_week6: Score -334, Gaps 2, Violations 6, Top5 2
+tc_week4: Score -330, Gaps 6, Violations 7, Top5 6
+tc_week5: Score -328, Gaps 3, Violations 5, Top5 4
+tc_week7: Score -298, Gaps 4, Violations 6, Top5 2
+tc_week2: Score 585, Gaps 0, Violations 1, Top5 0

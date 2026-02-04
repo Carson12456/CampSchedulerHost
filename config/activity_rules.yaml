@@ -1,0 +1,70 @@
+exclusive_areas:
+  Handicrafts:
+  - Tie Dye
+  - Hemp Craft
+  - Woggle Neckerchief Slide
+  - Monkey's Fist
+  Delta:
+  - Delta
+  Super Troop:
+  - Super Troop
+  Tower:
+  - Climbing Tower
+  Rifle Range:
+  - Troop Rifle
+  - Troop Shotgun
+  Archery:
+  - Archery
+  Outdoor Skills:
+  - Knots and Lashings
+  - Orienteering
+  - GPS & Geocaching
+  - Ultimate Survivor
+  - What's Cooking
+  - Chopped!
+  Nature Center:
+  - Dr. DNA
+  - Loon Lore
+  - Nature Canoe
+wet_activities:
+- Aqua Trampoline
+- Water Polo
+- Greased Watermelon
+- Troop Swim
+- Underwater Obstacle Course
+- Troop Canoe
+- Troop Kayak
+- Canoe Snorkel
+- Nature Canoe
+- Float for Floats
+- Sailing
+- Sauna
+- Delta
+three_hour_activities:
+- Tamarac Wildlife Refuge
+- Itasca State Park
+- Back of the Moon
+area_pairs:
+  Tower: Outdoor Skills
+  Outdoor Skills: Tower
+  Rifle Range: Super Troop
+  Super Troop: Rifle Range
+  Delta: Sailing
+  Sailing: Delta
+same_day_conflicts:
+- - Trading Post
+  - Campsite Free Time
+- - Trading Post
+  - Shower House
+- - Troop Canoe
+  - Canoe Snorkel
+- - Troop Canoe
+  - Nature Canoe
+- - Troop Canoe
+  - Float for Floats
+- - Canoe Snorkel
+  - Nature Canoe
+- - Canoe Snorkel
+  - Float for Floats
+- - Nature Canoe
+  - Float for Floats

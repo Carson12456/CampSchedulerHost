@@ -1,0 +1,1290 @@
+{
+  "timestamp": "C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler",
+  "season_success_rate": 95.21126760563381,
+  "total_top5_slots": 6035,
+  "total_exempt_misses": 18,
+  "total_counted_misses": 289,
+  "weeks_with_issues": 88,
+  "week_details": {
+    "tc_week1_direct_fixed": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_enhanced": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_enhanced_spine": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_final_comprehensive": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_final_enhanced": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_final_fixed": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_final_push": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_integrated_spine": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_mission_complete": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_restored_spine": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_spine_aware": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_troops": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_ultimate_gap": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_ultra_fixed": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_ultra": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week1_zero_gap": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_enhanced": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_enhanced_spine": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_final_comprehensive": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 93.33333333333333,
+      "non_exempt_misses": 1
+    },
+    "tc_week2_final_enhanced": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_integrated_spine": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_mission_complete": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 93.33333333333333,
+      "non_exempt_misses": 1
+    },
+    "tc_week2_restored_spine": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_specialized_fixed": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 93.33333333333333,
+      "non_exempt_misses": 1
+    },
+    "tc_week2_spine_aware": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_troops": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_ultra_fixed": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_ultra": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_zero_gap": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week3_direct_fixed": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 93.33333333333333,
+      "non_exempt_misses": 3
+    },
+    "tc_week3_enhanced": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 95.55555555555556,
+      "non_exempt_misses": 2
+    },
+    "tc_week3_enhanced_spine": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 97.77777777777777,
+      "non_exempt_misses": 1
+    },
+    "tc_week3_final_comprehensive": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 5,
+      "success_rate": 88.88888888888889,
+      "non_exempt_misses": 5
+    },
+    "tc_week3_final_enhanced": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 95.55555555555556,
+      "non_exempt_misses": 2
+    },
+    "tc_week3_final_fixed": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 95.55555555555556,
+      "non_exempt_misses": 2
+    },
+    "tc_week3_final_push": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 97.77777777777777,
+      "non_exempt_misses": 1
+    },
+    "tc_week3_fixed": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 5,
+      "success_rate": 88.88888888888889,
+      "non_exempt_misses": 5
+    },
+    "tc_week3_mission_complete": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 93.33333333333333,
+      "non_exempt_misses": 3
+    },
+    "tc_week3_spine_aware": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 93.33333333333333,
+      "non_exempt_misses": 3
+    },
+    "tc_week3_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week3_troops": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 93.33333333333333,
+      "non_exempt_misses": 3
+    },
+    "tc_week3_ultimate_gap": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 95.55555555555556,
+      "non_exempt_misses": 2
+    },
+    "tc_week3_ultra_fixed": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 97.77777777777777,
+      "non_exempt_misses": 1
+    },
+    "tc_week3_ultra": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 97.77777777777777,
+      "non_exempt_misses": 1
+    },
+    "tc_week4_beach_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week4_direct_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 5,
+      "success_rate": 90.9090909090909,
+      "non_exempt_misses": 5
+    },
+    "tc_week4_enhanced": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 6,
+      "success_rate": 89.0909090909091,
+      "non_exempt_misses": 6
+    },
+    "tc_week4_enhanced_spine": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 7,
+      "success_rate": 87.27272727272727,
+      "non_exempt_misses": 7
+    },
+    "tc_week4_final_comprehensive": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 12,
+      "success_rate": 78.18181818181819,
+      "non_exempt_misses": 12
+    },
+    "tc_week4_final_enhanced": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 6,
+      "success_rate": 89.0909090909091,
+      "non_exempt_misses": 6
+    },
+    "tc_week4_final_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "tc_week4_final_push": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "tc_week4_fully_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week4_mission_complete": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 7,
+      "success_rate": 87.27272727272727,
+      "non_exempt_misses": 7
+    },
+    "tc_week4_spine_aware": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 6,
+      "success_rate": 89.0909090909091,
+      "non_exempt_misses": 6
+    },
+    "tc_week4_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week4_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 8,
+      "success_rate": 85.45454545454545,
+      "non_exempt_misses": 8
+    },
+    "tc_week4_ultimate_gap": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 6,
+      "success_rate": 89.0909090909091,
+      "non_exempt_misses": 6
+    },
+    "tc_week4_ultra_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 8,
+      "success_rate": 85.45454545454545,
+      "non_exempt_misses": 8
+    },
+    "tc_week4_ultra": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 7,
+      "success_rate": 87.27272727272727,
+      "non_exempt_misses": 7
+    },
+    "tc_week5_direct_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 94.54545454545455,
+      "non_exempt_misses": 3
+    },
+    "tc_week5_enhanced": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "tc_week5_enhanced_spine": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "tc_week5_final_comprehensive": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 7,
+      "success_rate": 87.27272727272727,
+      "non_exempt_misses": 7
+    },
+    "tc_week5_final_enhanced": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "tc_week5_final_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "tc_week5_final_push": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "tc_week5_mission_complete": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 5,
+      "success_rate": 90.9090909090909,
+      "non_exempt_misses": 5
+    },
+    "tc_week5_spine_aware": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 94.54545454545455,
+      "non_exempt_misses": 3
+    },
+    "tc_week5_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week5_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 6,
+      "success_rate": 89.0909090909091,
+      "non_exempt_misses": 6
+    },
+    "tc_week5_ultimate_gap": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 1,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "tc_week5_ultra_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 94.54545454545455,
+      "non_exempt_misses": 3
+    },
+    "tc_week5_ultra": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 7,
+      "success_rate": 87.27272727272727,
+      "non_exempt_misses": 7
+    },
+    "tc_week6_direct_fixed": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "tc_week6_enhanced": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "tc_week6_enhanced_spine": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week6_final_comprehensive": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "tc_week6_final_enhanced": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week6_final_fixed": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week6_final_push": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "tc_week6_integrated_spine": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week6_mission_complete": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 4,
+      "success_rate": 92.0,
+      "non_exempt_misses": 4
+    },
+    "tc_week6_spine_aware": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "tc_week6_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week6_troops": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 94.0,
+      "non_exempt_misses": 3
+    },
+    "tc_week6_ultimate_gap": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week6_ultra_fixed": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "tc_week6_ultra": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "tc_week7_direct_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.18181818181819,
+      "non_exempt_misses": 1
+    },
+    "tc_week7_enhanced": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 94.54545454545455,
+      "non_exempt_misses": 3
+    },
+    "tc_week7_enhanced_spine": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 96.36363636363636,
+      "non_exempt_misses": 2
+    },
+    "tc_week7_final_comprehensive": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 10,
+      "success_rate": 81.81818181818181,
+      "non_exempt_misses": 10
+    },
+    "tc_week7_final_enhanced": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.18181818181819,
+      "non_exempt_misses": 1
+    },
+    "tc_week7_final_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.18181818181819,
+      "non_exempt_misses": 1
+    },
+    "tc_week7_final_push": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.18181818181819,
+      "non_exempt_misses": 1
+    },
+    "tc_week7_mission_complete": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 5,
+      "success_rate": 90.9090909090909,
+      "non_exempt_misses": 5
+    },
+    "tc_week7_spine_aware": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 96.36363636363636,
+      "non_exempt_misses": 2
+    },
+    "tc_week7_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week7_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 5,
+      "success_rate": 90.9090909090909,
+      "non_exempt_misses": 5
+    },
+    "tc_week7_ultimate_gap": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 94.54545454545455,
+      "non_exempt_misses": 3
+    },
+    "tc_week7_ultra_fixed": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.18181818181819,
+      "non_exempt_misses": 1
+    },
+    "tc_week7_ultra": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 96.36363636363636,
+      "non_exempt_misses": 2
+    },
+    "tc_week8_direct_fixed": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_enhanced": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_enhanced_spine": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_final_comprehensive": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_final_enhanced": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_final_fixed": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_final_push": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_integrated_spine": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_mission_complete": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_restored_spine": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_spine_aware": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_troops": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 95.0,
+      "non_exempt_misses": 1
+    },
+    "tc_week8_ultimate_gap": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_ultra_fixed": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_ultra": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_zero_gap": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week1_direct_fixed": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "voyageur_week1_enhanced": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 96.0,
+      "non_exempt_misses": 2
+    },
+    "voyageur_week1_enhanced_spine": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 3,
+      "success_rate": 94.0,
+      "non_exempt_misses": 3
+    },
+    "voyageur_week1_final_comprehensive": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 4,
+      "success_rate": 92.0,
+      "non_exempt_misses": 4
+    },
+    "voyageur_week1_final_enhanced": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "voyageur_week1_final_fixed": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week1_final_push": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 3,
+      "success_rate": 94.0,
+      "non_exempt_misses": 3
+    },
+    "voyageur_week1_mission_complete": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 3,
+      "success_rate": 94.0,
+      "non_exempt_misses": 3
+    },
+    "voyageur_week1_spine_aware": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 2,
+      "success_rate": 96.0,
+      "non_exempt_misses": 2
+    },
+    "voyageur_week1_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week1_troops": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 5,
+      "success_rate": 90.0,
+      "non_exempt_misses": 5
+    },
+    "voyageur_week1_ultimate_gap": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 1,
+      "success_rate": 98.0,
+      "non_exempt_misses": 1
+    },
+    "voyageur_week1_ultra_fixed": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 4,
+      "success_rate": 92.0,
+      "non_exempt_misses": 4
+    },
+    "voyageur_week1_ultra": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 4,
+      "success_rate": 92.0,
+      "non_exempt_misses": 4
+    },
+    "voyageur_week3_direct_fixed": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_enhanced": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_enhanced_spine": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_final_comprehensive": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 92.5,
+      "non_exempt_misses": 3
+    },
+    "voyageur_week3_final_enhanced": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 95.0,
+      "non_exempt_misses": 2
+    },
+    "voyageur_week3_final_fixed": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 95.0,
+      "non_exempt_misses": 2
+    },
+    "voyageur_week3_final_push": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_mission_complete": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 92.5,
+      "non_exempt_misses": 3
+    },
+    "voyageur_week3_spine_aware": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_top5_fixed": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 0.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_troops": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 3,
+      "success_rate": 92.5,
+      "non_exempt_misses": 3
+    },
+    "voyageur_week3_ultimate_gap": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_ultra_fixed": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_ultra": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_zero_gap": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "week1": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "week2": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "week3": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 97.77777777777777,
+      "non_exempt_misses": 1
+    },
+    "week4": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 4,
+      "success_rate": 92.72727272727273,
+      "non_exempt_misses": 4
+    },
+    "week5": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 96.36363636363636,
+      "non_exempt_misses": 2
+    },
+    "week6": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 2,
+      "success_rate": 96.0,
+      "non_exempt_misses": 2
+    },
+    "week7": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 1,
+      "success_rate": 98.18181818181819,
+      "non_exempt_misses": 1
+    },
+    "week8": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    }
+  }
+}

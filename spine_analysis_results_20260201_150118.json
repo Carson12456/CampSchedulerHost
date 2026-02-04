@@ -1,0 +1,304 @@
+{
+  "weeks_analyzed": [
+    "tc_week1",
+    "voyageur_week1",
+    "tc_week2",
+    "tc_week3",
+    "voyageur_week3",
+    "tc_week4",
+    "tc_week5",
+    "tc_week6",
+    "tc_week7",
+    "tc_week8"
+  ],
+  "before_metrics": {
+    "tc_week1": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "expected str, bytes or os.PathLike object, not Schedule"
+    },
+    "voyageur_week1": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Troop' object has no attribute 'day'"
+    },
+    "tc_week2": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "expected str, bytes or os.PathLike object, not Schedule"
+    },
+    "tc_week3": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "expected str, bytes or os.PathLike object, not Schedule"
+    },
+    "voyageur_week3": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "expected str, bytes or os.PathLike object, not Schedule"
+    },
+    "tc_week4": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Troop' object has no attribute 'day'"
+    },
+    "tc_week5": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Troop' object has no attribute 'day'"
+    },
+    "tc_week6": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Troop' object has no attribute 'day'"
+    },
+    "tc_week7": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Troop' object has no attribute 'day'"
+    },
+    "tc_week8": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "expected str, bytes or os.PathLike object, not Schedule"
+    }
+  },
+  "after_metrics": {
+    "tc_week1": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "voyageur_week1": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "tc_week2": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "tc_week3": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "voyageur_week3": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "tc_week4": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "tc_week5": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "tc_week6": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "tc_week7": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    },
+    "tc_week8": {
+      "evaluation": {
+        "score": 0,
+        "gaps": 999,
+        "violations": 999
+      },
+      "scheduler_metrics": {},
+      "error": "'Schedule' object has no attribute 'get_troop_entries'"
+    }
+  },
+  "improvements": {
+    "tc_week1": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "voyageur_week1": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "tc_week2": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "tc_week3": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "voyageur_week3": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "tc_week4": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "tc_week5": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "tc_week6": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "tc_week7": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    },
+    "tc_week8": {
+      "score_improvement": 0,
+      "gaps_improvement": 0,
+      "violations_improvement": 0,
+      "top5_improvement": 0,
+      "staff_efficiency_improvement": 0,
+      "clustering_improvement": 0,
+      "overall_improvement": 0
+    }
+  },
+  "overall_effectiveness": {
+    "weeks_analyzed": 10,
+    "successful_weeks": 0,
+    "success_rate": 0.0,
+    "avg_score_improvement": 0.0,
+    "avg_gaps_improvement": 0.0,
+    "avg_violations_improvement": 0.0,
+    "avg_top5_improvement": 0.0,
+    "avg_overall_improvement": 0.0,
+    "total_score_improvement": 0,
+    "total_gaps_eliminated": 0,
+    "total_violations_fixed": 0,
+    "total_top5_recovered": 0
+  }
+}

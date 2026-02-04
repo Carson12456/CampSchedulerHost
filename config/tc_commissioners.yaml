@@ -1,0 +1,34 @@
+troops:
+  Commissioner A:
+  - Massasoit
+  - Tecumseh
+  - Samoset
+  - Black Hawk
+  - Taskalusa
+  Commissioner B:
+  - Powhatan
+  - Red Cloud
+  - Cochise
+  - Joseph
+  - Tamanend
+  Commissioner C:
+  - Pontiac
+  - Skenandoa
+  - Sequoyah
+  - Roman Nose
+delta_days:
+  Commissioner A: Monday
+  Commissioner B: Tuesday
+  Commissioner C: Wednesday
+super_troop_days:
+  Commissioner A: Monday
+  Commissioner B: Tuesday
+  Commissioner C: Wednesday
+archery_days:
+  Commissioner A: Wednesday
+  Commissioner B: Friday
+  Commissioner C: Monday
+tower_ods_days:
+  Commissioner A: Thursday
+  Commissioner B: Monday
+  Commissioner C: Tuesday

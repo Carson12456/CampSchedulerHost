@@ -1,0 +1,25 @@
+# Advanced Clustering Experiments
+
+## Experiment 3: Day Load Balancing
+**Problem:** Tuesday has too many activities
+**Solution:** Penalize overloaded days during slot selection
+
+Test: Check if activities distribute more evenly
+
+## Experiment 4: ODS + Tower Clustering
+**Problem:** ODS (Orienteering, GPS, etc.) spreads across 4 days
+**Solution:** Cluster ODS with Tower days (they're geographically paired)
+
+Test: Do ODS activities concentrate on Tower days?
+
+## Experiment 5: Aggressive Post-Optimization
+**Problem:** After scheduling, some activities could swap for better clustering
+**Solution:** More aggressive swap checking in optimization phase
+
+Test: Does it reduce day spread further?
+
+## Current Baseline (After Experiments 1-2)
+- Tower: 4 days (Mon:2, Tue:3, Wed:3, Thu:2)
+- Archery: 5 days (Mon:3, Tue:3, others single)
+- Rifle: 5 days combined
+- Max staff: 13

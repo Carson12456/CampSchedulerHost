@@ -1,0 +1,137 @@
+[
+  {
+    "week": 1,
+    "troops": 6,
+    "stats": {
+      "total_entries": 84,
+      "troops": {
+        "Tamanend": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 10,
+          "has_reflection": true
+        },
+        "Sequoyah": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 11,
+          "has_reflection": false
+        },
+        "Samoset": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 9,
+          "has_reflection": false
+        },
+        "Red Cloud": {
+          "total_scheduled": 14,
+          "top5_achieved": 6,
+          "top10_achieved": 11,
+          "has_reflection": false
+        },
+        "Massasoit": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 11,
+          "has_reflection": true
+        },
+        "Black Hawk": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 10,
+          "has_reflection": true
+        }
+      }
+    }
+  },
+  {
+    "week": 2,
+    "troops": 3,
+    "stats": {
+      "total_entries": 42,
+      "troops": {
+        "Taskalusa": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 12,
+          "has_reflection": true
+        },
+        "Massasoit": {
+          "total_scheduled": 14,
+          "top5_achieved": 6,
+          "top10_achieved": 9,
+          "has_reflection": true
+        },
+        "Black Hawk": {
+          "total_scheduled": 14,
+          "top5_achieved": 7,
+          "top10_achieved": 12,
+          "has_reflection": true
+        }
+      }
+    }
+  },
+  {
+    "week": 3,
+    "troops": 9,
+    "stats": {
+      "total_entries": 125,
+      "troops": {
+        "Tecumseh": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 9,
+          "has_reflection": true
+        },
+        "Taskalusa": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 9,
+          "has_reflection": true
+        },
+        "Tamanend": {
+          "total_scheduled": 14,
+          "top5_achieved": 7,
+          "top10_achieved": 11,
+          "has_reflection": true
+        },
+        "Sequoyah": {
+          "total_scheduled": 14,
+          "top5_achieved": 6,
+          "top10_achieved": 9,
+          "has_reflection": false
+        },
+        "Samoset": {
+          "total_scheduled": 14,
+          "top5_achieved": 6,
+          "top10_achieved": 11,
+          "has_reflection": false
+        },
+        "Red Cloud": {
+          "total_scheduled": 14,
+          "top5_achieved": 6,
+          "top10_achieved": 11,
+          "has_reflection": false
+        },
+        "Powhatan": {
+          "total_scheduled": 14,
+          "top5_achieved": 5,
+          "top10_achieved": 9,
+          "has_reflection": false
+        },
+        "Pontiac": {
+          "total_scheduled": 14,
+          "top5_achieved": 6,
+          "top10_achieved": 10,
+          "has_reflection": false
+        },
+        "Black Hawk": {
+          "total_scheduled": 13,
+          "top5_achieved": 5,
+          "top10_achieved": 9,
+          "has_reflection": false
+        }
+      }
+    }
+  }
+]

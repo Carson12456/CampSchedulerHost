@@ -1,0 +1,59 @@
+# Camp Configuration
+# Settings for Camp Ten Chiefs scheduling
+
+camp:
+  name: "Camp Ten Chiefs"
+  total_weeks: 7
+  days_per_week: 5  # Monday-Friday
+  slots_per_day: 3
+  thursday_slots: 2  # Thursday only has 2 slots
+  
+commissioners:
+  - name: "Commissioner A"
+    troops: ["Tecumseh", "Red Cloud", "Massasoit", "Joseph", "Skenandoa"]
+    delta_day: "Tuesday"
+    super_troop_day: "Tuesday"
+    archery_day: "Wednesday"
+    tower_ods_day: "Thursday"
+    
+  - name: "Commissioner B"
+    troops: ["Tamanend", "Samoset", "Black Hawk", "Sequoyah"]
+    delta_day: "Wednesday"
+    super_troop_day: "Wednesday"
+    archery_day: "Friday"
+    tower_ods_day: "Monday"
+    
+  - name: "Commissioner C"
+    troops: ["Taskalusa", "Powhatan", "Cochise", "Pontiac"]
+    delta_day: "Thursday"
+    super_troop_day: "Thursday"
+    archery_day: "Monday"
+    tower_ods_day: "Tuesday"
+
+# Staff capacity limits
+capacity:
+  max_beach_staff_per_slot: 12
+  max_canoe_capacity: 26  # 13 canoes = 26 people
+  aqua_trampoline_small_troop_max: 16  # Troops ≤16 can share
+  tower_large_troop_threshold: 15  # 15+ scouts = 1.5 slots
+
+# Default priorities for filling empty slots
+default_fill_priority:
+  - "Super Troop"
+  - "Aqua Trampoline"
+  - "Climbing Tower"
+  - "Archery"
+  - "Water Polo"
+  - "Troop Rifle"
+  - "Gaga Ball"
+  - "9 Square"
+  - "Troop Swim"
+  - "Sailing"
+  - "Trading Post"
+  - "GPS & Geocaching"
+  - "Disc Golf"
+  - "Hemp Craft"
+  - "Dr. DNA"
+  - "Loon Lore"
+  - "Fishing"
+  - "Campsite Free Time"

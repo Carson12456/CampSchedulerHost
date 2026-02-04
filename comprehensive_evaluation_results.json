@@ -1,0 +1,899 @@
+[
+  {
+    "week_name": "tc_week1_troops",
+    "troop_count": 6,
+    "total_entries": 84,
+    "gaps": 0,
+    "troop_gaps": {
+      "Tamanend": 0,
+      "Sequoyah": 0,
+      "Samoset": 0,
+      "Red Cloud": 0,
+      "Massasoit": 0,
+      "Black Hawk": 0
+    },
+    "preference_stats": {
+      "total_preferences": 104,
+      "satisfied_preferences": 67,
+      "satisfaction_rate": 64.42307692307693,
+      "top5_satisfaction_rate": 96.66666666666667
+    },
+    "staff_stats": {
+      "avg_staff": 6.142857142857143,
+      "min_staff": 3,
+      "max_staff": 9,
+      "variance": 2.4395604395604398,
+      "high_load_slots": 0,
+      "underused_slots": 2
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 3,
+      "total_areas": 20
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Tamanend": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      },
+      "Sequoyah": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Samoset": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Red Cloud": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Massasoit": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Black Hawk": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      }
+    },
+    "issues": [
+      "Tamanend missing Top 5: ['Aqua Trampoline']",
+      "Outdoor Skills spread across 5 days (poor clustering)",
+      "Handicrafts spread across 4 days (poor clustering)",
+      "Super Troop spread across 4 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "tc_week2_troops",
+    "troop_count": 3,
+    "total_entries": 42,
+    "gaps": 0,
+    "troop_gaps": {
+      "Taskalusa": 0,
+      "Massasoit": 0,
+      "Black Hawk": 0
+    },
+    "preference_stats": {
+      "total_preferences": 44,
+      "satisfied_preferences": 29,
+      "satisfaction_rate": 65.9090909090909,
+      "top5_satisfaction_rate": 100.0
+    },
+    "staff_stats": {
+      "avg_staff": 2.9285714285714284,
+      "min_staff": 1,
+      "max_staff": 6,
+      "variance": 2.840659340659341,
+      "high_load_slots": 0,
+      "underused_slots": 11
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 1,
+      "total_areas": 15
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Taskalusa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Massasoit": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Black Hawk": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      }
+    },
+    "issues": [
+      "Too many underused slots: 11",
+      "Handicrafts spread across 4 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "tc_week3_troops",
+    "troop_count": 9,
+    "total_entries": 122,
+    "gaps": 0,
+    "troop_gaps": {
+      "Tecumseh": 0,
+      "Taskalusa": 0,
+      "Tamanend": 0,
+      "Sequoyah": 0,
+      "Samoset": 0,
+      "Red Cloud": 0,
+      "Powhatan": 0,
+      "Pontiac": 0,
+      "Black Hawk": 0
+    },
+    "preference_stats": {
+      "total_preferences": 146,
+      "satisfied_preferences": 94,
+      "satisfaction_rate": 64.38356164383562,
+      "top5_satisfaction_rate": 97.77777777777777
+    },
+    "staff_stats": {
+      "avg_staff": 8.714285714285714,
+      "min_staff": 6,
+      "max_staff": 13,
+      "variance": 3.758241758241758,
+      "high_load_slots": 0,
+      "underused_slots": 0
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 7,
+      "total_areas": 21
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Tecumseh": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Taskalusa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Tamanend": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Sequoyah": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Samoset": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Red Cloud": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Powhatan": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      },
+      "Pontiac": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Black Hawk": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      }
+    },
+    "issues": [
+      "Powhatan missing Top 5: ['Greased Watermelon']",
+      "Super Troop spread across 5 days (poor clustering)",
+      "Aqua Trampoline spread across 4 days (poor clustering)",
+      "Sailing spread across 4 days (poor clustering)",
+      "Rifle Range spread across 5 days (poor clustering)",
+      "Outdoor Skills spread across 5 days (poor clustering)",
+      "Handicrafts spread across 5 days (poor clustering)",
+      "Archery spread across 5 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "tc_week4_troops",
+    "troop_count": 11,
+    "total_entries": 149,
+    "gaps": 0,
+    "troop_gaps": {
+      "Tecumseh": 0,
+      "Taskalusa": 0,
+      "Tamanend": 0,
+      "Skenandoa": 0,
+      "Samoset": 0,
+      "Powhatan": 0,
+      "Pontiac": 0,
+      "Massasoit": 0,
+      "Joseph": 0,
+      "Cochise": 0,
+      "Black Hawk": 0
+    },
+    "preference_stats": {
+      "total_preferences": 181,
+      "satisfied_preferences": 116,
+      "satisfaction_rate": 64.08839779005525,
+      "top5_satisfaction_rate": 92.72727272727272
+    },
+    "staff_stats": {
+      "avg_staff": 11.357142857142858,
+      "min_staff": 8,
+      "max_staff": 15,
+      "variance": 4.4010989010989015,
+      "high_load_slots": 1,
+      "underused_slots": 0
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 11,
+      "total_areas": 23
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Tecumseh": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Taskalusa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Tamanend": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      },
+      "Skenandoa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Samoset": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Powhatan": {
+        "satisfied": 3,
+        "total": 5,
+        "percentage": 60.0
+      },
+      "Pontiac": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Massasoit": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Joseph": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Cochise": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Black Hawk": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      }
+    },
+    "issues": [
+      "Tamanend missing Top 5: ['Aqua Trampoline']",
+      "Powhatan missing Top 5: ['Aqua Trampoline', 'Sailing']",
+      "Black Hawk missing Top 5: ['Aqua Trampoline']",
+      "High staff variance: 4.40",
+      "Canoe Snorkel spread across 4 days (poor clustering)",
+      "Sailing spread across 4 days (poor clustering)",
+      "Tower spread across 5 days (poor clustering)",
+      "Outdoor Skills spread across 5 days (poor clustering)",
+      "Handicrafts spread across 5 days (poor clustering)",
+      "Archery spread across 4 days (poor clustering)",
+      "Water Polo spread across 4 days (poor clustering)",
+      "Greased Watermelon spread across 5 days (poor clustering)",
+      "Fishing spread across 4 days (poor clustering)",
+      "Super Troop spread across 4 days (poor clustering)",
+      "Rifle Range spread across 5 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "tc_week5_troops",
+    "troop_count": 11,
+    "total_entries": 151,
+    "gaps": 0,
+    "troop_gaps": {
+      "Tecumseh": 0,
+      "Taskalusa": 0,
+      "Tamanend": 0,
+      "Skenandoa": 0,
+      "Sequoyah": 0,
+      "Samoset": 0,
+      "Red Cloud": 0,
+      "Pontiac": 0,
+      "Massasoit": 0,
+      "Joseph": 0,
+      "Black Hawk": 0
+    },
+    "preference_stats": {
+      "total_preferences": 188,
+      "satisfied_preferences": 116,
+      "satisfaction_rate": 61.702127659574465,
+      "top5_satisfaction_rate": 94.54545454545455
+    },
+    "staff_stats": {
+      "avg_staff": 11.785714285714286,
+      "min_staff": 8,
+      "max_staff": 15,
+      "variance": 4.7967032967032965,
+      "high_load_slots": 1,
+      "underused_slots": 0
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 11,
+      "total_areas": 22
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Tecumseh": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Taskalusa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Tamanend": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Skenandoa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Sequoyah": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Samoset": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Red Cloud": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Pontiac": {
+        "satisfied": 3,
+        "total": 5,
+        "percentage": 60.0
+      },
+      "Massasoit": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Joseph": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Black Hawk": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      }
+    },
+    "issues": [
+      "Pontiac missing Top 5: ['Aqua Trampoline', 'Shower House']",
+      "Black Hawk missing Top 5: ['Aqua Trampoline']",
+      "High staff variance: 4.80",
+      "Aqua Trampoline spread across 5 days (poor clustering)",
+      "Float for Floats spread across 4 days (poor clustering)",
+      "Sailing spread across 4 days (poor clustering)",
+      "Tower spread across 5 days (poor clustering)",
+      "Outdoor Skills spread across 5 days (poor clustering)",
+      "Handicrafts spread across 4 days (poor clustering)",
+      "Archery spread across 5 days (poor clustering)",
+      "Fishing spread across 4 days (poor clustering)",
+      "Greased Watermelon spread across 5 days (poor clustering)",
+      "Trading Post spread across 4 days (poor clustering)",
+      "Super Troop spread across 5 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "tc_week6_troops",
+    "troop_count": 10,
+    "total_entries": 137,
+    "gaps": 0,
+    "troop_gaps": {
+      "Tecumseh": 0,
+      "Taskalusa": 0,
+      "Tamanend": 0,
+      "Samoset": 0,
+      "Red Cloud": 0,
+      "Powhatan": 0,
+      "Massasoit": 0,
+      "Joseph": 0,
+      "Cochise": 0,
+      "Black Hawk": 0
+    },
+    "preference_stats": {
+      "total_preferences": 161,
+      "satisfied_preferences": 110,
+      "satisfaction_rate": 68.32298136645963,
+      "top5_satisfaction_rate": 100.0
+    },
+    "staff_stats": {
+      "avg_staff": 10.214285714285714,
+      "min_staff": 6,
+      "max_staff": 13,
+      "variance": 4.950549450549451,
+      "high_load_slots": 0,
+      "underused_slots": 0
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 10,
+      "total_areas": 23
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Tecumseh": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Taskalusa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Tamanend": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Samoset": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Red Cloud": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Powhatan": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Massasoit": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Joseph": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Cochise": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Black Hawk": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      }
+    },
+    "issues": [
+      "High staff variance: 4.95",
+      "Aqua Trampoline spread across 4 days (poor clustering)",
+      "Greased Watermelon spread across 5 days (poor clustering)",
+      "Tower spread across 4 days (poor clustering)",
+      "Outdoor Skills spread across 5 days (poor clustering)",
+      "Archery spread across 4 days (poor clustering)",
+      "Water Polo spread across 4 days (poor clustering)",
+      "Shower House spread across 4 days (poor clustering)",
+      "Fishing spread across 4 days (poor clustering)",
+      "Super Troop spread across 4 days (poor clustering)",
+      "Handicrafts spread across 4 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "tc_week7_troops",
+    "troop_count": 11,
+    "total_entries": 151,
+    "gaps": 0,
+    "troop_gaps": {
+      "Taskalusa": 0,
+      "Tamanend": 0,
+      "Samoset": 0,
+      "Roman Nose": 0,
+      "Red Cloud": 0,
+      "Powhatan": 0,
+      "Massasoit": 0,
+      "Joseph": 0,
+      "Cochise": 0,
+      "Black Hawk": 0,
+      "Tecumseh": 0
+    },
+    "preference_stats": {
+      "total_preferences": 165,
+      "satisfied_preferences": 114,
+      "satisfaction_rate": 69.0909090909091,
+      "top5_satisfaction_rate": 98.18181818181819
+    },
+    "staff_stats": {
+      "avg_staff": 10.785714285714286,
+      "min_staff": 7,
+      "max_staff": 14,
+      "variance": 4.181318681318682,
+      "high_load_slots": 0,
+      "underused_slots": 0
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 10,
+      "total_areas": 23
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Taskalusa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Tamanend": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Samoset": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Roman Nose": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Red Cloud": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      },
+      "Powhatan": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Massasoit": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Joseph": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Cochise": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Black Hawk": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Tecumseh": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      }
+    },
+    "issues": [
+      "Red Cloud missing Top 5: ['Aqua Trampoline']",
+      "High staff variance: 4.18",
+      "Aqua Trampoline spread across 4 days (poor clustering)",
+      "Tower spread across 4 days (poor clustering)",
+      "Rifle Range spread across 4 days (poor clustering)",
+      "Outdoor Skills spread across 4 days (poor clustering)",
+      "Archery spread across 5 days (poor clustering)",
+      "Fishing spread across 4 days (poor clustering)",
+      "Greased Watermelon spread across 4 days (poor clustering)",
+      "Shower House spread across 5 days (poor clustering)",
+      "Nature Center spread across 4 days (poor clustering)",
+      "Super Troop spread across 5 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "tc_week8_troops",
+    "troop_count": 4,
+    "total_entries": 54,
+    "gaps": 0,
+    "troop_gaps": {
+      "Tecumseh": 0,
+      "Taskalusa": 0,
+      "Samoset": 0,
+      "Black Hawk": 0
+    },
+    "preference_stats": {
+      "total_preferences": 67,
+      "satisfied_preferences": 41,
+      "satisfaction_rate": 61.19402985074627,
+      "top5_satisfaction_rate": 100.0
+    },
+    "staff_stats": {
+      "avg_staff": 4.928571428571429,
+      "min_staff": 2,
+      "max_staff": 7,
+      "variance": 1.7637362637362637,
+      "high_load_slots": 0,
+      "underused_slots": 4
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 1,
+      "total_areas": 17
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Tecumseh": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Taskalusa": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Samoset": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Black Hawk": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      }
+    },
+    "issues": [
+      "Too many underused slots: 4",
+      "Handicrafts spread across 5 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "voyageur_week1_troops",
+    "troop_count": 10,
+    "total_entries": 136,
+    "gaps": 0,
+    "troop_gaps": {
+      "Ely": 0,
+      "Hibbing": 0,
+      "Chisholm": 0,
+      "Vermillion": 0,
+      "Fond Du Lac": 0,
+      "Ft. William": 0,
+      "Two Harbors 1": 0,
+      "Two Harbors 2": 0,
+      "Quetico": 0,
+      "Ft. Francis": 0
+    },
+    "preference_stats": {
+      "total_preferences": 142,
+      "satisfied_preferences": 100,
+      "satisfaction_rate": 70.4225352112676,
+      "top5_satisfaction_rate": 92.0
+    },
+    "staff_stats": {
+      "avg_staff": 9.928571428571429,
+      "min_staff": 7,
+      "max_staff": 13,
+      "variance": 4.84065934065934,
+      "high_load_slots": 0,
+      "underused_slots": 0
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 7,
+      "total_areas": 21
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Ely": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      },
+      "Hibbing": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Chisholm": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Vermillion": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Fond Du Lac": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Ft. William": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Two Harbors 1": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Two Harbors 2": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      },
+      "Quetico": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      },
+      "Ft. Francis": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      }
+    },
+    "issues": [
+      "Ely missing Top 5: ['Delta']",
+      "Two Harbors 2 missing Top 5: ['Aqua Trampoline']",
+      "Quetico missing Top 5: ['Aqua Trampoline']",
+      "Ft. Francis missing Top 5: ['9 Square']",
+      "High staff variance: 4.84",
+      "Super Troop spread across 5 days (poor clustering)",
+      "Sailing spread across 4 days (poor clustering)",
+      "Outdoor Skills spread across 4 days (poor clustering)",
+      "Handicrafts spread across 5 days (poor clustering)",
+      "Water Polo spread across 4 days (poor clustering)",
+      "Greased Watermelon spread across 5 days (poor clustering)",
+      "Rifle Range spread across 4 days (poor clustering)"
+    ]
+  },
+  {
+    "week_name": "voyageur_week3_troops",
+    "troop_count": 8,
+    "total_entries": 109,
+    "gaps": 0,
+    "troop_gaps": {
+      "Quetico": 0,
+      "Two Harbors": 0,
+      "Hibbing 1": 0,
+      "Hibbing 2": 0,
+      "Ft. Francis": 0,
+      "Ft. William": 0,
+      "Fond Du Lac": 0,
+      "Duluth": 0
+    },
+    "preference_stats": {
+      "total_preferences": 113,
+      "satisfied_preferences": 80,
+      "satisfaction_rate": 70.79646017699115,
+      "top5_satisfaction_rate": 97.5
+    },
+    "staff_stats": {
+      "avg_staff": 8.785714285714286,
+      "min_staff": 5,
+      "max_staff": 12,
+      "variance": 4.7967032967032965,
+      "high_load_slots": 0,
+      "underused_slots": 0
+    },
+    "clustering_stats": {
+      "areas_with_poor_clustering": 7,
+      "total_areas": 21
+    },
+    "constraint_violations": {},
+    "top5_satisfaction": {
+      "Quetico": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Two Harbors": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Hibbing 1": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Hibbing 2": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Ft. Francis": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Ft. William": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Fond Du Lac": {
+        "satisfied": 5,
+        "total": 5,
+        "percentage": 100.0
+      },
+      "Duluth": {
+        "satisfied": 4,
+        "total": 5,
+        "percentage": 80.0
+      }
+    },
+    "issues": [
+      "Duluth missing Top 5: ['Aqua Trampoline']",
+      "High staff variance: 4.80",
+      "Sailing spread across 4 days (poor clustering)",
+      "Aqua Trampoline spread across 4 days (poor clustering)",
+      "Greased Watermelon spread across 4 days (poor clustering)",
+      "Tower spread across 4 days (poor clustering)",
+      "Archery spread across 5 days (poor clustering)",
+      "Super Troop spread across 4 days (poor clustering)",
+      "Shower House spread across 4 days (poor clustering)"
+    ]
+  }
+]

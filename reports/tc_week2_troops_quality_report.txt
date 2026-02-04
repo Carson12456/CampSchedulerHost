@@ -1,0 +1,75 @@
+======================================================================
+SCHEDULE QUALITY REPORT: tc_week2_troops.json
+======================================================================
+
+PREFERENCE SATISFACTION
+----------------------------------------------------------------------
+  Top 5      (Raw)     100.0% ( 15/ 15) [OK]
+  Top 10     (Raw)      96.4% ( 27/ 28) [OK]
+  Top 5      (Adj)     100.0% ( 15/ 15) [OK]
+  Top 10     (Adj)     100.0% ( 27/ 27) [OK]
+  Weighted Score        99.4% (161/162) [OK]
+
+  [NOTE] Capacity-Constrained Activities (excluded from adjusted %):
+    Disc Golf: 1 troops excluded (demand=1, scheduled=0)
+
+CONSTRAINT COMPLIANCE
+----------------------------------------------------------------------
+  Beach Slot Rule:     [OK] All compliant
+  Rifle+Shotgun Day:   [OK] All compliant
+  Accuracy Limit:      [OK] All compliant
+  Friday Reflection:   [OK] All troops
+
+SCHEDULE GAPS (Empty Slots)
+----------------------------------------------------------------------
+  [OK] No gaps - all troops have complete schedules
+
+WET/DRY CONSTRAINT VIOLATIONS
+----------------------------------------------------------------------
+  Wet -> Tower/ODS:    0 violations
+  Tower/ODS -> Wet:    0 violations
+  2+ Major Wet/Day:    0 violations
+  Wet-Dry-Wet Pattern: 0 violations
+  TOTAL:               0 violations [OK]
+
+DELTA WALKING CONSTRAINT
+----------------------------------------------------------------------
+  [OK] No Delta walking violations
+
+DRY DAYS TRACKING (excl. Thursday)
+----------------------------------------------------------------------
+  Average dry days per troop: 2.0
+  Troops with 2+ dry days (3):
+    Taskalusa: 2 dry days
+    Massasoit: 2 dry days
+    Black Hawk: 2 dry days
+
+STAFF CLUSTERING EFFICIENCY
+----------------------------------------------------------------------
+  Tower                2 days (min: 1, excess: 1, gaps: 1) [INFO]
+  Rifle Range          1 days (min: 1, excess: 0, gaps: 0) [OK]
+  Outdoor Skills       2 days (min: 1, excess: 1, gaps: 1) [INFO]
+  Handicrafts          3 days (min: 2, excess: 1, gaps: 0) [INFO]
+
+STAFF WORKLOAD DISTRIBUTION (Exponential)
+----------------------------------------------------------------------
+  Beach Staff          avg=0.5/slot, max=2, slots=6/14, need=1 staff [OK]
+  Tower Director       avg=0.1/slot, max=1, slots=2/14, need=1 staff [OK]
+  Rifle Director       avg=0.1/slot, max=1, slots=2/14, need=1 staff [OK]
+  ODS Director         avg=0.2/slot, max=1, slots=3/14, need=1 staff [OK]
+
+  ALL-STAFF DISTRIBUTION SCORE:
+    Total staff-requiring activities: 14
+    Average per slot: 1.0, Peak: 2, Empty slots: 5
+    Variance: 0.56
+    Distribution Score: 84/100 [OK]
+
+COMMISSIONER LOAD BALANCE
+----------------------------------------------------------------------
+  Commissioner A  1 troops, 3 days worked, 1/1 Reflections [OK]
+  Commissioner B  1 troops, 3 days worked, 1/1 Reflections [OK]
+  Commissioner C  1 troops, 3 days worked, 1/1 Reflections [OK]
+
+======================================================================
+Total Activities Scheduled: 42
+======================================================================

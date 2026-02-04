@@ -1,0 +1,1222 @@
+{
+  "troops": [
+    {
+      "name": "Tecumseh",
+      "scouts": 22,
+      "adults": 4,
+      "campsite": "Tecumseh",
+      "commissioner": "Commissioner A",
+      "preferences": [
+        "Archery",
+        "Ultimate Survivor",
+        "Chopped!",
+        "Shower House",
+        "Gaga Ball",
+        "Aqua Trampoline",
+        "9 Square",
+        "Water Polo",
+        "Troop Shotgun",
+        "Troop Canoe",
+        "Sailing",
+        "Trading Post",
+        "Climbing Tower",
+        "Troop Rifle",
+        "Dr. DNA",
+        "Greased Watermelon",
+        "Disc Golf"
+      ],
+      "day_requests": {}
+    },
+    {
+      "name": "Taskalusa",
+      "scouts": 12,
+      "adults": 4,
+      "campsite": "Taskalusa",
+      "commissioner": "Commissioner C",
+      "preferences": [
+        "Trading Post",
+        "Greased Watermelon",
+        "Water Polo",
+        "Aqua Trampoline",
+        "Troop Swim",
+        "Ultimate Survivor",
+        "Campsite Free Time",
+        "Gaga Ball",
+        "Climbing Tower",
+        "Sauna",
+        "Canoe Snorkel",
+        "What's Cooking",
+        "Archery",
+        "Shower House",
+        "Delta",
+        "9 Square",
+        "Chopped!",
+        "Dr. DNA",
+        "Loon Lore",
+        "Orienteering"
+      ],
+      "day_requests": {}
+    },
+    {
+      "name": "Tamanend",
+      "scouts": 23,
+      "adults": 3,
+      "campsite": "Tamanend",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Aqua Trampoline",
+        "Archery",
+        "History Center",
+        "Itasca State Park",
+        "Troop Canoe",
+        "Tamarac Wildlife Refuge",
+        "Float for Floats",
+        "9 Square",
+        "Fishing",
+        "Canoe Snorkel",
+        "Troop Shotgun",
+        "Ultimate Survivor",
+        "Orienteering",
+        "Troop Swim",
+        "Campsite Free Time",
+        "Tie Dye",
+        "GPS & Geocaching",
+        "Disc Golf"
+      ],
+      "day_requests": {}
+    },
+    {
+      "name": "Sequoyah",
+      "scouts": 5,
+      "adults": 2,
+      "campsite": "Sequoyah",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Aqua Trampoline",
+        "9 Square",
+        "Climbing Tower",
+        "GPS & Geocaching",
+        "Sailing",
+        "Tie Dye",
+        "Archery",
+        "Campsite Free Time"
+      ],
+      "day_requests": {}
+    },
+    {
+      "name": "Samoset",
+      "scouts": 18,
+      "adults": 3,
+      "campsite": "Samoset",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Delta",
+        "Archery",
+        "Aqua Trampoline",
+        "Troop Rifle",
+        "Climbing Tower",
+        "Sailing",
+        "Canoe Snorkel",
+        "Gaga Ball",
+        "History Center",
+        "9 Square",
+        "Woggle Neckerchief Slide",
+        "Monkey's Fist",
+        "Hemp Craft",
+        "Dr. DNA",
+        "Orienteering",
+        "Trading Post"
+      ],
+      "day_requests": {}
+    },
+    {
+      "name": "Red Cloud",
+      "scouts": 13,
+      "adults": 2,
+      "campsite": "Red Cloud",
+      "commissioner": "Commissioner A",
+      "preferences": [
+        "Climbing Tower",
+        "Archery",
+        "Aqua Trampoline",
+        "Sailing",
+        "Ultimate Survivor",
+        "Troop Shotgun",
+        "Canoe Snorkel",
+        "History Center",
+        "9 Square",
+        "Delta",
+        "Fishing",
+        "Gaga Ball",
+        "Greased Watermelon",
+        "Knots and Lashings",
+        "Shower House",
+        "Troop Swim",
+        "Troop Canoe",
+        "Back of the Moon"
+      ],
+      "day_requests": {}
+    },
+    {
+      "name": "Powhatan",
+      "scouts": 11,
+      "adults": 3,
+      "campsite": "Powhatan",
+      "commissioner": "Commissioner C",
+      "preferences": [
+        "Greased Watermelon",
+        "Water Polo",
+        "Aqua Trampoline",
+        "Sailing",
+        "Troop Shotgun",
+        "Archery",
+        "Climbing Tower",
+        "Gaga Ball",
+        "Delta",
+        "9 Square",
+        "Orienteering",
+        "GPS & Geocaching",
+        "Canoe Snorkel",
+        "Ultimate Survivor",
+        "Troop Canoe",
+        "Float for Floats",
+        "Dr. DNA",
+        "Tamarac Wildlife Refuge",
+        "Back of the Moon"
+      ],
+      "day_requests": {}
+    },
+    {
+      "name": "Pontiac",
+      "scouts": 8,
+      "adults": 1,
+      "campsite": "Pontiac",
+      "commissioner": "Commissioner C",
+      "preferences": [
+        "Sailing",
+        "Greased Watermelon",
+        "Water Polo",
+        "Aqua Trampoline",
+        "Troop Canoe",
+        "Gaga Ball",
+        "Climbing Tower",
+        "Ultimate Survivor",
+        "Delta",
+        "9 Square",
+        "Troop Swim",
+        "Canoe Snorkel",
+        "What's Cooking",
+        "Campsite Free Time",
+        "Archery"
+      ],
+      "day_requests": {}
+    },
+    {
+      "name": "Black Hawk",
+      "scouts": 17,
+      "adults": 1,
+      "campsite": "Black Hawk",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Aqua Trampoline",
+        "Archery",
+        "Troop Canoe",
+        "Climbing Tower",
+        "Delta",
+        "Gaga Ball",
+        "Hemp Craft",
+        "Monkey's Fist",
+        "Shower House",
+        "Sailing",
+        "Troop Shotgun",
+        "Tie Dye",
+        "Float for Floats",
+        "Trading Post",
+        "What's Cooking"
+      ],
+      "day_requests": {}
+    }
+  ],
+  "entries": [
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Orienteering",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Archery",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Ultimate Survivor",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Chopped!",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Shower House",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Gaga Ball",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Trading Post",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Greased Watermelon",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Water Polo",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Aqua Trampoline",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Troop Swim",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Troop Canoe",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Troop Canoe",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Archery",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Ultimate Survivor",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Dr. DNA",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Dr. DNA",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Greased Watermelon",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Water Polo",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Troop Shotgun",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Sailing",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Sailing",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Sailing",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Sailing",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Archery",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "History Center",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Troop Canoe",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Tie Dye",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "9 Square",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Sequoyah",
+      "activity_name": "GPS & Geocaching",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Orienteering",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Delta",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Archery",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Troop Rifle",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "What's Cooking",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Greased Watermelon",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Water Polo",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Troop Canoe",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "What's Cooking",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Archery",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Troop Canoe",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Delta",
+      "day": "TUESDAY",
+      "slot": 1
+    }
+  ],
+  "unscheduled": {
+    "Tecumseh": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Aqua Trampoline",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "9 Square",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Water Polo",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "Troop Shotgun",
+          "rank": 9,
+          "is_exempt": false
+        },
+        {
+          "name": "Troop Canoe",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    },
+    "Taskalusa": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Ultimate Survivor",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Campsite Free Time",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Gaga Ball",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "Climbing Tower",
+          "rank": 9,
+          "is_exempt": false
+        },
+        {
+          "name": "Sauna",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    },
+    "Tamanend": {
+      "top5": [
+        {
+          "name": "Itasca State Park",
+          "rank": 4,
+          "is_exempt": false
+        }
+      ],
+      "top10": [
+        {
+          "name": "Tamarac Wildlife Refuge",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Float for Floats",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "9 Square",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "Fishing",
+          "rank": 9,
+          "is_exempt": false
+        },
+        {
+          "name": "Canoe Snorkel",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    },
+    "Sequoyah": {
+      "top5": [
+        {
+          "name": "Sailing",
+          "rank": 5,
+          "is_exempt": false
+        }
+      ],
+      "top10": [
+        {
+          "name": "Archery",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Campsite Free Time",
+          "rank": 8,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    },
+    "Samoset": {
+      "top5": [
+        {
+          "name": "Climbing Tower",
+          "rank": 5,
+          "is_exempt": false
+        }
+      ],
+      "top10": [
+        {
+          "name": "Sailing",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Canoe Snorkel",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Gaga Ball",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "History Center",
+          "rank": 9,
+          "is_exempt": false
+        },
+        {
+          "name": "9 Square",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    },
+    "Red Cloud": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Troop Shotgun",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Canoe Snorkel",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "History Center",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "9 Square",
+          "rank": 9,
+          "is_exempt": false
+        },
+        {
+          "name": "Delta",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    },
+    "Powhatan": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Archery",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Climbing Tower",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Gaga Ball",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "Delta",
+          "rank": 9,
+          "is_exempt": false
+        },
+        {
+          "name": "9 Square",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    },
+    "Pontiac": {
+      "top5": [
+        {
+          "name": "Sailing",
+          "rank": 1,
+          "is_exempt": false
+        }
+      ],
+      "top10": [
+        {
+          "name": "Gaga Ball",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Climbing Tower",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Ultimate Survivor",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "Delta",
+          "rank": 9,
+          "is_exempt": false
+        },
+        {
+          "name": "9 Square",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    },
+    "Black Hawk": {
+      "top5": [
+        {
+          "name": "Climbing Tower",
+          "rank": 4,
+          "is_exempt": false
+        }
+      ],
+      "top10": [
+        {
+          "name": "Gaga Ball",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Hemp Craft",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Monkey's Fist",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "Shower House",
+          "rank": 9,
+          "is_exempt": false
+        },
+        {
+          "name": "Sailing",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ],
+      "has_reflection": false
+    }
+  }
+}

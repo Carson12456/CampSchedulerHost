@@ -1,0 +1,154 @@
+Troop,Day,Slot,Activity,Duration,Priority,Scouts,Adults
+Black Hawk,Friday,1,Reflection,1,999,15,1
+Black Hawk,Friday,2,Archery,1,4,15,1
+Black Hawk,Friday,3,Troop Swim,1,999,15,1
+Black Hawk,Monday,1,Troop Canoe,1,5,15,1
+Black Hawk,Monday,2,Dr. DNA,1,999,15,1
+Black Hawk,Monday,3,Super Troop,1,999,15,1
+Black Hawk,Thursday,1,Campsite Free Time,1,999,15,1
+Black Hawk,Thursday,2,Climbing Tower,1,3,15,1
+Black Hawk,Tuesday,1,Aqua Trampoline,1,1,15,1
+Black Hawk,Tuesday,2,Shower House,1,0,15,1
+Black Hawk,Tuesday,3,Gaga Ball,1,8,15,1
+Black Hawk,Wednesday,1,Fishing,1,999,15,1
+Black Hawk,Wednesday,2,9 Square,1,6,15,1
+Black Hawk,Wednesday,3,Itasca State Park,3,2,15,1
+Cochise,Friday,1,Dr. DNA,1,999,8,3
+Cochise,Friday,2,Monkey's Fist,1,9,8,3
+Cochise,Friday,3,Reflection,1,999,8,3
+Cochise,Monday,1,Greased Watermelon,1,6,8,3
+Cochise,Monday,2,Super Troop,1,999,8,3
+Cochise,Monday,3,Fishing,1,999,8,3
+Cochise,Thursday,1,Troop Canoe,1,4,8,3
+Cochise,Thursday,2,Aqua Trampoline,1,0,8,3
+Cochise,Tuesday,1,Troop Shotgun,1,2,8,3
+Cochise,Tuesday,2,Gaga Ball,1,8,8,3
+Cochise,Tuesday,3,Climbing Tower,1,5,8,3
+Cochise,Wednesday,1,Troop Rifle,1,999,8,3
+Cochise,Wednesday,2,Archery,1,3,8,3
+Cochise,Wednesday,3,Troop Swim,1,1,8,3
+Joseph,Friday,1,9 Square,1,5,22,1
+Joseph,Friday,2,Knots and Lashings,1,8,22,1
+Joseph,Friday,3,Reflection,1,999,22,1
+Joseph,Monday,1,Sailing,1.5,3,22,1
+Joseph,Monday,3,Campsite Free Time,1,6,22,1
+Joseph,Thursday,1,Campsite Free Time,1,6,22,1
+Joseph,Thursday,2,Archery,1,7,22,1
+Joseph,Tuesday,1,Delta,1,9,22,1
+Joseph,Tuesday,2,Super Troop,1,999,22,1
+Joseph,Tuesday,3,Greased Watermelon,1,1,22,1
+Joseph,Wednesday,1,Sauna,1,4,22,1
+Joseph,Wednesday,2,Gaga Ball,1,2,22,1
+Joseph,Wednesday,3,Aqua Trampoline,1,0,22,1
+Massasoit,Friday,1,Reflection,1,999,21,3
+Massasoit,Friday,2,Trading Post,1,999,21,3
+Massasoit,Friday,3,9 Square,1,3,21,3
+Massasoit,Friday,3,Climbing Tower,1,5,21,3
+Massasoit,Monday,1,Aqua Trampoline,1,9,21,3
+Massasoit,Monday,2,Hemp Craft,1,999,21,3
+Massasoit,Monday,3,Troop Canoe,1,6,21,3
+Massasoit,Thursday,1,Gaga Ball,1,4,21,3
+Massasoit,Thursday,2,Super Troop,1,999,21,3
+Massasoit,Tuesday,1,History Center,1,1,21,3
+Massasoit,Tuesday,2,Disc Golf,1,8,21,3
+Massasoit,Tuesday,3,Delta,1,0,21,3
+Massasoit,Wednesday,1,Greased Watermelon,1,999,21,3
+Massasoit,Wednesday,2,Troop Rifle,1,999,21,3
+Massasoit,Wednesday,3,Shower House,1,2,21,3
+Powhatan,Friday,1,Reflection,1,999,17,4
+Powhatan,Friday,2,Super Troop,1,999,17,4
+Powhatan,Friday,3,Greased Watermelon,1,4,17,4
+Powhatan,Monday,1,Gaga Ball,1,2,17,4
+Powhatan,Monday,2,Archery,1,1,17,4
+Powhatan,Monday,3,Aqua Trampoline,1,0,17,4
+Powhatan,Thursday,1,9 Square,1,3,17,4
+Powhatan,Thursday,2,Campsite Free Time,1,11,17,4
+Powhatan,Tuesday,1,Fishing,1,999,17,4
+Powhatan,Tuesday,2,Troop Rifle,1,12,17,4
+Powhatan,Tuesday,3,Hemp Craft,1,999,17,4
+Powhatan,Wednesday,1,Sailing,1.5,6,17,4
+Powhatan,Wednesday,3,Chopped!,1,7,17,4
+Red Cloud,Friday,1,Greased Watermelon,1,1,7,4
+Red Cloud,Friday,2,Reflection,1,999,7,4
+Red Cloud,Friday,3,Gaga Ball,1,5,7,4
+Red Cloud,Monday,1,Hemp Craft,1,999,7,4
+Red Cloud,Monday,2,Climbing Tower,1,2,7,4
+Red Cloud,Monday,3,Knots and Lashings,1,12,7,4
+Red Cloud,Thursday,1,Troop Swim,1,4,7,4
+Red Cloud,Thursday,2,Shower House,1,8,7,4
+Red Cloud,Tuesday,1,Sailing,1.5,3,7,4
+Red Cloud,Tuesday,3,Campsite Free Time,1,10,7,4
+Red Cloud,Wednesday,1,Aqua Trampoline,1,0,7,4
+Red Cloud,Wednesday,2,Super Troop,1,999,7,4
+Red Cloud,Wednesday,3,9 Square,1,9,7,4
+Roman Nose,Friday,1,Super Troop,1,999,10,4
+Roman Nose,Friday,2,Reflection,1,999,10,4
+Roman Nose,Friday,3,Aqua Trampoline,1,0,10,4
+Roman Nose,Monday,1,Archery,1,9,10,4
+Roman Nose,Monday,2,Fishing,1,11,10,4
+Roman Nose,Monday,3,Water Polo,1,7,10,4
+Roman Nose,Thursday,1,Greased Watermelon,1,1,10,4
+Roman Nose,Thursday,2,Delta,1,3,10,4
+Roman Nose,Tuesday,1,Gaga Ball,1,4,10,4
+Roman Nose,Tuesday,2,Climbing Tower,1,5,10,4
+Roman Nose,Tuesday,3,Chopped!,1,13,10,4
+Roman Nose,Wednesday,1,9 Square,1,2,10,4
+Roman Nose,Wednesday,2,Sauna,1,12,10,4
+Roman Nose,Wednesday,3,Troop Rifle,1,8,10,4
+Samoset,Friday,1,Reflection,1,999,8,2
+Samoset,Friday,2,Gaga Ball,1,4,8,2
+Samoset,Friday,3,Fishing,1,999,8,2
+Samoset,Monday,1,9 Square,1,3,8,2
+Samoset,Monday,2,Ultimate Survivor,1,0,8,2
+Samoset,Monday,3,Monkey's Fist,1,16,8,2
+Samoset,Thursday,1,Archery,1,2,8,2
+Samoset,Thursday,2,Troop Canoe,1,6,8,2
+Samoset,Tuesday,1,Dr. DNA,1,999,8,2
+Samoset,Tuesday,2,Campsite Free Time,1,999,8,2
+Samoset,Tuesday,3,Canoe Snorkel,2,1,8,2
+Samoset,Tuesday,3,Shower House,1,7,8,2
+Samoset,Wednesday,1,Super Troop,1,999,8,2
+Samoset,Wednesday,2,Trading Post,1,10,8,2
+Samoset,Wednesday,3,Water Polo,1,5,8,2
+Tamanend,Friday,1,Troop Swim,1,999,7,1
+Tamanend,Friday,2,Dr. DNA,1,999,7,1
+Tamanend,Friday,3,Reflection,1,999,7,1
+Tamanend,Monday,1,Super Troop,1,999,7,1
+Tamanend,Monday,2,9 Square,1,6,7,1
+Tamanend,Monday,3,Climbing Tower,1,3,7,1
+Tamanend,Thursday,1,Fishing,1,999,7,1
+Tamanend,Thursday,2,Canoe Snorkel,2,1,7,1
+Tamanend,Tuesday,1,Chopped!,1,7,7,1
+Tamanend,Tuesday,2,Archery,1,4,7,1
+Tamanend,Tuesday,3,Aqua Trampoline,1,0,7,1
+Tamanend,Wednesday,1,Gaga Ball,1,8,7,1
+Tamanend,Wednesday,2,Campsite Free Time,1,11,7,1
+Tamanend,Wednesday,3,Delta,1,2,7,1
+Taskalusa,Friday,1,Aqua Trampoline,1,2,9,4
+Taskalusa,Friday,2,Reflection,1,999,9,4
+Taskalusa,Friday,3,History Center,1,11,9,4
+Taskalusa,Monday,1,GPS & Geocaching,1,12,9,4
+Taskalusa,Monday,2,Gaga Ball,1,4,9,4
+Taskalusa,Monday,3,Greased Watermelon,1,3,9,4
+Taskalusa,Thursday,1,Campsite Free Time,1,1,9,4
+Taskalusa,Thursday,2,Loon Lore,1,8,9,4
+Taskalusa,Tuesday,1,Disc Golf,1,10,9,4
+Taskalusa,Tuesday,2,Fishing,1,5,9,4
+Taskalusa,Tuesday,3,Super Troop,1,999,9,4
+Taskalusa,Wednesday,1,Chopped!,1,0,9,4
+Taskalusa,Wednesday,2,Shower House,1,9,9,4
+Taskalusa,Wednesday,3,Trading Post,1,999,9,4
+Tecumseh,Friday,1,Reflection,1,999,14,4
+Tecumseh,Friday,2,Fishing,1,999,14,4
+Tecumseh,Friday,3,Aqua Trampoline,1,3,14,4
+Tecumseh,Monday,1,Climbing Tower,1,0,14,4
+Tecumseh,Monday,2,Troop Rifle,1,7,14,4
+Tecumseh,Monday,3,Gaga Ball,1,6,14,4
+Tecumseh,Thursday,1,Shower House,1,10,14,4
+Tecumseh,Thursday,2,9 Square,1,4,14,4
+Tecumseh,Tuesday,1,Archery,1,1,14,4
+Tecumseh,Tuesday,2,History Center,1,9,14,4
+Tecumseh,Tuesday,3,Campsite Free Time,1,12,14,4
+Tecumseh,Wednesday,1,Trading Post,1,8,14,4
+Tecumseh,Wednesday,2,Delta,1,5,14,4
+Tecumseh,Wednesday,3,Super Troop,1,999,14,4

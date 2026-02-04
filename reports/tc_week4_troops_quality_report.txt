@@ -1,0 +1,91 @@
+======================================================================
+SCHEDULE QUALITY REPORT: tc_week4_troops.json
+======================================================================
+
+PREFERENCE SATISFACTION
+----------------------------------------------------------------------
+  Top 5      (Raw)      90.9% ( 50/ 55) [OK]
+  Top 10     (Raw)      87.3% ( 96/110) [OK]
+  Top 5      (Adj)     100.0% ( 50/ 50) [OK]
+  Top 10     (Adj)      95.0% ( 96/101) [OK]
+  Weighted Score        89.9% (544/605) [OK]
+
+  [NOTE] Capacity-Constrained Activities (excluded from adjusted %):
+    Sailing: 9 troops excluded (demand=7, scheduled=5)
+    History Center: 1 troops excluded (demand=1, scheduled=0)
+    Troop Swim: 1 troops excluded (demand=3, scheduled=2)
+
+  Missing Top 5 Activities (Adjusted):
+    Tamanend: Canoe Snorkel (#2)
+
+  Missing Top 6-10 Activities (Adjusted):
+    Black Hawk: Water Polo (#7)
+    Black Hawk: Disc Golf (#8)
+    Taskalusa: Canoe Snorkel (#9)
+    Powhatan: Greased Watermelon (#10)
+    Samoset: Canoe Snorkel (#10)
+
+CONSTRAINT COMPLIANCE
+----------------------------------------------------------------------
+  Beach Slot Rule:     [OK] All compliant
+  Rifle+Shotgun Day:   [OK] All compliant
+  Accuracy Limit:      [WARN] 1 violations
+  Friday Reflection:   [FAIL] 5 missing
+
+SCHEDULE GAPS (Empty Slots)
+----------------------------------------------------------------------
+  [OK] No gaps - all troops have complete schedules
+
+WET/DRY CONSTRAINT VIOLATIONS
+----------------------------------------------------------------------
+  Wet -> Tower/ODS:    0 violations
+  Tower/ODS -> Wet:    0 violations
+  2+ Major Wet/Day:    0 violations
+  Wet-Dry-Wet Pattern: 0 violations
+  TOTAL:               0 violations [OK]
+
+DELTA WALKING CONSTRAINT
+----------------------------------------------------------------------
+  Total violations: 1 [WARN]
+    Black Hawk: Delta -> Ultimate Survivor (Fri-2)
+
+DRY DAYS TRACKING (excl. Thursday)
+----------------------------------------------------------------------
+  Average dry days per troop: 1.5
+  Troops with 2+ dry days (6):
+    Samoset: 3 dry days
+    Tecumseh: 2 dry days
+    Tamanend: 2 dry days
+    Powhatan: 2 dry days
+    Pontiac: 2 dry days
+    Joseph: 2 dry days
+
+STAFF CLUSTERING EFFICIENCY
+----------------------------------------------------------------------
+  Tower                4 days (min: 3, excess: 1, gaps: 1) [INFO]
+  Rifle Range          4 days (min: 4, excess: 0, gaps: 1) [INFO]
+  Outdoor Skills       5 days (min: 4, excess: 1, gaps: 0) [INFO]
+  Handicrafts          5 days (min: 3, excess: 2, gaps: 0) [INFO]
+
+STAFF WORKLOAD DISTRIBUTION (Exponential)
+----------------------------------------------------------------------
+  Beach Staff          avg=2.4/slot, max=4, slots=12/14, need=3 staff [WARN]
+  Tower Director       avg=0.6/slot, max=1, slots=8/14, need=1 staff [OK]
+  Rifle Director       avg=0.7/slot, max=1, slots=10/14, need=1 staff [OK]
+  ODS Director         avg=0.7/slot, max=1, slots=10/14, need=1 staff [OK]
+
+  ALL-STAFF DISTRIBUTION SCORE:
+    Total staff-requiring activities: 62
+    Average per slot: 4.4, Peak: 6, Empty slots: 0
+    Variance: 1.96
+    Distribution Score: 80/100 [OK]
+
+COMMISSIONER LOAD BALANCE
+----------------------------------------------------------------------
+  Commissioner A  4 troops, 4 days worked, 2/3 Reflections [WARN]
+  Commissioner B  2 troops, 4 days worked, 1/2 Reflections [WARN]
+  Commissioner C  5 troops, 4 days worked, 3/3 Reflections [OK]
+
+======================================================================
+Total Activities Scheduled: 148
+======================================================================

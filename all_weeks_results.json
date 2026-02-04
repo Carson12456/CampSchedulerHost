@@ -1,0 +1,482 @@
+{
+  "timestamp": "2026-02-02T12:14:40.578537",
+  "total_weeks": 8,
+  "total_troops": 65,
+  "overall_metrics": {
+    "top5_satisfaction": 106.46153846153845,
+    "reflection_compliance": 30.76923076923077,
+    "total_violations": 40
+  },
+  "weekly_results": [
+    {
+      "week": 1,
+      "troops": 6,
+      "stats": {
+        "total_entries": 84,
+        "troops": {
+          "Tamanend": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": true
+          },
+          "Sequoyah": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 11,
+            "has_reflection": false
+          },
+          "Samoset": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Red Cloud": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 11,
+            "has_reflection": false
+          },
+          "Massasoit": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 11,
+            "has_reflection": true
+          },
+          "Black Hawk": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": true
+          }
+        }
+      },
+      "violations": 5
+    },
+    {
+      "week": 2,
+      "troops": 3,
+      "stats": {
+        "total_entries": 42,
+        "troops": {
+          "Taskalusa": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 12,
+            "has_reflection": true
+          },
+          "Massasoit": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 9,
+            "has_reflection": true
+          },
+          "Black Hawk": {
+            "total_scheduled": 14,
+            "top5_achieved": 7,
+            "top10_achieved": 12,
+            "has_reflection": true
+          }
+        }
+      },
+      "violations": 5
+    },
+    {
+      "week": 3,
+      "troops": 9,
+      "stats": {
+        "total_entries": 125,
+        "troops": {
+          "Tecumseh": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": true
+          },
+          "Taskalusa": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": true
+          },
+          "Tamanend": {
+            "total_scheduled": 14,
+            "top5_achieved": 7,
+            "top10_achieved": 8,
+            "has_reflection": true
+          },
+          "Sequoyah": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Samoset": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 11,
+            "has_reflection": false
+          },
+          "Red Cloud": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 11,
+            "has_reflection": false
+          },
+          "Powhatan": {
+            "total_scheduled": 14,
+            "top5_achieved": 4,
+            "top10_achieved": 8,
+            "has_reflection": false
+          },
+          "Pontiac": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Black Hawk": {
+            "total_scheduled": 13,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": false
+          }
+        }
+      },
+      "violations": 5
+    },
+    {
+      "week": 4,
+      "troops": 11,
+      "stats": {
+        "total_entries": 150,
+        "troops": {
+          "Tecumseh": {
+            "total_scheduled": 14,
+            "top5_achieved": 7,
+            "top10_achieved": 12,
+            "has_reflection": false
+          },
+          "Taskalusa": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 9,
+            "has_reflection": true
+          },
+          "Tamanend": {
+            "total_scheduled": 13,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Skenandoa": {
+            "total_scheduled": 13,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Samoset": {
+            "total_scheduled": 14,
+            "top5_achieved": 7,
+            "top10_achieved": 11,
+            "has_reflection": false
+          },
+          "Powhatan": {
+            "total_scheduled": 13,
+            "top5_achieved": 3,
+            "top10_achieved": 7,
+            "has_reflection": false
+          },
+          "Pontiac": {
+            "total_scheduled": 13,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Massasoit": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": true
+          },
+          "Joseph": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Cochise": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Black Hawk": {
+            "total_scheduled": 14,
+            "top5_achieved": 4,
+            "top10_achieved": 8,
+            "has_reflection": false
+          }
+        }
+      },
+      "violations": 5
+    },
+    {
+      "week": 5,
+      "troops": 11,
+      "stats": {
+        "total_entries": 151,
+        "troops": {
+          "Tecumseh": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 8,
+            "has_reflection": false
+          },
+          "Taskalusa": {
+            "total_scheduled": 13,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Tamanend": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 8,
+            "has_reflection": false
+          },
+          "Skenandoa": {
+            "total_scheduled": 14,
+            "top5_achieved": 8,
+            "top10_achieved": 12,
+            "has_reflection": false
+          },
+          "Sequoyah": {
+            "total_scheduled": 13,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Samoset": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Red Cloud": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Pontiac": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 8,
+            "has_reflection": false
+          },
+          "Massasoit": {
+            "total_scheduled": 13,
+            "top5_achieved": 4,
+            "top10_achieved": 8,
+            "has_reflection": true
+          },
+          "Joseph": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Black Hawk": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          }
+        }
+      },
+      "violations": 5
+    },
+    {
+      "week": 6,
+      "troops": 10,
+      "stats": {
+        "total_entries": 139,
+        "troops": {
+          "Tecumseh": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 8,
+            "has_reflection": false
+          },
+          "Taskalusa": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 11,
+            "has_reflection": true
+          },
+          "Tamanend": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 11,
+            "has_reflection": false
+          },
+          "Samoset": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 11,
+            "has_reflection": false
+          },
+          "Red Cloud": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Powhatan": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Massasoit": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 10,
+            "has_reflection": true
+          },
+          "Joseph": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 7,
+            "has_reflection": true
+          },
+          "Cochise": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Black Hawk": {
+            "total_scheduled": 13,
+            "top5_achieved": 3,
+            "top10_achieved": 9,
+            "has_reflection": false
+          }
+        }
+      },
+      "violations": 5
+    },
+    {
+      "week": 7,
+      "troops": 11,
+      "stats": {
+        "total_entries": 153,
+        "troops": {
+          "Taskalusa": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": true
+          },
+          "Tamanend": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Samoset": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Roman Nose": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Red Cloud": {
+            "total_scheduled": 14,
+            "top5_achieved": 4,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Powhatan": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 11,
+            "has_reflection": false
+          },
+          "Massasoit": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": true
+          },
+          "Joseph": {
+            "total_scheduled": 14,
+            "top5_achieved": 6,
+            "top10_achieved": 11,
+            "has_reflection": true
+          },
+          "Cochise": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Black Hawk": {
+            "total_scheduled": 13,
+            "top5_achieved": 7,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Tecumseh": {
+            "total_scheduled": 14,
+            "top5_achieved": 7,
+            "top10_achieved": 12,
+            "has_reflection": false
+          }
+        }
+      },
+      "violations": 5
+    },
+    {
+      "week": 8,
+      "troops": 4,
+      "stats": {
+        "total_entries": 56,
+        "troops": {
+          "Tecumseh": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": true
+          },
+          "Taskalusa": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 9,
+            "has_reflection": false
+          },
+          "Samoset": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": false
+          },
+          "Black Hawk": {
+            "total_scheduled": 14,
+            "top5_achieved": 5,
+            "top10_achieved": 10,
+            "has_reflection": true
+          }
+        }
+      },
+      "violations": 5
+    }
+  ]
+}

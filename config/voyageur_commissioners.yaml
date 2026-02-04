@@ -1,0 +1,20 @@
+troops:
+  Voyageur A: []
+  Voyageur B: []
+  Voyageur C: []
+delta_days:
+  Voyageur A: Monday
+  Voyageur B: Wednesday
+  Voyageur C: Friday
+super_troop_days:
+  Voyageur A: Monday
+  Voyageur B: Wednesday
+  Voyageur C: Friday
+archery_days:
+  Voyageur A: Monday
+  Voyageur B: Wednesday
+  Voyageur C: Friday
+tower_ods_days:
+  Voyageur A: Tuesday
+  Voyageur B: Thursday
+  Voyageur C: Monday

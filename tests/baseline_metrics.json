@@ -1,0 +1,16 @@
+{
+  "created_date": "2026-02-02",
+  "version": "1.0",
+  "metrics": {
+    "average_season_score": 730.7,
+    "top5_satisfaction_target": 90.0,
+    "multislot_success_target": 100.0,
+    "schedule_empty_slots_target": 0,
+    "schedule_validity_target": 100.0,
+    "staff_efficiency_baseline": 55.8,
+    "clustering_quality_baseline": 59.3,
+    "max_allowed_violations": 6,
+    "min_success_rate": 30.0
+  },
+  "notes": "Initial baseline established for regression testing"
+}

@@ -1,0 +1,189 @@
+{
+    "troops": [
+        {
+            "name": "Quetico",
+            "campsite": "Quetico",
+            "commissioner": "Voyageur A",
+            "scouts": 25,
+            "adults": 6,
+            "preferences": [
+                "Aqua Trampoline",
+                "9 Square",
+                "Greased Watermelon",
+                "Sauna",
+                "Water Polo",
+                "Climbing Tower",
+                "Troop Shotgun",
+                "Shower House",
+                "Archery",
+                "Monkey's Fist",
+                "Canoe Snorkel",
+                "Float for Floats",
+                "Itasca State Park",
+                "Back of the Moon"
+            ]
+        },
+        {
+            "name": "Two Harbors",
+            "campsite": "Two Harbors",
+            "commissioner": "Voyageur A",
+            "scouts": 9,
+            "adults": 4,
+            "preferences": [
+                "Delta",
+                "Greased Watermelon",
+                "Aqua Trampoline",
+                "Canoe Snorkel",
+                "Gaga Ball",
+                "Water Polo",
+                "Troop Rifle",
+                "9 Square",
+                "Chopped!",
+                "Float for Floats",
+                "Archery",
+                "Troop Shotgun",
+                "Sailing",
+                "Climbing Tower",
+                "Sauna",
+                "Fishing"
+            ]
+        },
+        {
+            "name": "Hibbing 1",
+            "campsite": "Hibbing 1",
+            "commissioner": "Voyageur B",
+            "scouts": 22,
+            "adults": 12,
+            "preferences": [
+                "Greased Watermelon",
+                "Sailing",
+                "Aqua Trampoline",
+                "Climbing Tower",
+                "Troop Shotgun",
+                "Chopped!",
+                "Campsite Free Time",
+                "Shower House",
+                "Float for Floats",
+                "Water Polo",
+                "9 Square",
+                "What's Cooking",
+                "Troop Rifle",
+                "Canoe Snorkel",
+                "Gaga Ball"
+            ]
+        },
+        {
+            "name": "Hibbing 2",
+            "campsite": "Hibbing 2",
+            "commissioner": "Voyageur B",
+            "scouts": 10,
+            "adults": 3,
+            "preferences": [
+                "Aqua Trampoline",
+                "Climbing Tower",
+                "Chopped!",
+                "Sailing",
+                "Tie Dye",
+                "Canoe Snorkel",
+                "Archery",
+                "Float for Floats",
+                "Shower House",
+                "Hemp Craft",
+                "Back of the Moon",
+                "Water Polo",
+                "9 Square",
+                "Ultimate Survivor",
+                "Itasca State Park"
+            ]
+        },
+        {
+            "name": "Ft. Francis",
+            "campsite": "Ft. Francis",
+            "commissioner": "Voyageur C",
+            "scouts": 38,
+            "adults": 20,
+            "preferences": [
+                "Aqua Trampoline",
+                "Greased Watermelon",
+                "9 Square",
+                "Water Polo",
+                "Gaga Ball",
+                "Float for Floats",
+                "Campsite Free Time",
+                "Archery",
+                "Climbing Tower",
+                "Shower House",
+                "Trading Post",
+                "Sailing",
+                "Troop Canoe",
+                "Canoe Snorkel",
+                "Disc Golf",
+                "History Center",
+                "What's Cooking"
+            ]
+        },
+        {
+            "name": "Ft. William",
+            "campsite": "Ft. William",
+            "commissioner": "Voyageur C",
+            "scouts": 16,
+            "adults": 2,
+            "preferences": [
+                "Greased Watermelon",
+                "Aqua Trampoline",
+                "Water Polo",
+                "Troop Canoe",
+                "Gaga Ball",
+                "History Center",
+                "9 Square",
+                "Archery",
+                "Canoe Snorkel",
+                "Campsite Free Time"
+            ]
+        },
+        {
+            "name": "Fond Du Lac",
+            "campsite": "Fond Du Lac",
+            "commissioner": "Voyageur A",
+            "scouts": 17,
+            "adults": 14,
+            "preferences": [
+                "Aqua Trampoline",
+                "Troop Rifle",
+                "Climbing Tower",
+                "Delta",
+                "Greased Watermelon",
+                "Archery",
+                "Sailing",
+                "Water Polo",
+                "Troop Shotgun",
+                "9 Square",
+                "Campsite Free Time",
+                "Knots and Lashings",
+                "Gaga Ball",
+                "Orienteering",
+                "Itasca State Park",
+                "Back of the Moon"
+            ]
+        },
+        {
+            "name": "Duluth",
+            "campsite": "Duluth",
+            "commissioner": "Voyageur B",
+            "scouts": 17,
+            "adults": 5,
+            "preferences": [
+                "Aqua Trampoline",
+                "Climbing Tower",
+                "Water Polo",
+                "Sailing",
+                "Gaga Ball",
+                "9 Square",
+                "Archery",
+                "Troop Rifle",
+                "Greased Watermelon",
+                "Shower House"
+            ]
+        }
+    ]
+}

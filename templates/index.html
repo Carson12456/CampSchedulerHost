@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summer Camp Scheduler - Ten Chiefs 2024</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #4a9eff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 1.2em;
+        }
+
+        .tab-section {
+            margin-bottom: 20px;
+        }
+
+        .tab-section h3 {
+            color: #4a9eff;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: #2d2d30;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .tab-button:hover {
+            background: #3d3d40;
+        }
+
+        .tab-button.active {
+            background: #4a9eff;
+        }
+
+        .schedule-container {
+            background: #2d2d30;
+            border-radius: 10px;
+            padding: 12px;
+            overflow-x: auto;
+        }
+
+        .schedule-title {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            color: #4a9eff;
+            text-align: center;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(5, 1fr);
+            gap: 1px;
+            min-width: 480px;
+            font-size: 0.6em;
+        }
+
+        .grid-header {
+            background: #3d3d40;
+            padding: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        .grid-cell {
+            background: #2d2d30;
+            padding: 6px;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            font-size: 8px;
+        }
+
+        .grid-cell.activity {
+            background: #2d5016;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .grid-cell.activity.priority-top1 {
+            background: #4a4a4a;
+            /* Grey for Top 1 (Priority 0) */
+            font-weight: 600;
+        }
+
+        .grid-cell.activity.priority-high {
+            background: #2d5016;
+            /* Vibrant green for Top 5 */
+        }
+
+        .grid-cell.activity.priority-medium {
+            background: #2a3a16;
+            /* Darker green for Top 6-10 */
+        }
+
+        .grid-cell.activity.priority-moderate {
+            background: #5c5016;
+            /* Bright yellow for Top 11-15 */
+        }
+
+        .grid-cell.activity.priority-moderate-low {
+            background: #4d4016;
+            /* Darker yellow for Top 16-20 */
+        }
+
+        .grid-cell.activity.priority-commissioner {
+            background: #1a3a5a;
+            /* Blue for commissioner activities */
+        }
+
+        .grid-cell.activity.priority-low {
+            background: #3a3a3a;
+            /* Gray for 20+ */
+        }
+
+        .grid-cell.continuation {
+            background: #1d3d0d;
+            font-style: italic;
+        }
+
+        .activity-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+            font-size: 8px;
+        }
+
+        .activity-duration {
+            font-size: 7px;
+            color: #aaa;
+        }
+
+        .continuation-arrow {
+            font-size: 10px;
+            margin-right: 2px;
+        }
+
+        .slot-label {
+            background: #3d3d40;
+            padding: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #888;
+        }
+
+        .week-selector {
+            margin-top: 15px;
+        }
+
+        .week-selector select {
+            padding: 8px 16px;
+            font-size: 16px;
+            background: #2d2d30;
+            color: #fff;
+            border: 2px solid #4a9eff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .week-selector select:hover {
+            background: #3d3d40;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>⛺ Summer Camp Scheduler</h1>
+        <p>Ten Chiefs - 2024</p>
+        <div class="week-selector">
+            <select id="weekSelect" onchange="changeWeek(this.value)">
+                {% for week_id in available_weeks %}
+                <option value="{{ week_id }}" {% if week_id==current_week %}selected{% endif %}>
+                    {{ week_data[week_id] }}
+                </option>
+                {% endfor %}
+            </select>
+            <button id="regenerateBtn" onclick="regenerateCurrentWeek()" style="margin-left: 10px; padding: 8px 16px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">🔄 Regenerate</button>
+        </div>
+        <p style="font-size: 14px; margin-top: 5px;">Week Total: <span id="weekTotal"></span></p>
+        <div id="evaluationBanner" style="margin-top: 12px; padding: 10px 16px; border-radius: 8px; display: none;"></div>
+        <div id="evaluationMetrics" style="margin-top: 8px; font-size: 13px; color: #aaa;"></div>
+    </div>
+
+    <div class="tab-section">
+        <h3>👥 Troops</h3>
+        <div class="tabs" id="troopTabs"></div>
+    </div>
+
+    <div class="tab-section">
+        <h3>🏕️ Areas</h3>
+        <div class="tabs" id="areaTabs"></div>
+    </div>
+
+    <div class="tab-section">
+        <h3>🎯 Staff Schedules</h3>
+        <div class="tabs" id="staffTabs"></div>
+    </div>
+
+
+    <div class="schedule-container">
+        <div class="schedule-title" id="scheduleTitle">Select a view</div>
+        <div id="scheduleContent" class="loading">Loading...</div>
+    </div>
+
+    <script>
+        const troops = {{ troops | tojson }};
+        const commColors = {
+            'Commissioner A': '#bd1e1e', // Red
+            'Commissioner B': '#1e4dbd', // Blue
+            'Commissioner C': '#1ebd1e', // Green
+            'Commissioner D': '#bd7b1e', // Orange/Gold
+            'Voyageur A': '#bd1e1e',
+            'Voyageur B': '#1e4dbd',
+            'Voyageur C': '#1ebd1e'
+        };
+        const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        const areas = ['Beach Board', 'Balls', 'Boats', 'Sailing', 'Handicrafts', 'Delta', 'Super Troop',
+            'Tower/Climbing', 'Rifle Range', 'Archery', 'Outdoor Skills',
+            'Off-Camp', 'Nature Center', 'Campsite', 'Reserves', 'Reflection', 'Unscheduled'];
+        const commissioners = ['Commissioner A', 'Commissioner B', 'Commissioner C'];
+
+        // Get current week from URL or use default
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentWeek = urlParams.get('week') || '{{ current_week }}';
+
+        let currentView = 'troop';
+
+        // Change week by reloading page with new week parameter
+        function changeWeek(week) {
+            window.location.href = `/?week=${week}`;
+        }
+
+        // Regenerate current week's schedule
+        async function regenerateCurrentWeek() {
+            const weekId = document.getElementById('weekSelect').value;
+            const btn = document.getElementById('regenerateBtn');
+            const originalText = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Regenerating...';
+            
+            try {
+                const response = await fetch(`/api/regenerate/${weekId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    btn.innerHTML = '✅ Regenerated!';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    alert('Error regenerating schedule: ' + (data.error || 'Unknown error'));
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                alert('Error regenerating schedule: ' + error.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Create troop tabs
+        const troopTabsContainer = document.getElementById('troopTabs');
+        let totalScouts = 0, totalAdults = 0;
+        troops.forEach(troop => {
+            const button = document.createElement('button');
+            button.className = 'tab-button';
+            button.textContent = troop.name;
+            button.onclick = () => loadTroopSchedule(troop.name);
+
+            // Apply commissioner color to button border
+            if (troop.commissioner && commColors[troop.commissioner]) {
+                button.style.borderLeft = `5px solid ${commColors[troop.commissioner]}`;
+            }
+
+            troopTabsContainer.appendChild(button);
+            totalScouts += troop.scouts;
+            totalAdults += troop.adults;
+        });
+        document.getElementById('weekTotal').textContent = `${totalScouts}/${totalAdults}`;
+
+        // Load evaluation metrics (score, violations, double-book warning, beach slot 2)
+        async function loadEvaluation() {
+            const banner = document.getElementById('evaluationBanner');
+            const metricsEl = document.getElementById('evaluationMetrics');
+            try {
+                const weekId = document.getElementById('weekSelect').value;
+                const response = await fetch(`/api/evaluation/${weekId}`);
+                const data = await response.json();
+                if (data.error) {
+                    metricsEl.textContent = 'Evaluation: ' + data.error;
+                    banner.style.display = 'none';
+                    return;
+                }
+                // Show invalid banner when exclusive double-book (e.g. two troops in Tower same slot)
+                if (data.schedule_invalid || (data.exclusive_double_book && data.exclusive_double_book > 0)) {
+                    banner.style.display = 'block';
+                    banner.style.background = '#8b0000';
+                    banner.style.color = '#fff';
+                    banner.style.border = '2px solid #ff6b6b';
+                    banner.innerHTML = '&#9888; <strong>Schedule invalid</strong> – exclusive double-book detected (e.g. two troops in same Tower slot). Regenerate this week to fix.';
+                } else if (data.beach_slot_2_uses > 0) {
+                    banner.style.display = 'block';
+                    banner.style.background = '#5c4a00';
+                    banner.style.color = '#fff';
+                    banner.style.border = '1px solid #b8860b';
+                    banner.innerHTML = `Beach in slot 2 used ${data.beach_slot_2_uses} time(s) (penalized; prefer slot 1 or 3).`;
+                } else {
+                    banner.style.display = 'none';
+                }
+                metricsEl.textContent = `Score: ${data.final_score}  |  Violations: ${data.constraint_violations}  |  Top 5: ${data.top5_pct.toFixed(1)}% (${data.missing_top5} missed)`;
+            } catch (e) {
+                metricsEl.textContent = 'Evaluation: could not load';
+                banner.style.display = 'none';
+            }
+        }
+        loadEvaluation();
+
+        // Create area tabs
+        const areaTabsContainer = document.getElementById('areaTabs');
+        areas.forEach(area => {
+            const button = document.createElement('button');
+            button.className = 'tab-button';
+            button.textContent = area;
+            button.onclick = () => loadAreaSchedule(area);
+            areaTabsContainer.appendChild(button);
+        });
+
+
+        // Create staff tabs
+        const staffMembers = [
+            'Commissioner A',
+            'Commissioner B',
+            'Commissioner C',
+            'Commissioner D',  // For when other commissioners are busy
+            'Beach Staff',
+            'Ass. Aquatics',
+            'Shooting Sports Director',
+            'Archery Director',
+            'Tower Director',
+            'Outdoor Skills Director',
+            'Nature Director',
+            'Handicrafts Director'
+        ];
+        const staffTabsContainer = document.getElementById('staffTabs');
+        staffMembers.forEach(staff => {
+            const button = document.createElement('button');
+            button.className = 'tab-button';
+            // Shorten commissioner names
+            const displayName = staff.startsWith('Commissioner') ? staff.replace('Commissioner ', 'Comm. ') : staff;
+            button.textContent = displayName;
+
+            // Color code commissioner buttons
+            if (commColors[staff]) {
+                button.style.borderBottom = `3px solid ${commColors[staff]}`;
+            }
+
+            button.onclick = () => {
+                if (staff.startsWith('Commissioner')) {
+                    loadCommissionerSchedule(staff);
+                } else {
+                    loadStaffSchedule(staff);
+                }
+            };
+            staffTabsContainer.appendChild(button);
+        });
+
+        // Add All Staff Needs button
+        const staffNeedsButton = document.createElement('button');
+        staffNeedsButton.className = 'tab-button';
+        staffNeedsButton.textContent = 'All Staff Needs';
+        staffNeedsButton.onclick = () => loadStaffRequirements();
+        staffTabsContainer.appendChild(staffNeedsButton);
+
+        function clearActiveTabs() {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
+        async function loadTroopSchedule(troopName) {
+            currentView = 'troop';
+            clearActiveTabs();
+            event.target.classList.add('active');
+
+            document.getElementById('scheduleTitle').textContent = `Troop: ${troopName}`;
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const response = await fetch(`/api/schedule/${troopName}?week=${currentWeek}`);
+                const data = await response.json();
+                document.getElementById('scheduleTitle').textContent = `Troop: ${troopName} (${data.scouts}/${data.adults})`;
+                renderTroopScheduleGrid(data);
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="loading">Error loading schedule</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadAreaSchedule(areaName) {
+            currentView = 'area';
+            clearActiveTabs();
+            event.target.classList.add('active');
+
+            document.getElementById('scheduleTitle').textContent = `Area: ${areaName}`;
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                // Special handling for Beach Board
+                if (areaName === 'Beach Board') {
+                    const response = await fetch(`/api/beach_board?week=${currentWeek}`);
+                    const data = await response.json();
+                    renderBeachBoard(data);
+                } else if (areaName === 'Balls') {
+                    const response = await fetch(`/api/balls?week=${currentWeek}`);
+                    const data = await response.json();
+                    renderBallsBoard(data);
+                } else if (areaName === 'Unscheduled') {
+                    // Redirect to unscheduled view
+                    const response = await fetch(`/api/unscheduled?week=${currentWeek}`);
+                    const data = await response.json();
+                    document.getElementById('scheduleTitle').textContent = 'Unscheduled Activities';
+                    renderUnscheduledTable(data);
+                } else {
+                    const response = await fetch(`/api/area/${encodeURIComponent(areaName)}?week=${currentWeek}`);
+                    const data = await response.json();
+                    renderAreaScheduleGrid(data, areaName);
+                }
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="loading">Error loading schedule</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadCommissionerSchedule(commissionerName) {
+            currentView = 'commissioner';
+            clearActiveTabs();
+            event.target.classList.add('active');
+
+            // Set color for the title
+            const titleEl = document.getElementById('scheduleTitle');
+            titleEl.textContent = `${commissionerName}`;
+            if (commColors[commissionerName]) {
+                titleEl.style.color = commColors[commissionerName];
+            } else {
+                titleEl.style.color = '#4a9eff';
+            }
+
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const response = await fetch(`/api/commissioner/${encodeURIComponent(commissionerName)}?week=${currentWeek}`);
+                const data = await response.json();
+                renderCommissionerScheduleGrid(data, commissionerName);
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="loading">Error loading schedule</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadReflectionSchedule() {
+            currentView = 'reflection';
+            clearActiveTabs();
+            event.target.classList.add('active');
+
+            document.getElementById('scheduleTitle').textContent = 'Friday Reflection Schedule';
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const response = await fetch(`/api/reflection?week=${currentWeek}`);
+                const data = await response.json();
+                renderReflectionScheduleGrid(data);
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="loading">Error loading schedule</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadStaffSchedule(staffName) {
+            currentView = 'staff';
+            clearActiveTabs();
+            event.target.classList.add('active');
+
+            document.getElementById('scheduleTitle').textContent = `Staff: ${staffName}`;
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const response = await fetch(`/api/staff/${encodeURIComponent(staffName)}?week=${currentWeek}`);
+                const data = await response.json();
+                renderStaffScheduleGrid(data, staffName);
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="loading">Error loading schedule</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        function renderTroopScheduleGrid(data) {
+            const scheduleData = data.schedule;
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+
+            // Header row
+            grid.innerHTML = '<div class="grid-header"></div>';
+            dayNames.forEach(day => {
+                grid.innerHTML += `<div class="grid-header">${day}</div>`;
+            });
+
+            // Slot rows
+            for (let slot = 1; slot <= 3; slot++) {
+                grid.innerHTML += `<div class="slot-label">Slot ${slot}</div>`;
+
+                days.forEach(day => {
+                    // Thursday slot 3 doesn't exist
+                    if (day === 'THURSDAY' && slot === 3) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.style.background = '#1a1a1a';
+                        cell.style.color = '#666';
+                        cell.innerHTML = '<strong style="font-size: 16px;">✕</strong><br><small>CLOSED</small>';
+                        grid.appendChild(cell);
+                        return;
+                    }
+
+                    const cellData = scheduleData[day][slot];
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+
+                    if (cellData) {
+                        if (cellData.is_continuation) {
+                            cell.classList.add('continuation');
+                            if (cellData.slots === 1.5) {
+                                cell.innerHTML = `
+                                    <span class="continuation-arrow">↳</span>
+                                    <div class="activity-name">${cellData.activity}</div>
+                                    <div class="activity-duration">(+30 min)</div>
+                                `;
+                            } else {
+                                cell.innerHTML = `
+                                    <span class="continuation-arrow">↳</span>
+                                    <div class="activity-name">${cellData.activity}</div>
+                                `;
+                            }
+                        } else {
+                            cell.classList.add('activity');
+
+                            // Color based on priority ranking
+                            // NOTE: priority is 0-indexed (Top 1 = 0, Top 5 = 4, Top 10 = 9)
+                            const priority = (cellData.priority !== undefined && cellData.priority !== null) ? cellData.priority : 999;
+                            const isCommissionerActivity = ['Delta', 'Super Troop', 'Reflection'].includes(cellData.activity);
+
+                            if (priority < 5) {  // 0-4 = Top 1-5
+                                cell.classList.add('priority-high');  // Vibrant green
+                            } else if (priority < 10) {  // 5-9 = Top 6-10
+                                cell.classList.add('priority-medium');  // Less vibrant green
+                            } else if (priority < 15) {  // 10-14 = Top 11-15
+                                cell.classList.add('priority-moderate');  // Bright yellow
+                            } else if (priority < 20) {  // 15-19 = Top 16-20
+                                cell.classList.add('priority-moderate-low');  // Darker yellow
+                            } else if (isCommissionerActivity) {
+                                cell.classList.add('priority-commissioner');  // Blue for commissioners
+                            } else {
+                                cell.classList.add('priority-low');  // Gray
+                            }
+
+                            let duration = '';
+                            if (cellData.slots === 1.5) {
+                                duration = '(90 min)';
+                            } else if (cellData.slots === 2) {
+                                duration = '(2 hrs)';
+                            } else if (cellData.slots === 3) {
+                                duration = '(3 hrs)';
+                            }
+
+                            // Add spillover indicator if applicable
+                            let spilloverIcon = '';
+                            if (cellData.is_spillover) {
+                                spilloverIcon = '<span style="color: #ff8800; font-weight: bold;" title="Not on designated commissioner day">⚠️</span> ';
+                                cell.style.border = '2px solid #ff8800';
+                            }
+
+                            // Show priority rank (#1, #2, etc.) if available
+                            let priorityLabel = '';
+                            if (priority !== null && priority !== undefined && priority < 999) {
+                                priorityLabel = ` <span style="color: #ffd700; font-weight: bold;">#${priority + 1}</span>`;
+                            }
+
+                            cell.innerHTML = `
+                                <div class="activity-name">${spilloverIcon}${cellData.activity}${priorityLabel}</div>
+                                ${duration ? `<div class="activity-duration">${duration}</div>` : ''}
+                            `;
+                        }
+                    } else {
+                        cell.textContent = '-';
+                    }
+
+                    grid.appendChild(cell);
+                });
+            }
+
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(grid);
+
+            // Add preferences list below the schedule
+            if (data.preferences && data.preferences.length > 0) {
+                const prefsContainer = document.createElement('div');
+                prefsContainer.style.marginTop = '20px';
+                prefsContainer.style.padding = '15px';
+                prefsContainer.style.background = '#1a1a1a';
+                prefsContainer.style.borderRadius = '8px';
+
+                const prefsTitle = document.createElement('h3');
+                prefsTitle.textContent = 'Troop Preferences';
+                prefsTitle.style.color = '#4a9eff';
+                prefsTitle.style.marginBottom = '10px';
+                prefsContainer.appendChild(prefsTitle);
+
+                const prefsList = document.createElement('ol');
+                prefsList.style.lineHeight = '1.8';
+                prefsList.style.paddingLeft = '25px';
+
+                // Build set of activities this troop got
+                const scheduledActivities = new Set();
+                Object.values(scheduleData).forEach(daySlots => {
+                    Object.values(daySlots).forEach(slot => {
+                        if (slot && slot.activity) {
+                            scheduledActivities.add(slot.activity);
+                        }
+                    });
+                });
+
+                data.preferences.forEach(pref => {
+                    const li = document.createElement('li');
+                    li.textContent = pref;
+
+                    // Color-code: green if got it, red if didn't
+                    if (scheduledActivities.has(pref)) {
+                        li.style.color = '#4CAF50';  // Green - got it
+                        li.style.fontWeight = '500';
+                    } else if (data.exemptions && data.exemptions.includes(pref)) {
+                        li.style.color = '#795548';  // Brown - Exempt
+                        li.innerHTML += ' <span style="font-size: 0.8em;">(Exempt)</span>';
+                    } else {
+                        li.style.color = '#f44336';  // Red - didn't get it
+                    }
+
+                    prefsList.appendChild(li);
+                });
+
+                prefsContainer.appendChild(prefsList);
+                document.getElementById('scheduleContent').appendChild(prefsContainer);
+            }
+        }
+
+        function renderAreaScheduleGrid(scheduleData, areaName) {
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+
+            // Header row
+            grid.innerHTML = '<div class="grid-header"></div>';
+            dayNames.forEach(day => {
+                grid.innerHTML += `<div class="grid-header">${day}</div>`;
+            });
+
+            // Special handling for Sailing: 2 sessions per day
+            if (areaName === 'Sailing' && scheduleData['MONDAY'] && scheduleData['MONDAY']['session1']) {
+                const sessions = [
+                    { key: 'session1', label: 'Session 1 (Slots 1-2)', color: '#2d5016' },
+                    { key: 'session2', label: 'Session 2 (Slots 2-3)', color: '#1d4d0d' }
+                ];
+
+                sessions.forEach(session => {
+                    // Make session label 1.5x height
+                    grid.innerHTML += `<div class="slot-label" style="font-size: 7px; min-height: 60px;">${session.label}</div>`;
+
+                    days.forEach(day => {
+                        const sessionData = scheduleData[day][session.key];
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.style.minHeight = '60px';  // 1.5x normal height (40px * 1.5)
+
+                        if (sessionData && sessionData.troops && sessionData.troops.length > 0) {
+                            cell.classList.add('activity');
+                            cell.style.background = session.color;
+                            cell.innerHTML = `<div class="activity-name">${sessionData.troops.join(', ')}</div>`;
+                        } else {
+                            cell.textContent = '-';
+                        }
+
+                        grid.appendChild(cell);
+                    });
+                });
+
+                document.getElementById('scheduleContent').innerHTML = '';
+                document.getElementById('scheduleContent').appendChild(grid);
+                return;
+            }
+
+            // Regular area: Slot rows
+            for (let slot = 1; slot <= 3; slot++) {
+                grid.innerHTML += `<div class="slot-label">Slot ${slot}</div>`;
+
+                days.forEach(day => {
+                    // Thursday slot 3 doesn't exist
+                    if (day === 'THURSDAY' && slot === 3) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.style.background = '#1a1a1a';
+                        cell.style.color = '#666';
+                        cell.innerHTML = '<strong style="font-size: 16px;">✕</strong><br><small>CLOSED</small>';
+                        grid.appendChild(cell);
+                        return;
+                    }
+
+                    const cellData = scheduleData[day][slot];
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+
+                    if (cellData && cellData.length > 0) {
+                        cell.classList.add('activity');
+
+                        // Group by activity
+                        const activityGroups = {};
+                        cellData.forEach(item => {
+                            if (!activityGroups[item.activity]) {
+                                activityGroups[item.activity] = [];
+                            }
+                            activityGroups[item.activity].push(item);
+                        });
+
+                        // Set cell background based on first activity's priority
+                        // NOTE: priority is 0-indexed
+                        const firstKey = Object.keys(activityGroups)[0];
+                        const priority = activityGroups[firstKey][0].priority;
+                        const isCommissionerActivity = ['Super Troop', 'Reflection'].includes(firstKey);
+
+                        if (priority !== null && priority < 5) cell.style.background = '#2d5016';  // Top 1-5 (Green)
+                        else if (priority < 10) cell.style.background = '#3d3d16';  // Top 6-10
+                        else if (priority < 15) cell.style.background = '#5c5016';  // Top 11-15 (bright yellow)
+                        else if (priority < 20) cell.style.background = '#4d4016';  // Top 16-20 (darker yellow)
+                        else if (priority >= 999 && isCommissionerActivity) cell.style.background = '#1a4d80';  // Commissioner
+                        else cell.style.background = '#3a3a3a';  // Other
+
+                        let html = '';
+                        Object.keys(activityGroups).forEach(activity => {
+                            const items = activityGroups[activity];
+                            const troopList = items.map(item => {
+                                // Show troop name with scouts/adults and preference satisfaction
+                                let prefsInfo = '';
+                                if (item.prefs_achieved !== undefined && item.prefs_total !== undefined) {
+                                    prefsInfo = ` [${item.prefs_achieved}/${item.prefs_total}]`;
+                                }
+                                // Show priority rank if available
+                                let priorityLabel = '';
+                                if (item.priority !== null && item.priority !== undefined && item.priority < 999) {
+                                    priorityLabel = ` #${item.priority + 1}`;
+                                }
+                                return `${item.troop} (${item.scouts}/${item.adults})${prefsInfo}${priorityLabel}`;
+                            }).join(', ');
+
+                            html += `<div style="margin-bottom: 3px;">
+                                <strong style="font-size: 9px;">${activity}</strong><br>
+                                <small style="font-size: 8px;">${troopList}</small>
+                            </div>`;
+                        });
+
+                        cell.innerHTML = html;
+                    } else {
+                        cell.textContent = '-';
+                    }
+
+                    grid.appendChild(cell);
+                });
+            }
+
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(grid);
+        }
+
+        function renderCommissionerScheduleGrid(scheduleData, commissionerName) {
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+
+            // Header row
+            grid.innerHTML = '<div class="grid-header"></div>';
+            dayNames.forEach(day => {
+                grid.innerHTML += `<div class="grid-header">${day}</div>`;
+            });
+
+            // Color for this commissioner
+            const myColor = commColors[commissionerName] || '#1a3a5a';
+
+            // Slot rows
+            for (let slot = 1; slot <= 3; slot++) {
+                grid.innerHTML += `<div class="slot-label">Slot ${slot}</div>`;
+
+                days.forEach(day => {
+                    const cellData = scheduleData[day][slot];
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+
+                    if (cellData && cellData.length > 0) {
+                        cell.classList.add('activity');
+
+                        // Group by activity name to merge Own and Borrowed
+                        const activityGroups = {};
+
+                        cellData.forEach(item => {
+                            if (!activityGroups[item.activity]) {
+                                activityGroups[item.activity] = {
+                                    troops: [],
+                                    borrowedInfo: []
+                                };
+                            }
+
+                            // Determine how to display this troop
+                            let troopDisplay = item.troop;
+
+                            if (item.covers_for) {
+                                // For Comm D covering others
+                                const covered = item.covers_for.replace('Commissioner ', 'C.');
+                                troopDisplay += ` (for ${covered})`;
+                            } else if (item.borrowed && item.from_commissioner) {
+                                // For Comm A-C having a visiting troop
+                                const from = item.from_commissioner.replace('Commissioner ', 'C.');
+                                troopDisplay += ` (from ${from})`;
+                            }
+
+                            activityGroups[item.activity].troops.push(troopDisplay);
+                        });
+
+                        // CRITICAL: Commissioners can only do ONE activity at a time
+                        // Show only the first activity (they should all be the same anyway)
+                        const activities = Object.keys(activityGroups);
+                        const firstActivity = activities[0];
+                        const group = activityGroups[firstActivity];
+                        const troopsStr = group.troops.join(', ');
+
+                        cell.innerHTML = `<div style="margin-bottom: 5px;">
+                            <strong>${firstActivity}</strong><br>
+                            <small style="font-size: 9px;">${troopsStr}</small>
+                        </div>`;
+                    } else {
+                        cell.textContent = '-';
+                    }
+
+                    grid.appendChild(cell);
+                });
+            }
+
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(grid);
+        }
+
+        function renderBeachBoard(beachData) {
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+            // 1 activity column + 3 slots * 5 days = 16 columns
+            grid.style.gridTemplateColumns = '120px repeat(15, 1fr)';
+            grid.style.fontSize = '0.9em';
+
+            // Header row - Day names spanning 3 slots each
+            grid.innerHTML = '<div class="grid-header" style="font-size: 12px; padding: 8px;">Activity</div>';
+            dayNames.forEach(day => {
+                grid.innerHTML += `<div class="grid-header" style="font-size: 11px; padding: 6px; grid-column: span 3; border-left: 2px solid #555;">${day}</div>`;
+            });
+
+            // Sub-header row - Slot numbers
+            grid.innerHTML += '<div class="grid-header" style="font-size: 10px; padding: 4px;"></div>';
+            dayNames.forEach((day, dayIdx) => {
+                for (let slot = 1; slot <= 3; slot++) {
+                    const borderStyle = slot === 1 ? 'border-left: 2px solid #555;' : '';
+                    grid.innerHTML += `<div class="grid-header" style="font-size: 9px; padding: 4px; ${borderStyle}">S${slot}</div>`;
+                }
+            });
+
+            // For each beach activity, create rows
+            const activities = Object.keys(beachData);
+            activities.forEach(activity => {
+                // Activity name label
+                const activityLabel = document.createElement('div');
+                activityLabel.className = 'slot-label';
+                activityLabel.style.fontSize = '10px';
+                activityLabel.style.fontWeight = 'bold';
+                activityLabel.style.padding = '8px';
+                activityLabel.textContent = activity;
+                grid.appendChild(activityLabel);
+
+                // For each day and slot, show troops scheduled
+                days.forEach((day, dayIdx) => {
+                    const dayData = beachData[activity][day];
+                    for (let slot = 1; slot <= 3; slot++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.style.minHeight = '45px';
+                        cell.style.fontSize = '9px';
+                        cell.style.padding = '4px';
+                        if (slot === 1) {
+                            cell.style.borderLeft = '2px solid #555';
+                        }
+
+                        // Thursday slot 3 doesn't exist
+                        if (days[dayIdx] === 'THURSDAY' && slot === 3) {
+                            cell.style.background = '#1a1a1a';
+                            cell.style.color = '#666';
+                            cell.innerHTML = '<small>X</small>';
+                            grid.appendChild(cell);
+                            continue;
+                        }
+
+                        const troops = dayData[slot] || [];
+                        if (troops.length > 0) {
+                            cell.classList.add('activity');
+                            cell.style.background = '#2d5016';
+
+                            // Handle Aqua Trampoline objects vs plain troop names
+                            let troopNames;
+                            if (typeof troops[0] === 'object' && troops[0].troop) {
+                                troopNames = troops.map(t => t.troop);
+                            } else {
+                                troopNames = troops;
+                            }
+
+                            cell.innerHTML = `<div style="font-size: 9px; line-height: 1.2;">${troopNames.join('<br>')}</div>`;
+                        } else {
+                            cell.textContent = '-';
+                        }
+
+                        grid.appendChild(cell);
+                    }
+                });
+            });
+
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(grid);
+        }
+
+        function renderBallsBoard(ballsData) {
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+            // 1 activity column + 3 slots * 5 days = 16 columns
+            grid.style.gridTemplateColumns = '120px repeat(15, 1fr)';
+            grid.style.fontSize = '0.9em';
+
+            // Header row - Day names spanning 3 slots each
+            grid.innerHTML = '<div class="grid-header" style="font-size: 12px; padding: 8px;">Activity</div>';
+            dayNames.forEach(day => {
+                grid.innerHTML += `<div class="grid-header" style="font-size: 11px; padding: 6px; grid-column: span 3; border-left: 2px solid #555;">${day}</div>`;
+            });
+
+            // Sub-header row - Slot numbers
+            grid.innerHTML += '<div class="grid-header" style="font-size: 10px; padding: 4px;"></div>';
+            dayNames.forEach((day, dayIdx) => {
+                for (let slot = 1; slot <= 3; slot++) {
+                    const borderStyle = slot === 1 ? 'border-left: 2px solid #555;' : '';
+                    grid.innerHTML += `<div class="grid-header" style="font-size: 9px; padding: 4px; ${borderStyle}">S${slot}</div>`;
+                }
+            });
+
+            // For each balls activity, create rows
+            const activities = Object.keys(ballsData);
+            activities.forEach(activity => {
+                // Activity name label
+                const activityLabel = document.createElement('div');
+                activityLabel.className = 'slot-label';
+                activityLabel.style.fontSize = '10px';
+                activityLabel.style.fontWeight = 'bold';
+                activityLabel.style.padding = '8px';
+                activityLabel.textContent = activity;
+                grid.appendChild(activityLabel);
+
+                // For each day and slot, show troops scheduled
+                days.forEach((day, dayIdx) => {
+                    const dayData = ballsData[activity][day];
+                    for (let slot = 1; slot <= 3; slot++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.style.minHeight = '45px';
+                        cell.style.fontSize = '9px';
+                        cell.style.padding = '4px';
+                        if (slot === 1) {
+                            cell.style.borderLeft = '2px solid #555';
+                        }
+
+                        const troops = dayData[slot] || [];
+                        if (troops.length > 0) {
+                            cell.classList.add('activity');
+                            cell.style.background = '#3d5016';
+                            cell.innerHTML = `<div style="font-size: 9px; line-height: 1.2;">${troops.join('<br>')}</div>`;
+                        } else {
+                            cell.textContent = '-';
+                        }
+
+                        grid.appendChild(cell);
+                    }
+                });
+            });
+
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(grid);
+        }
+
+        function renderReflectionScheduleGrid(scheduleData) {
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+            grid.style.gridTemplateColumns = '100px repeat(3, 1fr)';
+
+            // Header row
+            grid.innerHTML = '<div class="grid-header"></div>';
+            ['Slot 1', 'Slot 2', 'Slot 3'].forEach(slot => {
+                grid.innerHTML += `<div class="grid-header">${slot}</div>`;
+            });
+
+            // Commissioner rows
+            commissioners.forEach(commissioner => {
+                const cell = document.createElement('div');
+                cell.className = 'slot-label';
+                cell.textContent = commissioner;
+                grid.appendChild(cell);
+
+                for (let slot = 1; slot <= 3; slot++) {
+                    const cellData = scheduleData[slot][commissioner];
+                    const dataCell = document.createElement('div');
+                    dataCell.className = 'grid-cell';
+
+                    if (cellData) {
+                        // Check if commissioner is available
+                        if (!cellData.available) {
+                            // Commissioner has conflict
+                            dataCell.style.background = '#4d1a1a';  // Dark red
+                            dataCell.innerHTML = `
+                                <div style="color: #ff6b6b; font-weight: bold; margin-bottom: 4px;">
+                                    ⚠️ UNAVAILABLE
+                                </div>
+                                <div style="font-size: 7px; color: #aaa;">
+                                    ${cellData.conflict || 'Conflict'}
+                                </div>
+                            `;
+                        } else if (cellData.troops && cellData.troops.length > 0) {
+                            // Commissioner is available and has troops
+                            dataCell.classList.add('activity');
+                            dataCell.innerHTML = `<div class="activity-name">${cellData.troops.join(', ')}</div>`;
+                        } else {
+                            // Commissioner is available but no troops assigned
+                            dataCell.style.background = '#2d3d2d';  // Slightly green tint
+                            dataCell.innerHTML = `<div style="color: #6b6; font-size: 7px;">✓ Available</div>`;
+                        }
+                    } else {
+                        dataCell.textContent = '-';
+                    }
+
+                    grid.appendChild(dataCell);
+                }
+            });
+
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(grid);
+        }
+
+        function renderStaffScheduleGrid(scheduleData, staffName) {
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+
+            // Header row
+            grid.innerHTML = '<div class="grid-header"></div>';
+            dayNames.forEach(day => {
+                grid.innerHTML += `<div class="grid-header">${day}</div>`;
+            });
+
+            // Slot rows
+            for (let slot = 1; slot <= 3; slot++) {
+                grid.innerHTML += `<div class="slot-label">Slot ${slot}</div>`;
+
+                days.forEach(day => {
+                    // Thursday slot 3 doesn't exist
+                    if (day === 'THURSDAY' && slot === 3) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.style.background = '#1a1a1a';
+                        cell.style.color = '#666';
+                        cell.innerHTML = '<strong style="font-size: 16px;">✕</strong><br><small>CLOSED</small>';
+                        grid.appendChild(cell);
+                        return;
+                    }
+
+                    const cellData = scheduleData[day][slot];
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+
+                    if (cellData && cellData.length > 0) {
+                        cell.classList.add('activity');
+
+                        // Group by activity
+                        const activityGroups = {};
+                        cellData.forEach(item => {
+                            if (!activityGroups[item.activity]) {
+                                activityGroups[item.activity] = [];
+                            }
+                            activityGroups[item.activity].push(item);
+                        });
+
+                        // Set cell background based on first activity's priority
+                        // Use green tones for staffed schedules to distinguish from other boards
+                        const firstKey = Object.keys(activityGroups)[0];
+                        const priority = activityGroups[firstKey][0].priority;
+                        const isCommissionerActivity = ['Super Troop', 'Reflection'].includes(firstKey);
+
+                        if (priority === 0) cell.style.background = '#4a4a4a';  // Grey for Top 1
+                        else if (priority < 5) cell.style.background = '#2d5016';  // Vibrant green for Top 2-5
+                        else if (priority < 10) cell.style.background = '#2a3a16';  // Darker green for Top 6-10
+                        else if (priority >= 999 && isCommissionerActivity) cell.style.background = '#1a3a5a';  // Commissioner blue
+                        else cell.style.background = '#3a3a3a';  // Gray for other
+
+                        let html = '';
+                        Object.keys(activityGroups).forEach(activity => {
+                            const items = activityGroups[activity];
+                            const troops = items.map(item =>
+                                `${item.troop} (${item.scouts}/${item.adults})`
+                            ).join(', ');
+
+                            html += `<div style="margin-bottom: 3px;">
+                                <strong style="font-size: 9px;">${activity}</strong><br>
+                                <small style="font-size: 8px;">${troops}</small>
+                            </div>`;
+                        });
+
+                        cell.innerHTML = html;
+                    } else {
+                        cell.textContent = '-';
+                    }
+
+                    grid.appendChild(cell);
+                });
+            }
+
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(grid);
+        }
+
+        async function loadStaffRequirements() {
+            document.getElementById('scheduleTitle').textContent = 'All Staff Requirements';
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const response = await fetch(`/api/staff-requirements?week=${currentWeek}`);
+                const data = await response.json();
+                renderStaffRequirements(data);
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="error">Error loading staff requirements</div>';
+            }
+        }
+
+        function renderStaffRequirements(data) {
+            const grid = document.createElement('div');
+            grid.className = 'schedule-grid';
+
+            // Header row
+            grid.innerHTML = '<div class="grid-header"></div>';
+            dayNames.forEach(day => {
+                grid.innerHTML += `<div class="grid-header">${day}</div>`;
+            });
+
+            // Slot rows
+            for (let slot = 1; slot <= 3; slot++) {
+                grid.innerHTML += `<div class="slot-label">Slot ${slot}</div>`;
+
+                days.forEach(day => {
+                    // Thursday slot 3 doesn't exist
+                    if (day === 'THURSDAY' && slot === 3) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.style.background = '#1a1a1a';
+                        cell.style.color = '#666';
+                        cell.innerHTML = '<strong style="font-size: 16px;">X</strong><br><small>CLOSED</small>';
+                        grid.appendChild(cell);
+                        return;
+                    }
+
+                    const slotData = data[day][slot];
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.classList.add('activity');
+
+                    const count = slotData.total_staff;
+                    const recommended = slotData.recommended_staff || 0;
+
+                    // Color spectrum for 15 staff max (5+ starts green, 14-15 is red)
+                    // Use recommended count if higher than actual for coloring
+                    const displayCount = Math.max(count, recommended);
+
+                    if (displayCount === 0) {
+                        cell.style.background = '#1a1a1a';  // Dark (no staff)
+                    } else if (displayCount <= 4) {
+                        cell.style.background = '#2a2a2a';  // Dark gray (very light)
+                    } else if (displayCount <= 7) {
+                        cell.style.background = '#2d5016';  // Green (light load)
+                    } else if (displayCount <= 10) {
+                        cell.style.background = '#4a5c16';  // Yellow-green (moderate)
+                    } else if (displayCount <= 13) {
+                        cell.style.background = '#5c4a16';  // Yellow/orange (getting busy)
+                    } else {
+                        cell.style.background = '#5d2016';  // Red (14-15, at/over capacity)
+                    }
+
+                    // Display format: "12 staff" or "12 staff (+3)" if extra needed
+                    let staffText = `${count} staff`;
+                    if (recommended > 0) {
+                        staffText += ` <span style="color: #ff8800;">(+${recommended})</span>`;
+                    }
+
+                    let html = `<div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">${staffText}</div>`;
+
+                    // Show breakdown by director
+                    const directors = Object.entries(slotData.by_director).sort((a, b) => b[1] - a[1]);
+                    directors.forEach(([director, dirCount]) => {
+                        html += `<div style="font-size: 8px; margin-bottom: 1px;">
+                            ${director}: ${dirCount}
+                        </div>`;
+                    });
+
+                    cell.innerHTML = html;
+                    grid.appendChild(cell);
+                });
+            }
+
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(grid);
+        }
+
+        async function loadUnscheduledActivities() {
+            currentView = 'unscheduled';
+            clearActiveTabs();
+            event.target.classList.add('active');
+
+            document.getElementById('scheduleTitle').textContent = 'Unscheduled Activities';
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const response = await fetch(`/api/unscheduled?week=${currentWeek}`);
+                const data = await response.json();
+                renderUnscheduledTable(data);
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="loading">Error loading unscheduled activities</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        function renderUnscheduledTable(data) {
+            const container = document.createElement('div');
+            container.style.padding = '20px';
+
+            // Add summary
+            const summary = document.createElement('div');
+            summary.style.marginBottom = '20px';
+            summary.style.fontSize = '18px';
+            summary.style.color = '#ff8800';
+            summary.innerHTML = `<strong>Total Unscheduled Activities: ${data.total_count}</strong>`;
+            container.appendChild(summary);
+
+            // Create table
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.marginTop = '15px';
+
+            // Table header
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th style="padding: 10px; background: #3d3d40; border: 1px solid #555; text-align: left;">Rank</th>
+                    <th style="padding: 10px; background: #3d3d40; border: 1px solid #555; text-align: left;">Activity</th>
+                    <th style="padding: 10px; background: #3d3d40; border: 1px solid #555; text-align: left;">Troop</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+
+            // Table body
+            const tbody = document.createElement('tbody');
+            data.unscheduled.forEach(item => {
+                const row = document.createElement('tr');
+
+                // Color code by rank
+                let rankColor = '#888';
+                let activityDisplay = item.activity;
+
+                if (item.is_exempt) {
+                    rankColor = '#795548';  // Brown for Exempt
+                    activityDisplay += ' <span style="font-size: 0.8em;">(Exempt)</span>';
+                } else {
+                    if (item.rank <= 5) rankColor = '#f44336';  // Red for Top 5
+                    else if (item.rank <= 10) rankColor = '#ff9800';  // Orange for Top 6-10
+                    else if (item.rank <= 15) rankColor = '#fdd835';  // Yellow for Top 11-15
+                }
+
+                row.innerHTML = `
+                    <td style="padding: 8px; border: 1px solid #555; color: ${rankColor}; font-weight: bold;">#${item.rank}</td>
+                    <td style="padding: 8px; border: 1px solid #555; color: ${item.is_exempt ? '#795548' : 'inherit'};">${activityDisplay}</td>
+                    <td style="padding: 8px; border: 1px solid #555;">${item.troop}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            table.appendChild(tbody);
+
+            container.appendChild(table);
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(container);
+        }
+
+        // Load first troop by default
+        if (troops.length > 0) {
+            loadTroopSchedule(troops[0].name);
+        }
+    </script>
+</body>
+
+</html>

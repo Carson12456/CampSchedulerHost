@@ -1,0 +1,827 @@
+{
+  "entries": [
+    {
+      "troop": "Massasoit",
+      "activity": "Reflection",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Reflection",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Reflection",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Disc Golf",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Aqua Trampoline",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Aqua Trampoline",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Aqua Trampoline",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Aqua Trampoline",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Aqua Trampoline",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Aqua Trampoline",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Aqua Trampoline",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Aqua Trampoline",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Greased Watermelon",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Greased Watermelon",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Sailing",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Sailing",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Float for Floats",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Float for Floats",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Canoe Snorkel",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Canoe Snorkel",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Sailing",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Sailing",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Climbing Tower",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Climbing Tower",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Orienteering",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Archery",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Archery",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Archery",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Water Polo",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Water Polo",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Greased Watermelon",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Shower House",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Campsite Free Time",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Delta",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Gaga Ball",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Climbing Tower",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Shower House",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Greased Watermelon",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Gaga Ball",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Sauna",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Fishing",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Archery",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Campsite Free Time",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Sauna",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Cochise",
+      "activity": "9 Square",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Trading Post",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Gaga Ball",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Troop Swim",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Dr. DNA",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Greased Watermelon",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Shower House",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Gaga Ball",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Trading Post",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Greased Watermelon",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Delta",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Dr. DNA",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Sailing",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Sailing",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Delta",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Water Polo",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Troop Swim",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Super Troop",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "What's Cooking",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "History Center",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Archery",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Knots and Lashings",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Trading Post",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "9 Square",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Hemp Craft",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Shower House",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Monkey's Fist",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Dr. DNA",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Chopped!",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Delta",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Delta",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Super Troop",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Fishing",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "GPS & Geocaching",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Monkey's Fist",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Archery",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Archery",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Shower House",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Greased Watermelon",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Water Polo",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Climbing Tower",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Nature Canoe",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Climbing Tower",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Climbing Tower",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Trading Post",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Troop Swim",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Knots and Lashings",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Aqua Trampoline",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Gaga Ball",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "9 Square",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Fishing",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Delta",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Fishing",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Delta",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Shower House",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "9 Square",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Troop Swim",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Archery",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Trading Post",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "9 Square",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Troop Shotgun",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Fishing",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Gaga Ball",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Troop Shotgun",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Disc Golf",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Trading Post",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Troop Shotgun",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Troop Canoe",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Troop Rifle",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Fishing",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Troop Rifle",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Greased Watermelon",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Troop Rifle",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Taskalusa",
+      "activity": "Knots and Lashings",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Water Polo",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Tie Dye",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Gaga Ball",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Tie Dye",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Gaga Ball",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Ultimate Survivor",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Tie Dye",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Archery",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Tecumseh",
+      "activity": "Super Troop",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Super Troop",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Super Troop",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Powhatan",
+      "activity": "Super Troop",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Super Troop",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Super Troop",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Water Polo",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Cochise",
+      "activity": "Hemp Craft",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Joseph",
+      "activity": "Gaga Ball",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Climbing Tower",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Climbing Tower",
+      "day": "Friday",
+      "slot": 3
+    }
+  ],
+  "unscheduled": {}
+}

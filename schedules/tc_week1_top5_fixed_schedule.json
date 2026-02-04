@@ -1,0 +1,515 @@
+{
+  "entries": [
+    {
+      "troop": "Massasoit",
+      "activity": "Reflection",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Reflection",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Reflection",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "History Center",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Disc Golf",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Disc Golf",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Aqua Trampoline",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Aqua Trampoline",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Aqua Trampoline",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Greased Watermelon",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Float for Floats",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Float for Floats",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Canoe Snorkel",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Canoe Snorkel",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Climbing Tower",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Climbing Tower",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Climbing Tower",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Troop Rifle",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Ultimate Survivor",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "What's Cooking",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Ultimate Survivor",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Knots and Lashings",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Archery",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Archery",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Archery",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Archery",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Greased Watermelon",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "9 Square",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Delta",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Trading Post",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "What's Cooking",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Troop Canoe",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Troop Swim",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Aqua Trampoline",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Campsite Free Time",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Greased Watermelon",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "GPS & Geocaching",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Hemp Craft",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Gaga Ball",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Dr. DNA",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Campsite Free Time",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Delta",
+      "day": "Friday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Fishing",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Gaga Ball",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Disc Golf",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Monkey's Fist",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Super Troop",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Gaga Ball",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Super Troop",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Greased Watermelon",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Archery",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Itasca State Park",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Itasca State Park",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Itasca State Park",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Trading Post",
+      "day": "Friday",
+      "slot": 2
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Super Troop",
+      "day": "Tuesday",
+      "slot": 3
+    },
+    {
+      "troop": "Black Hawk",
+      "activity": "Shower House",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Delta",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Super Troop",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Water Polo",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "GPS & Geocaching",
+      "day": "Thursday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Dr. DNA",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Climbing Tower",
+      "day": "Tuesday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Ultimate Survivor",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Troop Shotgun",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Gaga Ball",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Fishing",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Campsite Free Time",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "Troop Shotgun",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Sequoyah",
+      "activity": "GPS & Geocaching",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Climbing Tower",
+      "day": "Monday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Loon Lore",
+      "day": "Thursday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Chopped!",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Tie Dye",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Massasoit",
+      "activity": "Fishing",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Tie Dye",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Troop Shotgun",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Troop Shotgun",
+      "day": "Monday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Tie Dye",
+      "day": "Wednesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Troop Canoe",
+      "day": "Wednesday",
+      "slot": 1
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Super Troop",
+      "day": "Wednesday",
+      "slot": 3
+    },
+    {
+      "troop": "Red Cloud",
+      "activity": "Super Troop",
+      "day": "Friday",
+      "slot": 3
+    },
+    {
+      "troop": "Samoset",
+      "activity": "Gaga Ball",
+      "day": "Tuesday",
+      "slot": 2
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Gaga Ball",
+      "day": "Monday",
+      "slot": 3
+    },
+    {
+      "troop": "Tamanend",
+      "activity": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 1
+    }
+  ],
+  "unscheduled": {}
+}

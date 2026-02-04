@@ -1,0 +1,141 @@
+Troop,Day,Slot,Activity,Duration,Priority,Scouts,Adults
+Duluth,Friday,1,Water Polo,1,2,17,5
+Duluth,Friday,2,Archery,1,6,17,5
+Duluth,Friday,3,Reflection,1,999,17,5
+Duluth,Monday,1,Gaga Ball,1,4,17,5
+Duluth,Monday,2,Fishing,1,999,17,5
+Duluth,Monday,3,Dr. DNA,1,999,17,5
+Duluth,Thursday,1,9 Square,1,5,17,5
+Duluth,Thursday,2,Shower House,1,9,17,5
+Duluth,Tuesday,1,Sailing,1.5,3,17,5
+Duluth,Tuesday,3,Aqua Trampoline,1,0,17,5
+Duluth,Wednesday,1,Trading Post,1,999,17,5
+Duluth,Wednesday,2,Climbing Tower,1,1,17,5
+Duluth,Wednesday,2,Troop Rifle,1,7,17,5
+Duluth,Wednesday,3,Super Troop,1,999,17,5
+Fond Du Lac,Friday,1,Delta,1,3,17,14
+Fond Du Lac,Friday,2,Trading Post,1,999,17,14
+Fond Du Lac,Friday,3,Reflection,1,999,17,14
+Fond Du Lac,Monday,1,Troop Rifle,1,1,17,14
+Fond Du Lac,Monday,2,Loon Lore,1,999,17,14
+Fond Du Lac,Monday,3,Archery,1,5,17,14
+Fond Du Lac,Thursday,1,Greased Watermelon,1,4,17,14
+Fond Du Lac,Thursday,2,Water Polo,1,7,17,14
+Fond Du Lac,Tuesday,1,Dr. DNA,1,999,17,14
+Fond Du Lac,Tuesday,2,Knots and Lashings,1,11,17,14
+Fond Du Lac,Tuesday,3,Climbing Tower,1,2,17,14
+Fond Du Lac,Tuesday,3,9 Square,1,9,17,14
+Fond Du Lac,Wednesday,1,Aqua Trampoline,1,0,17,14
+Fond Du Lac,Wednesday,2,Super Troop,1,999,17,14
+Fond Du Lac,Wednesday,3,Gaga Ball,1,12,17,14
+Ft. Francis-A,Friday,1,Fishing,1,999,19,10
+Ft. Francis-A,Friday,2,Reflection,1,999,19,10
+Ft. Francis-A,Friday,3,Shower House,1,9,19,10
+Ft. Francis-A,Friday,3,Climbing Tower,1,8,19,10
+Ft. Francis-A,Monday,1,Greased Watermelon,1,1,19,10
+Ft. Francis-A,Monday,2,Archery,1,7,19,10
+Ft. Francis-A,Monday,3,9 Square,1,2,19,10
+Ft. Francis-A,Thursday,1,Gaga Ball,1,4,19,10
+Ft. Francis-A,Thursday,2,Campsite Free Time,1,6,19,10
+Ft. Francis-A,Tuesday,1,Aqua Trampoline,1,0,19,10
+Ft. Francis-A,Tuesday,2,Sauna,1,999,19,10
+Ft. Francis-A,Tuesday,3,Dr. DNA,1,999,19,10
+Ft. Francis-A,Wednesday,1,Super Troop,1,999,19,10
+Ft. Francis-A,Wednesday,2,Loon Lore,1,999,19,10
+Ft. Francis-A,Wednesday,3,Water Polo,1,3,19,10
+Ft. Francis-B,Friday,1,Reflection,1,999,19,10
+Ft. Francis-B,Friday,2,Super Troop,1,999,19,10
+Ft. Francis-B,Friday,3,Greased Watermelon,1,1,19,10
+Ft. Francis-B,Monday,1,Sailing,1.5,11,19,10
+Ft. Francis-B,Monday,3,Campsite Free Time,1,6,19,10
+Ft. Francis-B,Thursday,1,Aqua Trampoline,1,0,19,10
+Ft. Francis-B,Thursday,2,Gaga Ball,1,4,19,10
+Ft. Francis-B,Tuesday,1,Disc Golf,1,14,19,10
+Ft. Francis-B,Tuesday,2,9 Square,1,2,19,10
+Ft. Francis-B,Tuesday,3,Archery,1,7,19,10
+Ft. Francis-B,Wednesday,1,Water Polo,1,3,19,10
+Ft. Francis-B,Wednesday,2,Trading Post,1,10,19,10
+Ft. Francis-B,Wednesday,3,Troop Rifle,1,999,19,10
+Ft. William,Friday,1,Archery,1,7,16,2
+Ft. William,Friday,2,Dr. DNA,1,999,16,2
+Ft. William,Friday,3,Reflection,1,999,16,2
+Ft. William,Monday,1,Hemp Craft,1,999,16,2
+Ft. William,Monday,2,Gaga Ball,1,4,16,2
+Ft. William,Monday,3,Knots and Lashings,1,999,16,2
+Ft. William,Thursday,1,Water Polo,1,2,16,2
+Ft. William,Thursday,2,Troop Canoe,1,3,16,2
+Ft. William,Tuesday,1,History Center,1,5,16,2
+Ft. William,Tuesday,2,Super Troop,1,999,16,2
+Ft. William,Tuesday,3,Greased Watermelon,1,0,16,2
+Ft. William,Wednesday,1,9 Square,1,6,16,2
+Ft. William,Wednesday,2,Campsite Free Time,1,9,16,2
+Ft. William,Wednesday,3,Aqua Trampoline,1,1,16,2
+Hibbing 1,Friday,1,Reflection,1,999,22,12
+Hibbing 1,Friday,2,9 Square,1,10,22,12
+Hibbing 1,Friday,3,Aqua Trampoline,1,2,22,12
+Hibbing 1,Monday,1,Super Troop,1,999,22,12
+Hibbing 1,Monday,2,Troop Shotgun,1,4,22,12
+Hibbing 1,Monday,3,Water Polo,1,9,22,12
+Hibbing 1,Thursday,1,Sailing,1.5,1,22,12
+Hibbing 1,Tuesday,1,Greased Watermelon,1,0,22,12
+Hibbing 1,Tuesday,2,Campsite Free Time,1,6,22,12
+Hibbing 1,Tuesday,3,Troop Rifle,1,12,22,12
+Hibbing 1,Wednesday,1,Fishing,1,999,22,12
+Hibbing 1,Wednesday,2,Gaga Ball,1,14,22,12
+Hibbing 1,Wednesday,3,Shower House,1,7,22,12
+Hibbing 2,Friday,1,Aqua Trampoline,1,0,10,3
+Hibbing 2,Friday,2,Reflection,1,999,10,3
+Hibbing 2,Friday,3,Archery,1,6,10,3
+Hibbing 2,Monday,1,Climbing Tower,1,1,10,3
+Hibbing 2,Monday,2,Chopped!,1,2,10,3
+Hibbing 2,Monday,3,Tie Dye,1,4,10,3
+Hibbing 2,Thursday,1,Hemp Craft,1,9,10,3
+Hibbing 2,Thursday,2,Dr. DNA,1,999,10,3
+Hibbing 2,Tuesday,1,Super Troop,1,999,10,3
+Hibbing 2,Tuesday,2,Troop Rifle,1,999,10,3
+Hibbing 2,Tuesday,3,Troop Swim,1,999,10,3
+Hibbing 2,Wednesday,1,Sailing,1.5,3,10,3
+Hibbing 2,Wednesday,3,Campsite Free Time,1,999,10,3
+Quetico-A,Friday,1,Reflection,1,999,12,3
+Quetico-A,Friday,2,Shower House,1,7,12,3
+Quetico-A,Friday,3,Water Polo,1,4,12,3
+Quetico-A,Monday,1,Aqua Trampoline,1,0,12,3
+Quetico-A,Monday,2,9 Square,1,1,12,3
+Quetico-A,Monday,3,Troop Shotgun,1,6,12,3
+Quetico-A,Thursday,1,Fishing,1,999,12,3
+Quetico-A,Thursday,2,Climbing Tower,1,5,12,3
+Quetico-A,Tuesday,1,Archery,1,8,12,3
+Quetico-A,Tuesday,2,Monkey's Fist,1,9,12,3
+Quetico-A,Tuesday,3,Super Troop,1,999,12,3
+Quetico-A,Wednesday,1,Gaga Ball,1,999,12,3
+Quetico-A,Wednesday,2,Sauna,1,3,12,3
+Quetico-A,Wednesday,3,Greased Watermelon,1,2,12,3
+Quetico-B,Friday,1,Super Troop,1,999,13,3
+Quetico-B,Friday,2,Reflection,1,999,13,3
+Quetico-B,Friday,3,Gaga Ball,1,999,13,3
+Quetico-B,Monday,1,Archery,1,8,13,3
+Quetico-B,Monday,2,Monkey's Fist,1,9,13,3
+Quetico-B,Monday,3,Greased Watermelon,1,2,13,3
+Quetico-B,Thursday,1,Dr. DNA,1,999,13,3
+Quetico-B,Thursday,2,Sauna,1,3,13,3
+Quetico-B,Tuesday,1,Fishing,1,999,13,3
+Quetico-B,Tuesday,2,Trading Post,1,999,13,3
+Quetico-B,Tuesday,3,Campsite Free Time,1,999,13,3
+Quetico-B,Tuesday,3,Canoe Snorkel,2,10,13,3
+Quetico-B,Wednesday,1,Troop Rifle,1,999,13,3
+Quetico-B,Wednesday,2,9 Square,1,1,13,3
+Quetico-B,Wednesday,3,Aqua Trampoline,1,0,13,3
+Two Harbors,Friday,1,Chopped!,1,8,9,4
+Two Harbors,Friday,2,Delta,1,0,9,4
+Two Harbors,Friday,3,Reflection,1,999,9,4
+Two Harbors,Monday,1,Fishing,1,15,9,4
+Two Harbors,Monday,2,Sauna,1,14,9,4
+Two Harbors,Monday,3,Troop Swim,1,999,9,4
+Two Harbors,Thursday,1,Super Troop,1,999,9,4
+Two Harbors,Thursday,2,Aqua Trampoline,1,2,9,4
+Two Harbors,Tuesday,1,Troop Rifle,1,6,9,4
+Two Harbors,Tuesday,2,Gaga Ball,1,4,9,4
+Two Harbors,Tuesday,3,Water Polo,1,5,9,4
+Two Harbors,Wednesday,1,Greased Watermelon,1,1,9,4
+Two Harbors,Wednesday,2,Archery,1,10,9,4
+Two Harbors,Wednesday,3,9 Square,1,7,9,4

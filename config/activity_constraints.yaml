@@ -1,0 +1,130 @@
+# Activity Constraints Configuration
+# Defines all scheduling rules and constraints
+
+# Beach activities must be in slot 1 or 3 (slot 2 allowed on Thursday only, per Spine rule)
+# Exception: Sailing is allowed in Slot 2 (due to 1.5 slot duration)
+# Exception: Top 5 relaxation - slot 2 allowed when 1, 3, Thu-2 are full; for AT: exclusive use only (17+)
+beach_slot_constraint:
+  activities:
+    - "Water Polo"
+    - "Greased Watermelon"
+    - "Aqua Trampoline"
+  allowed_slots: [1, 3]
+  thursday_exception: [1, 2]  # Thursday only has 2 slots, so slot 2 is allowed
+  top5_relaxation_slot2: true  # Allow slot 2 for Top 5 beach when others full; AT requires exclusive (17+)
+
+# Maximum one accuracy activity per troop per day
+accuracy_limit:
+  activities:
+    - "Troop Rifle"
+    - "Troop Shotgun"
+    - "Archery"
+  max_per_day: 1
+
+# Wet activities that cannot be followed by Tower/ODS
+wet_activities:
+  - "Aqua Trampoline"
+  - "Water Polo"
+  - "Greased Watermelon"
+  - "Troop Swim"
+  - "Underwater Obstacle Course"
+  - "Troop Canoe"
+  - "Troop Kayak"
+  - "Canoe Snorkel"
+  - "Nature Canoe"
+  - "Float for Floats"
+  - "Sailing"
+  - "Sauna"
+  - "Delta"
+
+# Tower and ODS activities (cannot follow wet)
+tower_ods_activities:
+  - "Climbing Tower"
+  - "Knots and Lashings"
+  - "Orienteering"
+  - "GPS & Geocaching"
+  - "Ultimate Survivor"
+  - "What's Cooking"
+  - "Chopped!"
+
+# Exclusive areas - only one troop per slot
+exclusive_areas:
+  Tower:
+    - "Climbing Tower"
+  
+  Rifle_Range:
+    - "Troop Rifle"
+    - "Troop Shotgun"
+  
+  Outdoor_Skills:
+    - "Knots and Lashings"
+    - "Orienteering"
+    - "GPS & Geocaching"
+    - "Ultimate Survivor"
+    - "What's Cooking"
+    - "Chopped!"
+  
+  Sailing:
+    - "Sailing"
+  
+  Delta:
+    - "Delta"
+  
+  Super_Troop:
+    - "Super Troop"
+  
+  Handicrafts:
+    - "Tie Dye"
+    - "Hemp Craft"
+    - "Woggle Neckerchief Slide"
+    - "Monkey's Fist"
+  
+  Nature_Center:
+    - "Dr. DNA"
+    - "Loon Lore"
+  
+  Archery:
+    - "Archery"
+
+# Activities that cannot be on same day for a troop
+same_day_conflicts:
+  - ["Trading Post", "Campsite Free Time"]
+  - ["Trading Post", "Shower House"]
+  - ["Troop Canoe", "Canoe Snorkel"]
+  - ["Troop Canoe", "Nature Canoe"]
+  - ["Troop Canoe", "Float for Floats"]
+  - ["Canoe Snorkel", "Nature Canoe"]
+  - ["Canoe Snorkel", "Float for Floats"]
+  - ["Nature Canoe", "Float for Floats"]
+
+# Soft conflicts (try to avoid)
+soft_same_day_conflicts:
+  - ["Fishing", "Trading Post"]
+  - ["Fishing", "Campsite Free Time"]
+  - ["Campsite Free Time", "Shower House"]
+
+# Activities requiring consecutive slots
+consecutive_activities:
+  - "Tie Dye"
+  - "Archery"
+  - "Rifle Range"
+
+# Non-consecutive activities (exempt from optimization)
+non_consecutive_activities:
+  - "Trading Post"
+  - "Campsite Free Time"
+  - "Itasca State Park"
+  - "Tamarac Wildlife Refuge"
+  - "Back of the Moon"
+  - "Disc Golf"
+  - "History Center"
+
+# 3-hour activities
+three_hour_activities:
+  - name: "Tamarac Wildlife Refuge"
+    slots: 3
+  - name: "Itasca State Park"
+    slots: 3
+  - name: "Back of the Moon"
+    slots: 3
+    top_requirement: 3  # Must be in top 3 preferences

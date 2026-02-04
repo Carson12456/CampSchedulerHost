@@ -1,0 +1,99 @@
+======================================================================
+SCHEDULE QUALITY REPORT: tc_week5_troops.json
+======================================================================
+
+PREFERENCE SATISFACTION
+----------------------------------------------------------------------
+  Top 5      (Raw)     100.0% ( 55/ 55) [OK]
+  Top 10     (Raw)      77.3% ( 85/110) [WARN]
+  Top 5      (Adj)     100.0% ( 55/ 55) [OK]
+  Top 10     (Adj)      85.0% ( 85/100) [OK]
+  Weighted Score        88.9% (538/605) [OK]
+
+  [NOTE] Capacity-Constrained Activities (excluded from adjusted %):
+    Troop Shotgun: 4 troops excluded (demand=6, scheduled=3)
+    History Center: 2 troops excluded (demand=5, scheduled=3)
+    Ultimate Survivor: 2 troops excluded (demand=3, scheduled=1)
+    Water Polo: 1 troops excluded (demand=4, scheduled=3)
+    Troop Canoe: 1 troops excluded (demand=3, scheduled=2)
+
+  Missing Top 6-10 Activities (Adjusted):
+    Red Cloud: Chopped! (#6)
+    Skenandoa: Sailing (#6)
+    Black Hawk: Canoe Snorkel (#7)
+    Pontiac: Climbing Tower (#7)
+    Tamanend: Campsite Free Time (#7)
+    Taskalusa: Climbing Tower (#7)
+    Skenandoa: Gaga Ball (#8)
+    Sequoyah: Back of the Moon (#9)
+    Skenandoa: Campsite Free Time (#9)
+    Tamanend: Float for Floats (#9)
+    Taskalusa: Trading Post (#9)
+    Samoset: Aqua Trampoline (#10)
+    Skenandoa: Archery (#10)
+    Tamanend: Greased Watermelon (#10)
+    Tecumseh: Back of the Moon (#10)
+
+CONSTRAINT COMPLIANCE
+----------------------------------------------------------------------
+  Beach Slot Rule:     [OK] All compliant
+  Rifle+Shotgun Day:   [OK] All compliant
+  Accuracy Limit:      [OK] All compliant
+  Friday Reflection:   [FAIL] 1 missing
+
+SCHEDULE GAPS (Empty Slots)
+----------------------------------------------------------------------
+  [OK] No gaps - all troops have complete schedules
+
+WET/DRY CONSTRAINT VIOLATIONS
+----------------------------------------------------------------------
+  Wet -> Tower/ODS:    1 violations
+  Tower/ODS -> Wet:    0 violations
+  2+ Major Wet/Day:    0 violations
+  Wet-Dry-Wet Pattern: 1 violations
+  TOTAL:               2 violations [WARN]
+
+DELTA WALKING CONSTRAINT
+----------------------------------------------------------------------
+  Total violations: 1 [WARN]
+    Tecumseh: Delta -> What's Cooking (Fri-3)
+
+DRY DAYS TRACKING (excl. Thursday)
+----------------------------------------------------------------------
+  Average dry days per troop: 1.7
+  Troops with 2+ dry days (5):
+    Tecumseh: 3 dry days
+    Samoset: 3 dry days
+    Red Cloud: 3 dry days
+    Massasoit: 3 dry days
+    Black Hawk: 2 dry days
+
+STAFF CLUSTERING EFFICIENCY
+----------------------------------------------------------------------
+  Tower                4 days (min: 3, excess: 1, gaps: 0) [INFO]
+  Rifle Range          4 days (min: 4, excess: 0, gaps: 1) [INFO]
+  Outdoor Skills       4 days (min: 3, excess: 1, gaps: 1) [INFO]
+  Handicrafts          4 days (min: 2, excess: 2, gaps: 0) [INFO]
+
+STAFF WORKLOAD DISTRIBUTION (Exponential)
+----------------------------------------------------------------------
+  Beach Staff          avg=2.1/slot, max=3, slots=13/14, need=3 staff [WARN]
+  Tower Director       avg=0.5/slot, max=1, slots=7/14, need=1 staff [OK]
+  Rifle Director       avg=0.7/slot, max=1, slots=10/14, need=1 staff [OK]
+  ODS Director         avg=0.6/slot, max=1, slots=9/14, need=1 staff [OK]
+
+  ALL-STAFF DISTRIBUTION SCORE:
+    Total staff-requiring activities: 56
+    Average per slot: 4.0, Peak: 6, Empty slots: 0
+    Variance: 2.00
+    Distribution Score: 80/100 [OK]
+
+COMMISSIONER LOAD BALANCE
+----------------------------------------------------------------------
+  Commissioner A  4 troops, 4 days worked, 4/3 Reflections [OK]
+  Commissioner B  4 troops, 3 days worked, 3/3 Reflections [OK]
+  Commissioner C  3 troops, 3 days worked, 3/3 Reflections [OK]
+
+======================================================================
+Total Activities Scheduled: 150
+======================================================================

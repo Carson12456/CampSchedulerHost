@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-02-02T11:38:10.410717",
+  "summary": {
+    "total_test_suites": 6,
+    "passed_suites": 0,
+    "failed_suites": 6,
+    "error_suites": 0,
+    "total_tests": 0,
+    "total_passed": 0,
+    "total_failed": 0,
+    "success_rate": 0,
+    "total_duration": 2.0221951007843018
+  },
+  "test_suites": [
+    {
+      "name": "Core Entities",
+      "status": "FAILED",
+      "duration": 0.34594154357910156,
+      "failed_tests": 0,
+      "total_tests": 0,
+      "stdout": "",
+      "stderr": "ERROR: usage: __main__.py [options] [file_or_dir] [file_or_dir] [...]\n__main__.py: error: unrecognized arguments: --json-report\n  inifile: None\n  rootdir: C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler\n\n",
+      "return_code": 4
+    },
+    {
+      "name": "Constraint System",
+      "status": "FAILED",
+      "duration": 0.2787778377532959,
+      "failed_tests": 0,
+      "total_tests": 0,
+      "stdout": "",
+      "stderr": "ERROR: usage: __main__.py [options] [file_or_dir] [file_or_dir] [...]\n__main__.py: error: unrecognized arguments: --json-report\n  inifile: None\n  rootdir: C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler\n\n",
+      "return_code": 4
+    },
+    {
+      "name": "Scheduling Algorithm",
+      "status": "FAILED",
+      "duration": 0.392331600189209,
+      "failed_tests": 0,
+      "total_tests": 0,
+      "stdout": "",
+      "stderr": "ERROR: usage: __main__.py [options] [file_or_dir] [file_or_dir] [...]\n__main__.py: error: unrecognized arguments: --json-report\n  inifile: None\n  rootdir: C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler\n\n",
+      "return_code": 4
+    },
+    {
+      "name": "Performance Metrics",
+      "status": "FAILED",
+      "duration": 0.32831335067749023,
+      "failed_tests": 0,
+      "total_tests": 0,
+      "stdout": "",
+      "stderr": "ERROR: usage: __main__.py [options] [file_or_dir] [file_or_dir] [...]\n__main__.py: error: unrecognized arguments: --json-report\n  inifile: None\n  rootdir: C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler\n\n",
+      "return_code": 4
+    },
+    {
+      "name": "Success Metrics",
+      "status": "FAILED",
+      "duration": 0.3296236991882324,
+      "failed_tests": 0,
+      "total_tests": 0,
+      "stdout": "",
+      "stderr": "ERROR: usage: __main__.py [options] [file_or_dir] [file_or_dir] [...]\n__main__.py: error: unrecognized arguments: --json-report\n  inifile: None\n  rootdir: C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler\n\n",
+      "return_code": 4
+    },
+    {
+      "name": "Regression Detection",
+      "status": "FAILED",
+      "duration": 0.34720706939697266,
+      "failed_tests": 0,
+      "total_tests": 0,
+      "stdout": "",
+      "stderr": "ERROR: usage: __main__.py [options] [file_or_dir] [file_or_dir] [...]\n__main__.py: error: unrecognized arguments: --json-report\n  inifile: None\n  rootdir: C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler\n\n",
+      "return_code": 4
+    }
+  ],
+  "recommendations": [
+    "FAILED test suites indicate regressions - review failing tests immediately"
+  ]
+}

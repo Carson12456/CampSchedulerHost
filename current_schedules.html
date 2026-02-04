@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summer Camp Scheduler - Current Schedules & Success Evaluation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .metric {
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .metric.excellent {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .metric.good {
+            background-color: #cce5ff;
+            border: 1px solid #b3d9ff;
+        }
+        .metric.needs-work {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+        .metric.critical {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        .week-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .troop-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .troop-card {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .troop-card.has-reflection {
+            border-left-color: #28a745;
+        }
+        .stat {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .stat-value {
+            font-weight: bold;
+            color: #495057;
+        }
+        .timestamp {
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 30px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏕 Summer Camp Scheduler - Current Schedules & Success Evaluation</h1>
+        
+        <div class="timestamp">
+            Last Updated: 2026-02-02 12:09:02
+        </div>
+        
+        <div class="status-bar">
+            <div><strong>Total Troops:</strong> 18</div>
+            <div><strong>Total Activities:</strong> 251</div>
+            <div><strong>Avg per Troop:</strong> 13.9</div>
+        </div>
+        
+        <div class="metric excellent">
+            <h3>🎯 Top 5 Satisfaction</h3>
+            <div style="font-size: 24px; font-weight: bold;">111.1%</div>
+            <div>(100/90 preferences)</div>
+        </div>
+        
+        <div class="metric critical">
+            <h3>📅 Friday Reflection</h3>
+            <div style="font-size: 24px; font-weight: bold;">50.0%</div>
+            <div>(9/18 troops)</div>
+        </div>
+        
+        <div class="metric needs-work">
+            <h3>📊 Schedule Completeness</h3>
+            <div style="font-size: 24px; font-weight: bold;">13.9/troop</div>
+            <div>(Target: 15/troop)</div>
+        </div>
+        
+        <div class="metric good">
+            <h3>📈 Overall Grade</h3>
+            <div style="font-size: 24px; font-weight: bold;">B (84.7%)</div>
+            <div>Good Performance</div>
+        </div>
+        
+        <h2>📅 Weekly Schedule Details</h2>
+
+        <div class="week-section">
+            <h3>Week 1 Schedule</h3>
+            <div class="status-bar">
+                <div><strong>Troops:</strong> 6</div>
+                <div><strong>Activities:</strong> 84</div>
+                <div><strong>Top 5:</strong> 103.3%</div>
+                <div><strong>Reflection:</strong> 50.0%</div>
+            </div>
+            
+            <div class="troop-stats">
+
+                <div class="troop-card has-reflection">
+                    <h4>Tamanend</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">10</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Sequoyah</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">11</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Samoset</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">9</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Red Cloud</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">6</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">11</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+                <div class="troop-card has-reflection">
+                    <h4>Massasoit</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">11</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+                <div class="troop-card has-reflection">
+                    <h4>Black Hawk</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">10</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="week-section">
+            <h3>Week 2 Schedule</h3>
+            <div class="status-bar">
+                <div><strong>Troops:</strong> 3</div>
+                <div><strong>Activities:</strong> 42</div>
+                <div><strong>Top 5:</strong> 120.0%</div>
+                <div><strong>Reflection:</strong> 100.0%</div>
+            </div>
+            
+            <div class="troop-stats">
+
+                <div class="troop-card has-reflection">
+                    <h4>Taskalusa</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">12</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+                <div class="troop-card has-reflection">
+                    <h4>Massasoit</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">6</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">9</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+                <div class="troop-card has-reflection">
+                    <h4>Black Hawk</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">7</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">12</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="week-section">
+            <h3>Week 3 Schedule</h3>
+            <div class="status-bar">
+                <div><strong>Troops:</strong> 9</div>
+                <div><strong>Activities:</strong> 125</div>
+                <div><strong>Top 5:</strong> 113.3%</div>
+                <div><strong>Reflection:</strong> 33.3%</div>
+            </div>
+            
+            <div class="troop-stats">
+
+                <div class="troop-card has-reflection">
+                    <h4>Tecumseh</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">9</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+                <div class="troop-card has-reflection">
+                    <h4>Taskalusa</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">9</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+                <div class="troop-card has-reflection">
+                    <h4>Tamanend</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">7</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">11</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">✅</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Sequoyah</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">6</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">9</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Samoset</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">6</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">11</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Red Cloud</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">6</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">11</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Powhatan</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">9</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Pontiac</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">14</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">6</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">10</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+                <div class="troop-card ">
+                    <h4>Black Hawk</h4>
+                    <div class="stat">Total Scheduled: <span class="stat-value">13</span></div>
+                    <div class="stat">Top 5 Achieved: <span class="stat-value">5</span></div>
+                    <div class="stat">Top 10 Achieved: <span class="stat-value">9</span></div>
+                    <div class="stat">Friday Reflection: <span class="stat-value">❌</span></div>
+                </div>
+
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
+    
