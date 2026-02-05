@@ -1,0 +1,332 @@
+
+--- EVALUATION: data\troops\tc_week1_troops.json ---
+Final Score: 665
+------------------------------
+Excess Cluster Days:     5
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          0.82
+Slots Issues:            Severe Underuse (<5)=2, Excessive Staff (>14)=0
+Constraint Violations:   4
+Beach Slot 2 Uses:       1 (penalized)
+Top 5 Missed (Total):    0
+Top 5 Success:           100.0%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          96.7%
+Top 15 Success:          76.2%
+Top 20 Success:          68.0%
+Early Week Bonus:        4
+Batching Bonus:          1
+Sailing Full-Day Bonus:  0/0
+Sailing Same-Day Bonus:  0/0
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             196.6
+Constraint Compliance:   181.4
+Schedule Gaps:           120.0
+Staff Balance:           126.6
+Cluster Efficiency:      30.0
+Early Week Bias:          5.0
+Activity Batching:       5.0
+Promoted Pairings:       0.8
+Sailing Full-Day:        0.0
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\tc_week2_troops.json ---
+Final Score: 566
+------------------------------
+Excess Cluster Days:     5
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          0.53
+Slots Issues:            Severe Underuse (<5)=8, Excessive Staff (>14)=0
+Constraint Violations:   0
+Beach Slot 2 Uses:       1 (penalized)
+Top 5 Missed (Total):    0
+Top 5 Success:           100.0%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          100.0%
+Top 15 Success:          76.3%
+Top 20 Success:          65.9%
+Early Week Bonus:        3
+Batching Bonus:          0
+Sailing Full-Day Bonus:  0/0
+Sailing Same-Day Bonus:  0/0
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             93.0
+Constraint Compliance:   195.0
+Schedule Gaps:           120.0
+Staff Balance:           119.1
+Cluster Efficiency:      30.0
+Early Week Bias:          7.5
+Activity Batching:       0.0
+Promoted Pairings:       1.7
+Sailing Full-Day:        0.0
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\tc_week3_troops.json ---
+Final Score: 722
+------------------------------
+Excess Cluster Days:     9
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          2.03
+Slots Issues:            Severe Underuse (<5)=1, Excessive Staff (>14)=0
+Constraint Violations:   8
+Beach Slot 2 Uses:       3 (penalized)
+Top 5 Missed (Total):    1
+Top 5 Success:           97.8%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          88.6%
+Top 15 Success:          73.4%
+Top 20 Success:          66.4%
+Early Week Bonus:        5
+Batching Bonus:          0
+Sailing Full-Day Bonus:  3/3
+Sailing Same-Day Bonus:  0/3
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             281.6
+Constraint Compliance:   157.8
+Schedule Gaps:           120.0
+Staff Balance:           126.7
+Cluster Efficiency:      22.0
+Early Week Bias:          3.8
+Activity Batching:       0.0
+Promoted Pairings:       0.0
+Sailing Full-Day:        10.0
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\tc_week4_troops.json ---
+Final Score: 782
+------------------------------
+Excess Cluster Days:     6
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          1.54
+Slots Issues:            Severe Underuse (<5)=0, Excessive Staff (>14)=0
+Constraint Violations:   7
+Beach Slot 2 Uses:       4 (penalized)
+Top 5 Missed (Total):    5
+Top 5 Success:           90.9%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          86.4%
+Top 15 Success:          76.5%
+Top 20 Success:          67.4%
+Early Week Bonus:        6
+Batching Bonus:          4
+Sailing Full-Day Bonus:  3/4
+Sailing Same-Day Bonus:  0/4
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             327.4
+Constraint Compliance:   156.2
+Schedule Gaps:           120.0
+Staff Balance:           128.5
+Cluster Efficiency:      28.0
+Early Week Bias:          3.5
+Activity Batching:       10.0
+Promoted Pairings:       1.4
+Sailing Full-Day:        7.5
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\tc_week5_troops.json ---
+Final Score: 768
+------------------------------
+Excess Cluster Days:     4
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          1.66
+Slots Issues:            Severe Underuse (<5)=0, Excessive Staff (>14)=0
+Constraint Violations:   9
+Beach Slot 2 Uses:       4 (penalized)
+Top 5 Missed (Total):    4
+Top 5 Success:           92.7%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          82.7%
+Top 15 Success:          69.4%
+Top 20 Success:          64.4%
+Early Week Bonus:        5
+Batching Bonus:          1
+Sailing Full-Day Bonus:  2/3
+Sailing Same-Day Bonus:  0/3
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             325.0
+Constraint Compliance:   149.4
+Schedule Gaps:           120.0
+Staff Balance:           128.3
+Cluster Efficiency:      32.0
+Early Week Bias:          3.1
+Activity Batching:       3.3
+Promoted Pairings:       0.5
+Sailing Full-Day:        6.7
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\tc_week6_troops.json ---
+Final Score: 790
+------------------------------
+Excess Cluster Days:     6
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          1.52
+Slots Issues:            Severe Underuse (<5)=0, Excessive Staff (>14)=0
+Constraint Violations:   7
+Beach Slot 2 Uses:       1 (penalized)
+Top 5 Missed (Total):    1
+Top 5 Success:           98.0%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          91.0%
+Top 15 Success:          79.0%
+Top 20 Success:          70.2%
+Early Week Bonus:        6
+Batching Bonus:          2
+Sailing Full-Day Bonus:  2/4
+Sailing Same-Day Bonus:  0/4
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             322.8
+Constraint Compliance:   171.2
+Schedule Gaps:           120.0
+Staff Balance:           128.5
+Cluster Efficiency:      28.0
+Early Week Bias:          3.8
+Activity Batching:       10.0
+Promoted Pairings:       0.5
+Sailing Full-Day:        5.0
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\tc_week7_troops.json ---
+Final Score: 799
+------------------------------
+Excess Cluster Days:     4
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          0.88
+Slots Issues:            Severe Underuse (<5)=0, Excessive Staff (>14)=0
+Constraint Violations:   7
+Beach Slot 2 Uses:       2 (penalized)
+Top 5 Missed (Total):    2
+Top 5 Success:           96.4%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          89.1%
+Top 15 Success:          75.3%
+Top 20 Success:          69.1%
+Early Week Bonus:        6
+Batching Bonus:          0
+Sailing Full-Day Bonus:  2/2
+Sailing Same-Day Bonus:  0/2
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             336.8
+Constraint Compliance:   166.2
+Schedule Gaps:           120.0
+Staff Balance:           129.1
+Cluster Efficiency:      32.0
+Early Week Bias:          3.2
+Activity Batching:       0.0
+Promoted Pairings:       1.4
+Sailing Full-Day:        10.0
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\tc_week8_troops.json ---
+Final Score: 595
+------------------------------
+Excess Cluster Days:     5
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          1.24
+Slots Issues:            Severe Underuse (<5)=2, Excessive Staff (>14)=0
+Constraint Violations:   4
+Beach Slot 2 Uses:       2 (penalized)
+Top 5 Missed (Total):    0
+Top 5 Success:           100.0%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          85.0%
+Top 15 Success:          71.2%
+Top 20 Success:          65.7%
+Early Week Bonus:        4
+Batching Bonus:          0
+Sailing Full-Day Bonus:  1/1
+Sailing Same-Day Bonus:  0/1
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             127.8
+Constraint Compliance:   176.4
+Schedule Gaps:           120.0
+Staff Balance:           126.2
+Cluster Efficiency:      30.0
+Early Week Bias:          5.0
+Activity Batching:       0.0
+Promoted Pairings:       0.0
+Sailing Full-Day:        10.0
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\voyageur_week1_troops.json ---
+Final Score: 720
+------------------------------
+Excess Cluster Days:     4
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          1.80
+Slots Issues:            Severe Underuse (<5)=0, Excessive Staff (>14)=0
+Constraint Violations:   14
+Beach Slot 2 Uses:       4 (penalized)
+Top 5 Missed (Total):    3
+Top 5 Success:           94.0%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          89.7%
+Top 15 Success:          81.1%
+Top 20 Success:          73.9%
+Early Week Bonus:        3
+Batching Bonus:          0
+Sailing Full-Day Bonus:  2/4
+Sailing Same-Day Bonus:  0/4
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             299.9
+Constraint Compliance:   132.4
+Schedule Gaps:           120.0
+Staff Balance:           128.2
+Cluster Efficiency:      32.0
+Early Week Bias:          2.0
+Activity Batching:       0.0
+Promoted Pairings:       0.5
+Sailing Full-Day:        5.0
+Sailing Same-Day:        0.0
+------------------------------
+
+--- EVALUATION: data\troops\voyageur_week3_troops.json ---
+Final Score: 703
+------------------------------
+Excess Cluster Days:     8
+Unnecessary Gaps (1-x-3):0
+Staff Variance:          1.53
+Slots Issues:            Severe Underuse (<5)=1, Excessive Staff (>14)=0
+Constraint Violations:   5
+Beach Slot 2 Uses:       2 (penalized)
+Top 5 Missed (Total):    1
+Top 5 Success:           97.5%
+Cluster Gaps (1-3-2):    0
+Top 10 Success:          87.5%
+Top 15 Success:          72.5%
+Top 20 Success:          72.6%
+Early Week Bonus:        3
+Batching Bonus:          1
+Sailing Full-Day Bonus:  1/3
+Sailing Same-Day Bonus:  0/3
+------------------------------
+Score Breakdown (max 1000):
+Preferences:             242.7
+Constraint Compliance:   173.0
+Schedule Gaps:           120.0
+Staff Balance:           127.2
+Cluster Efficiency:      24.0
+Early Week Bias:          3.0
+Activity Batching:       10.0
+Promoted Pairings:       0.0
+Sailing Full-Day:        3.3
+Sailing Same-Day:        0.0
+------------------------------
+
+Average Season Score: 711.0

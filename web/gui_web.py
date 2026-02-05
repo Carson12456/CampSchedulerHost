@@ -1,15 +1,20 @@
 """
 Web-based GUI for Summer Camp Scheduler using Flask.
 This generates an HTML interface that properly displays 1.5-slot activities.
+yaya
 """
 from flask import Flask, render_template, send_from_directory, request, jsonify
 from pathlib import Path
 import json
+import sys
 
-from models import Day, TimeSlot, generate_time_slots, ScheduleEntry, Troop, Schedule
-from activities import get_all_activities
-from io_handler import load_troops_from_json, save_schedule_to_json
-from constrained_scheduler import ConstrainedScheduler
+# Add project root to path
+sys.path.append(str(Path(__file__).parent.parent))
+
+from core.models import Day, TimeSlot, generate_time_slots, ScheduleEntry, Troop, Schedule
+from core.activities import get_all_activities
+from core.io_handler import load_troops_from_json, save_schedule_to_json
+from core.constrained_scheduler import ConstrainedScheduler
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -29,7 +34,7 @@ def add_header(response):
 # Load schedules from JSON cache or generate if needed
 print("Loading schedules...")
 
-SCHEDULES_DIR = SCRIPT_DIR / "schedules"
+SCHEDULES_DIR = SCRIPT_DIR.parent / "data/schedules"
 WEEK_DATA = {}
 activities = get_all_activities()
 time_slots = generate_time_slots()
@@ -158,7 +163,7 @@ def generate_schedule(troops_file):
 
 # Auto-discover all troop files (LAZY LOADING - only get names, don't load yet)
 print("Discovering available weeks...")
-troop_files = sorted(SCRIPT_DIR.glob("*_troops.json"))
+troop_files = sorted((SCRIPT_DIR.parent / "data/troops").glob("*.json"))
 
 # Just store metadata, not actual schedules
 WEEK_METADATA = {}
@@ -318,7 +323,7 @@ def get_evaluation(week_id):
     if week_id not in WEEK_METADATA:
         return jsonify({'error': 'Week not found'}), 404
     try:
-        from evaluate_week_success import evaluate_week
+        from utils.evaluate_week_success import evaluate_week
         meta = WEEK_METADATA[week_id]
         troops_file = meta['file']
         # evaluate_week expects filename like tc_week5_troops.json (relative or absolute)

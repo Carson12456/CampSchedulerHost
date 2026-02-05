@@ -1,0 +1,315 @@
+{
+    "version": "1.0.0",
+    "comment": "Data-driven rules and configuration. Generated from Reference Codebase.",
+    "exclusive_areas": {
+        "Outdoor Skills": [
+            "Knots and Lashings",
+            "Orienteering",
+            "GPS & Geocaching",
+            "Ultimate Survivor",
+            "What's Cooking",
+            "Chopped!"
+        ],
+        "Tower": [
+            "Climbing Tower"
+        ],
+        "Rifle Range": [
+            "Troop Rifle",
+            "Troop Shotgun"
+        ],
+        "Archery": [
+            "Archery"
+        ],
+        "Handicrafts": [
+            "Tie Dye",
+            "Hemp Craft",
+            "Woggle Neckerchief Slide",
+            "Monkey's Fist"
+        ],
+        "Nature Center": [
+            "Dr. DNA",
+            "Loon Lore"
+        ],
+        "Delta": [
+            "Delta"
+        ],
+        "Super Troop": [
+            "Super Troop"
+        ],
+        "Sailing": [
+            "Sailing"
+        ],
+        "Aqua Trampoline": [
+            "Aqua Trampoline"
+        ],
+        "Water Polo": [
+            "Water Polo"
+        ],
+        "Greased Watermelon": [
+            "Greased Watermelon"
+        ],
+        "Troop Swim": [
+            "Troop Swim"
+        ],
+        "Float for Floats": [
+            "Float for Floats"
+        ],
+        "Canoe Snorkel": [
+            "Canoe Snorkel"
+        ],
+        "Troop Canoe": [
+            "Troop Canoe"
+        ],
+        "Nature Canoe": [
+            "Nature Canoe"
+        ],
+        "Fishing": [
+            "Fishing"
+        ],
+        "History Center": [
+            "History Center"
+        ],
+        "Trading Post": [
+            "Trading Post"
+        ],
+        "Sauna": [
+            "Sauna"
+        ],
+        "Shower House": [
+            "Shower House"
+        ],
+        "Disc Golf": [
+            "Disc Golf"
+        ]
+    },
+    "staff_needs": {
+        "Aqua Trampoline": 2,
+        "Troop Canoe": 2,
+        "Troop Kayak": 2,
+        "Canoe Snorkel": 3,
+        "Float for Floats": 3,
+        "Greased Watermelon": 2,
+        "Underwater Obstacle Course": 2,
+        "Troop Swim": 2,
+        "Water Polo": 2,
+        "Nature Canoe": 2,
+        "Sailing": 1,
+        "Troop Rifle": 1,
+        "Troop Shotgun": 1,
+        "Archery": 1,
+        "Climbing Tower": 2,
+        "Orienteering": 1,
+        "GPS & Geocaching": 1,
+        "Knots and Lashings": 1,
+        "Ultimate Survivor": 1,
+        "What's Cooking": 1,
+        "Chopped!": 1,
+        "Loon Lore": 1,
+        "Dr. DNA": 1,
+        "Tie Dye": 1,
+        "Hemp Craft": 1,
+        "Woggle Neckerchief Slide": 1,
+        "Monkey's Fist": 1,
+        "Reflection": 1,
+        "Delta": 1,
+        "Super Troop": 1
+    },
+    "constraints": {
+        "max_staff_global": 16,
+        "target_staff_global": 14,
+        "max_beach_staffed_activities": 4,
+        "max_canoe_capacity": 26,
+        "beach_staff_per_slot": 12,
+        "tower_extended_size": 15,
+        "sailing_extended_size": 12,
+        "three_hour_activities": [
+            "Tamarac Wildlife Refuge",
+            "Itasca State Park",
+            "Back of the Moon"
+        ],
+        "fill_activities": [
+            "Super Troop",
+            "Aqua Trampoline",
+            "Climbing Tower",
+            "Archery",
+            "Water Polo",
+            "Troop Rifle",
+            "Gaga Ball",
+            "9 Square",
+            "Troop Swim",
+            "Sailing",
+            "Trading Post",
+            "GPS & Geocaching",
+            "Disc Golf",
+            "Hemp Craft",
+            "Dr. DNA",
+            "Loon Lore",
+            "Fishing",
+            "Campsite Free Time"
+        ],
+        "optimization": {
+            "area_clustering_priority": [
+                "Tower",
+                "Rifle Range",
+                "Archery",
+                "Outdoor Skills"
+            ],
+            "consecutive_activities": [
+                "Tie Dye",
+                "Archery"
+            ],
+            "avoid_friday": [
+                "Archery"
+            ],
+            "archery_target_days": 2,
+            "enable_smart_balls_scheduling": true,
+            "enable_area_day_filling": true
+        },
+        "aqua_trampoline_rules": {
+            "max_small_troops": 2,
+            "small_troop_size": 16
+        }
+    },
+    "prohibited_pairs": [
+        [
+            "Trading Post",
+            "Campsite Free Time"
+        ],
+        [
+            "Trading Post",
+            "Shower House"
+        ],
+        [
+            "Aqua Trampoline",
+            "Water Polo"
+        ],
+        [
+            "Aqua Trampoline",
+            "Greased Watermelon"
+        ],
+        [
+            "Water Polo",
+            "Greased Watermelon"
+        ],
+        [
+            "Troop Canoe",
+            "Canoe Snorkel"
+        ],
+        [
+            "Troop Canoe",
+            "Nature Canoe"
+        ],
+        [
+            "Troop Canoe",
+            "Float for Floats"
+        ],
+        [
+            "Canoe Snorkel",
+            "Nature Canoe"
+        ],
+        [
+            "Canoe Snorkel",
+            "Float for Floats"
+        ],
+        [
+            "Nature Canoe",
+            "Float for Floats"
+        ]
+    ],
+    "commissioner_groups": {
+        "North": [
+            "Massasoit",
+            "Tecumseh",
+            "Samoset",
+            "Black Hawk",
+            "Taskalusa"
+        ],
+        "Central": [
+            "Powhatan",
+            "Red Cloud",
+            "Cochise",
+            "Joseph",
+            "Tamanend"
+        ],
+        "South": [
+            "Pontiac",
+            "Skenandoa",
+            "Sequoyah",
+            "Roman Nose"
+        ]
+    },
+    "activity_tags": {
+        "wet": [
+            "Aqua Trampoline",
+            "Water Polo",
+            "Greased Watermelon",
+            "Troop Swim",
+            "Underwater Obstacle Course",
+            "Troop Canoe",
+            "Troop Kayak",
+            "Canoe Snorkel",
+            "Nature Canoe",
+            "Float for Floats",
+            "Sailing"
+        ],
+        "beach": [
+            "Aqua Trampoline",
+            "Water Polo",
+            "Greased Watermelon",
+            "Troop Swim",
+            "Underwater Obstacle Course",
+            "Troop Canoe",
+            "Troop Kayak",
+            "Canoe Snorkel",
+            "Nature Canoe",
+            "Float for Floats"
+        ],
+        "accuracy": [
+            "Archery",
+            "Troop Rifle",
+            "Troop Shotgun"
+        ],
+        "tower_ods": [
+            "Climbing Tower",
+            "Knots and Lashings",
+            "Orienteering",
+            "GPS & Geocaching",
+            "Ultimate Survivor",
+            "What's Cooking",
+            "Chopped!"
+        ],
+        "mandatory": [
+            "Reflection",
+            "Super Troop"
+        ],
+        "multi_slot": [
+            "Sailing",
+            "GPS & Geocaching",
+            "Float for Floats",
+            "Canoe Snorkel"
+        ]
+    },
+    "slot_rules": {
+        "beach_allowed_slots": [
+            1,
+            3
+        ],
+        "beach_thursday_slots": [
+            1,
+            2
+        ],
+        "sailing_allowed_slot_2": true,
+        "thursday_max_slots": 2
+    },
+    "special_activities": {
+        "Water Polo": {
+            "max_troops_per_slot": 2,
+            "comment": "WP can accommodate 2 troops simultaneously if both are under 8 scouts and adults"
+        },
+        "Aqua Trampoline": {
+            "max_troop_size": 16,
+            "exclusive_for_large": true,
+            "comment": "Troops >16 need exclusive AT slot"
+        }
+    }
+}

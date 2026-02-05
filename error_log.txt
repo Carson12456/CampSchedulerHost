@@ -1,0 +1,149 @@
+﻿No existing schedule found at data\schedules\tc_week1_troops_schedule.json. Running fresh scheduler...
+
+======================================================================
+CONSTRAINED SCHEDULER - PHASE A: FOUNDATION
+======================================================================
+
+--- A.0 Friday Reflection (reserve Friday slots) ---
+
+--- Scheduling Friday Reflection for ALL troops (by campsite proximity) ---
+DEBUG: Checking slots for Reflection...
+  Massasoit: Reflection -> Fri-1 (north zone)
+  Samoset: Reflection -> Fri-1 (north zone)
+  Black Hawk: Reflection -> Fri-2 (middle zone)
+  Red Cloud: Reflection -> Fri-2 (middle zone)
+  Tamanend: Reflection -> Fri-3 (south zone)
+  Sequoyah: Reflection -> Fri-3 (south zone)
+
+--- A.0b Super Troop (mandatory) ---
+
+--- Scheduling Super Troop (flexible commissioner preference) ---
+  Tamanend: Super Troop -> Tue-1 (commissioner day bias)
+  Sequoyah: Super Troop -> Mon-1 (best available, 1 ST on MONDAY)
+  Samoset: Super Troop -> Mon-2 (commissioner day bias)
+  Red Cloud: Super Troop -> Tue-3 (commissioner day bias)
+  Massasoit: Super Troop -> Mon-3 (commissioner day bias)
+  Black Hawk: Super Troop -> Wed-1 (best available, 1 ST on WEDNESDAY)
+
+--- A.3 HC/DG Tuesday scheduling (Spine: early) ---
+
+--- Early HC/DG Scheduling (Tuesday Only, Top 3) ---
+  Processing History Center requests...
+    [SUCCESS] Sequoyah: History Center at Tue-1
+    [SUCCESS] Samoset: History Center at Tue-2
+    Tamanend wants BOTH HC and DG - attempting back-to-back...
+      Slot 1 free: False, Slot 2 free: True
+      Slot 2 free: True, Slot 3 free: True
+      HC at Slot 2 blocked by constraints
+    [PAIR FAIL] Could not schedule back-to-back. Falling back to single HC.
+    [SUCCESS] Tamanend: History Center at Tue-3
+  Processing Disc Golf requests...
+    [SUCCESS] Red Cloud: Disc Golf at Tue-1
+    [SUCCESS] Black Hawk: Disc Golf at Tue-2
+
+--- A.5 Thursday Sailing Reservation (Spine: early) ---
+
+--- Thursday Sailing for Largest Troop ---
+  Troops wanting Sailing (sorted by size):
+    Samoset: 12 scouts, Sailing is #9
+  Could not schedule Thursday Sailing for any troop
+
+--- A.5b Early Aqua Trampoline for Top 5 ---
+  [Early AT] Scheduled Aqua Trampoline for 4 troops (Top 5)
+
+--- A.5c Guarantee Top 1 Beach (AT/WP/GM/etc.) ---
+python : Traceback 
+(most recent call 
+last):
+At line:1 char:1
++ python utils/evalua
+te_week_success.py 
+2>&1 | Out-File 
+-FilePath "erro ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Traceba   
+ ck (most recent     
+call last)::Stri    
+ng) [], RemoteEx    
+ception
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+  File "C:\Users\Cars
+on\OneDrive - 
+Minnesota State\Deskt
+op\Projects\CampSched
+uler\summer-camp-sche
+duler\utils\evaluate_
+week_success.py", 
+line 737, in <module>
+    m = 
+evaluate_week(w)
+        
+^^^^^^^^^^^^^^^^
+  File "C:\Users\Cars
+on\OneDrive - 
+Minnesota State\Deskt
+op\Projects\CampSched
+uler\summer-camp-sche
+duler\utils\evaluate_
+week_success.py", 
+line 110, in 
+evaluate_week
+    schedule = schedu
+ler.schedule_all()
+               ^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Cars
+on\OneDrive - 
+Minnesota State\Deskt
+op\Projects\CampSched
+uler\summer-camp-sche
+duler\core\constraine
+d_scheduler.py", 
+line 661, in 
+schedule_all
+    self._guarantee_t
+op1_beach()
+  File "C:\Users\Cars
+on\OneDrive - 
+Minnesota State\Deskt
+op\Projects\CampSched
+uler\summer-camp-sche
+duler\core\constraine
+d_scheduler.py", 
+line 1662, in 
+_guarantee_top1_beach
+    ordered_slots = s
+elf._get_cluster_orde
+red_slots(troop, 
+activity)
+                    ^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^
+  File "C:\Users\Cars
+on\OneDrive - 
+Minnesota State\Deskt
+op\Projects\CampSched
+uler\summer-camp-sche
+duler\core\constraine
+d_scheduler.py", 
+line 8658, in _get_cl
+uster_ordered_slots
+    priority_areas = 
+self.config.get("sche
+duler_rules.optimizat
+ion.area_clustering_p
+riority", 
+                     
+^^^^^^^^^^^
+AttributeError: 'Cons
+trainedScheduler' 
+object has no 
+attribute 'config'
