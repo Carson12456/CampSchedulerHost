@@ -1,6 +1,6 @@
 # BRAIN: Central Source of Truth
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Last Updated:** 2026-02-05
 
 This document is the **Single Source of Truth** for all decision-making logic, constraints, and priorities for the Summer Camp Scheduler. All code logic (`core/`) and configuration (`config/`) must derive from the principles defined here.
