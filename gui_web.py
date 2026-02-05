@@ -1,6 +1,7 @@
 """
 Web-based GUI for Summer Camp Scheduler using Flask.
 This generates an HTML interface that properly displays 1.5-slot activities.
+yaya
 """
 from flask import Flask, render_template, send_from_directory, request, jsonify
 from pathlib import Path
