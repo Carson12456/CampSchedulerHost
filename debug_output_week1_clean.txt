@@ -1,0 +1,30 @@
+Analyzing data/troops/tc_week1_troops.json...
+
+--- Score Components ---
+{'activity_batching_points': 10.0,
+ 'at_sharing_bonus': 50.0,
+ 'cluster_efficiency_points': 125.0,
+ 'early_week_points': 5.0,
+ 'preference_bonuses': 1.2,
+ 'preference_deductions': 28.799999999999997,
+ 'preference_points': 422.4,
+ 'promoted_pairing_points': 0.8333333333333333,
+ 'sailing_full_day_points': 0.0,
+ 'sailing_same_day_points': 0.0,
+ 'soft_constraint_points': 137.0,
+ 'staff_balance_points': 81.85204081632654}
+
+--- Key Metrics ---
+Final Score: 862
+Top 5 Pct: 100.0
+Excess Cluster Days: 5
+Staff Variance: 1.2295918367346939
+Soft Violations: 1
+
+--- Preference Breakdown ---
+Preference Points Accumulated: 422.4
+Missing Top 5: 0
+Missing Top 10: 4
+
+--- Violation Details ---
+["Sequoyah: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Tuesday"]

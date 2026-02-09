@@ -1,0 +1,175 @@
+ENHANCED Regression Checker - Analyzing 10 Actual Weeks
+============================================================
+Analyzing current schedules...
+Found 10 target week files
+Calculating comprehensive quality metrics...
+  Average Week Score: 871.2
+  Average Constraint Violations: 2.7
+  Average Staff Variance: 1.76
+  Average Clustering Efficiency: 5.10
+  Average Beach Slot Violations: 2.2
+Loading baseline metrics...
+Checking for regressions...
+Checking multi-slot activities...
+Checking data consistency...
+
+============================================================
+ENHANCED REGRESSION CHECK SUMMARY
+============================================================
+REGRESSIONS DETECTED: 3
+   High Severity: 1
+   Medium Severity: 2
+
+REGRESSION DETAILS:
+   1. HIGH Constraint Violations: Constraint violations increased from 0.0 to 2.7
+   2. MEDIUM Beach Slot Compliance: Beach slot violations increased from 0.0 to 2.2
+   3. MEDIUM Staff Balance: Staff variance increased from 0.00 to 1.76
+============================================================
+
+==========================================================================================
+PER-WEEK EVALUATION SUMMARY
+==========================================================================================
+Week                   | Score  | Top5%  | Viol  | StVar | Clust | Beach
+------------------------------------------------------------------------------------------
+tc_week1_troops        | 862    | 100.0  | 1     | 1.23  | 5     | 1    
+tc_week2_troops        | 826    | 93.3   | 0     | 0.82  | 4     | 1    
+tc_week3_troops        | 934    | 95.6   | 5     | 2.00  | 3     | 2    
+tc_week4_troops        | 851    | 89.1   | 3     | 2.35  | 5     | 3    
+tc_week5_troops        | 893    | 90.9   | 4     | 2.21  | 5     | 3    
+tc_week6_troops        | 880    | 100.0  | 6     | 1.78  | 5     | 3    
+tc_week7_troops        | 901    | 100.0  | 2     | 1.71  | 7     | 3    
+tc_week8_troops        | 819    | 95.0   | 2     | 1.23  | 4     | 2    
+voyageur_week1_troops  | 941    | 98.0   | 1     | 2.10  | 6     | 2    
+voyageur_week3_troops  | 805    | 92.5   | 3     | 2.12  | 7     | 2    
+==========================================================================================
+
+DETAILED TOP 5 ANALYSIS:
+
+--- tc_week1_troops ---
+Success Rate: 100.0%
+Counted Misses: 0
+
+--- tc_week2_troops ---
+Success Rate: 80.0%
+Counted Misses: 1
+Missed Activities:
+  - Black Hawk: Climbing Tower (Top #4)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+
+--- tc_week3_troops ---
+Success Rate: 93.3%
+Counted Misses: 2
+Missed Activities:
+  - Samoset: Climbing Tower (Top #5)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+  - Black Hawk: Climbing Tower (Top #4)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+
+--- tc_week4_troops ---
+Success Rate: 88.0%
+Counted Misses: 6
+Missed Activities:
+  - Tecumseh: Float for Floats (Top #1)
+    Suggestions: High priority - consider swapping lower priority activities, Check for constraint-aware displacement opportunities
+  - Tamanend: Greased Watermelon (Top #4)
+    Suggestions: Try beach slots 1 or 3 (or slot 2 on Thursday), Consider sharing Aqua Trampoline if troop size <= 16
+  - Powhatan: Sailing (Top #4)
+  - Pontiac: Sailing (Top #4)
+  - Cochise: Canoe Snorkel (Top #4)
+  - Black Hawk: Greased Watermelon (Top #3)
+    Suggestions: Try beach slots 1 or 3 (or slot 2 on Thursday), Consider sharing Aqua Trampoline if troop size <= 16
+
+--- tc_week5_troops ---
+Success Rate: 90.0%
+Counted Misses: 5
+Missed Activities:
+  - Tecumseh: Climbing Tower (Top #3)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+  - Tamanend: Canoe Snorkel (Top #3)
+  - Red Cloud: Climbing Tower (Top #3)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+  - Pontiac: Shower House (Top #3)
+  - Black Hawk: Float for Floats (Top #3)
+
+--- tc_week6_troops ---
+Success Rate: 100.0%
+Counted Misses: 0
+
+--- tc_week7_troops ---
+Success Rate: 100.0%
+Counted Misses: 0
+
+--- tc_week8_troops ---
+Success Rate: 93.3%
+Counted Misses: 1
+Missed Activities:
+  - Taskalusa: Climbing Tower (Top #1)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+
+--- voyageur_week1_troops ---
+Success Rate: 97.5%
+Counted Misses: 1
+Missed Activities:
+  - Ely: Float for Floats (Top #4)
+
+--- voyageur_week3_troops ---
+Success Rate: 92.5%
+Counted Misses: 3
+Missed Activities:
+  - Hibbing 1: Climbing Tower (Top #4)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+  - Fond Du Lac: Climbing Tower (Top #3)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+  - Duluth: Climbing Tower (Top #2)
+    Suggestions: Check exclusive area availability, Consider commissioner day assignments
+
+============================================================
+VIOLATION DETAILS BY WEEK
+============================================================
+
+--- tc_week1_troops (1 violations) ---
+  - Sequoyah: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Tuesday
+
+--- tc_week2_troops (0 violations) ---
+
+--- tc_week3_troops (5 violations) ---
+  - Samoset: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+  - Tamanend: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Taskalusa: Wet-Dry-Wet pattern on Tuesday
+  - Pontiac: Wet-Dry-Wet pattern on Friday
+  - Red Cloud: Shower House before Super Troop on Tuesday
+
+--- tc_week4_troops (3 violations) ---
+  - Massasoit: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+  - Powhatan: Shower House before Greased Watermelon on Wednesday
+  - Massasoit: Shower House before Greased Watermelon on Friday
+
+--- tc_week5_troops (4 violations) ---
+  - Black Hawk: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Tamanend: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Tamanend: Wet-Dry-Wet pattern on Friday
+  - Joseph: Shower House before Super Troop on Wednesday
+
+--- tc_week6_troops (6 violations) ---
+  - Tecumseh: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Taskalusa: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Tuesday
+  - Samoset: Beach activity 'Water Polo' in Slot 2 (not Top 5) on Tuesday
+  - Tecumseh: Shower House before Float for Floats on Monday
+  - Red Cloud: Shower House before Greased Watermelon on Wednesday
+  - Red Cloud: Multiple accuracy activities on Monday (Archery, Troop Shotgun)
+
+--- tc_week7_troops (2 violations) ---
+  - Powhatan: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Wednesday
+  - Massasoit: Beach activity 'Nature Canoe' in Slot 2 (not Top 5) on Wednesday
+
+--- tc_week8_troops (2 violations) ---
+  - Tecumseh: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Samoset: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Tuesday
+
+--- voyageur_week1_troops (1 violations) ---
+  - Chisholm: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+
+--- voyageur_week3_troops (3 violations) ---
+  - Hibbing 2: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Ft. William: Wet-Dry-Wet pattern on Wednesday
+  - Hibbing 1: Shower House before Aqua Trampoline on Wednesday

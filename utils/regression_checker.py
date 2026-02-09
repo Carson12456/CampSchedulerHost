@@ -30,15 +30,16 @@ from core.models import Day, TimeSlot, EXCLUSIVE_AREAS, generate_time_slots
 DEFAULT_WEIGHTS = {
     "max_score": 1000.0,
 
-    # Preferences: ~450 pts (Core Priority - Satisfaction First)
-    # Ratios preserved: Top 1 = 2x Top 5, gradual then steep decline
-    "preference_points": {
-        "top5": [5.4, 4.7, 4.1, 3.4, 2.7],       # Ranks 1-5 (Mandatory) - Sum: 20.3/troop
-        "top6_10": [2.6, 2.4, 2.3, 2.2, 2.0],    # Ranks 6-10 (Gradual) - Sum: 11.5/troop
-        "top11_15": [1.8, 1.6, 1.4, 1.2, 1.0],   # Ranks 11-15 - Sum: 7.0/troop
-        "top16_20": [0.8, 0.6, 0.4, 0.2, 0.0]    # Ranks 16-20 - Sum: 2.0/troop
+    # Preferences: Base Score ~450 pts (Innocent until proven guilty)
+    # Deductions for Misses (Ranks 1-14)
+    # Bonuses for Hits (Ranks 15-20)
+    "preference_base_score": 450.0,
+    "preference_weights": {
+        "top5": [5.4, 4.7, 4.1, 3.4, 2.7],       # Ranks 1-5 (Mandatory) - Miss Penalty
+        "top6_10": [2.6, 2.4, 2.3, 2.2, 2.0],    # Ranks 6-10 (Gradual) - Miss Penalty
+        "top11_14": [1.8, 1.6, 1.4, 1.2],        # Ranks 11-14 - Miss Penalty
+        "top15_20": [1.0, 0.8, 0.6, 0.4, 0.2, 0.0] # Ranks 15-20 - HIT BONUS
     },
-    # Total per troop: 40.8 pts -> 11 troops = ~449 pts max
     
     # Cluster Efficiency: 250 pts (HIGH PRIORITY - more important than staff)
     "cluster_efficiency_points": 250.0,
@@ -448,13 +449,20 @@ def evaluate_week(week_file, weights=None):
     metrics["constraint_violations"] = hard_violations + soft_violations  # Total for backward compat
     metrics["violation_details"] = hard_violation_details + soft_violation_details  # Combined for backward compat
 
-    # 6. Top Preference Success (Exponential Decay Scoring)
+    # 6. Top Preference Success (Innocent Until Proven Guilty Scoring)
     # -------------------------
-    total_preference_points_accumulated = 0.0
+    # Base Score: 450 (or whatever is in DEFAULT_WEIGHTS)
+    # Deductions: For missing Top 14 items (if requested)
+    # Bonuses: For hitting Top 15+ items
+    
+    preference_score = weights.get("preference_base_score", 450.0)
+    current_preference_deductions = 0.0
+    current_preference_bonuses = 0.0
+    
+    # Stats tracking
     missing_top5_count = 0
     missing_top10_count = 0
-    missing_top15_count = 0
-    missing_top20_count = 0
+    missing_top14_count = 0
     
     # HC/DG exemption: if all 3 Tuesday slots are HC or DG, missed HC/DG counts as exempt
     tuesday_hc_dg_slots = set()
@@ -470,63 +478,67 @@ def evaluate_week(week_file, weights=None):
         has_3hr_scheduled = any(e.activity.name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] 
                                for e in schedule.entries if e.troop == troop)
         
-        # Iterate through ALL top 20 preferences to assign points
-        # Only check up to 20; if list is shorter, loop handles it
-        for i, pref_name in enumerate(troop.preferences[:20]):
+        # Iterate through preferences
+        for i, pref_name in enumerate(troop.preferences):
             rank = i + 1
             
-            # Determine points for this rank
-            points_for_hit = 0.0
-            if rank <= 5:
-                points_for_hit = weights["preference_points"]["top5"][i] # i=0 is rank 1
-            elif rank <= 10:
-                points_for_hit = weights["preference_points"]["top6_10"][i-5]
-            elif rank <= 15:
-                points_for_hit = weights["preference_points"]["top11_15"][i-10]
-            elif rank <= 20:
-                points_for_hit = weights["preference_points"]["top16_20"][i-15]
-            
-            if pref_name in troop_acts:
-                total_preference_points_accumulated += points_for_hit
-            else:
-                # Count missing by tier
+            # --- RANKS 1-14: DEDUCTION IF MISSED ---
+            if rank <= 14:
+                # Determining weight
+                weight = 0.0
                 if rank <= 5:
-                    missing_top5_count += 1
-                if rank <= 10:
-                    missing_top10_count += 1
-                if rank <= 15:
-                    missing_top15_count += 1
-                if rank <= 20:
-                    missing_top20_count += 1
-                # Handle Top 5 Penalties & Exemptions
-                if rank <= 5:
+                    weight = weights["preference_weights"]["top5"][i]
+                elif rank <= 10:
+                    weight = weights["preference_weights"]["top6_10"][i-5]
+                elif rank <= 14:
+                    weight = weights["preference_weights"]["top11_14"][i-10]
+                
+                if pref_name not in troop_acts:
+                    # Check exemptions before deducting
                     is_exempt = False
-                    if pref_name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] and has_3hr_scheduled:
-                        is_exempt = True
-                    elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                        is_exempt = True
-                    if is_exempt:
-                        total_preference_points_accumulated += points_for_hit
-                        missing_top5_count -= 1  # Exempt doesn't count as miss
-                        missing_top10_count -= 1
-                        missing_top15_count -= 1
-                        missing_top20_count -= 1
-    
+                    if rank <= 5: # Top 5 specific exemptions
+                         if pref_name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] and has_3hr_scheduled:
+                             is_exempt = True
+                         elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
+                             is_exempt = True
+                    
+                    if not is_exempt:
+                        current_preference_deductions += weight
+                        # Stats
+                        if rank <= 5: missing_top5_count += 1
+                        if rank <= 10: missing_top10_count += 1
+                        if rank <= 14: missing_top14_count += 1
+
+            # --- RANKS 15-20: BONUS IF HIT ---
+            elif rank <= 20:
+                # Determining bonus weight
+                weight = 0.0
+                idx = i - 14
+                if idx < len(weights["preference_weights"]["top15_20"]):
+                    weight = weights["preference_weights"]["top15_20"][idx]
+                
+                if pref_name in troop_acts:
+                    current_preference_bonuses += weight
+                    # No stats for "missing" deep preferences
+
+    # Final calculation
+    total_preference_points_accumulated = max(0, preference_score - current_preference_deductions + current_preference_bonuses)
+
     metrics["preference_points_accumulated"] = total_preference_points_accumulated
+    metrics["preference_deductions"] = current_preference_deductions
+    metrics["preference_bonuses"] = current_preference_bonuses
+    
     metrics["missing_top5"] = missing_top5_count
     metrics["missing_top10"] = missing_top10_count
-    metrics["missing_top15"] = missing_top15_count
-    metrics["missing_top20"] = missing_top20_count
+    metrics["missing_top14"] = missing_top14_count
     
-    # Success percentages
-    total_top5 = sum(min(5, len(t.preferences)) for t in troops)
-    total_top10 = sum(min(10, len(t.preferences)) for t in troops)
-    total_top15 = sum(min(15, len(t.preferences)) for t in troops)
-    total_top20 = sum(min(20, len(t.preferences)) for t in troops)
-    metrics["top5_pct"] = 100.0 * (total_top5 - missing_top5_count) / max(1, total_top5)
-    metrics["top10_pct"] = 100.0 * (total_top10 - missing_top10_count) / max(1, total_top10)
-    metrics["top15_pct"] = 100.0 * (total_top15 - missing_top15_count) / max(1, total_top15)
-    metrics["top20_pct"] = 100.0 * (total_top20 - missing_top20_count) / max(1, total_top20)
+    # Success percentages (Calculated based on requested vs fulfilled)
+    # Only count "requested" items in the denominator
+    total_top5_requested = sum(min(5, len(t.preferences)) for t in troops)
+    total_top10_requested = sum(min(10, len(t.preferences)) for t in troops)
+    
+    metrics["top5_pct"] = 100.0 * (total_top5_requested - missing_top5_count) / max(1, total_top5_requested)
+    metrics["top10_pct"] = 100.0 * (total_top10_requested - missing_top10_count) / max(1, total_top10_requested)
 
 
     # 8. New Metrics: Early Week Bias & Batching
@@ -663,12 +675,12 @@ def evaluate_week(week_file, weights=None):
     # === Valid schedule - calculate component scores ===
     metrics["schedule_invalid"] = False
     
-    # 1. Preferences: ~450 pts (summed points - penalty for missed Top 5)
-    pref_points = (
-        metrics.get("preference_points_accumulated", 0.0)
-        - metrics["missing_top5"] * weights["top5_miss_penalty"]
-    )
+    # 1. Preferences: ~450 pts (already calculated with new deduction/bonus logic)
+    pref_points = metrics.get("preference_points_accumulated", 0.0)
     score_components["preference_points"] = pref_points
+    score_components["preference_deductions"] = metrics.get("preference_deductions", 0.0)
+    score_components["preference_bonuses"] = metrics.get("preference_bonuses", 0.0)
+
     
     # 2. Cluster Efficiency: 250 pts (HIGH PRIORITY)
     cluster_points = (
