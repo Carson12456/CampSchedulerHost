@@ -196,3 +196,74 @@ def get_special_activities() -> Dict[str, Dict[str, Any]]:
 def get_special_activity_config(activity_name: str) -> Dict[str, Any]:
     """Get configuration for a specific special activity."""
     return get_special_activities().get(activity_name, {})
+
+
+# === Soft Prohibited Pairs ===
+
+def get_soft_prohibited_pairs() -> List[List[str]]:
+    """Get list of soft prohibited activity pairs (avoid same day if possible)."""
+    return _load_skull().get("soft_prohibited_pairs", [])
+
+
+def are_activities_soft_prohibited_together(act1: str, act2: str) -> bool:
+    """Check if two activities should avoid being scheduled on the same day."""
+    for pair in get_soft_prohibited_pairs():
+        if act1 in pair and act2 in pair:
+            return True
+    return False
+
+
+# === Request-Only Activities ===
+
+def get_request_only_activities() -> List[str]:
+    """Get list of activities that should only be scheduled if explicitly requested."""
+    return _load_skull().get("request_only_activities", [])
+
+
+def is_request_only_activity(activity_name: str) -> bool:
+    """Check if an activity should only be scheduled when explicitly requested."""
+    return activity_name in get_request_only_activities()
+
+
+# === Sequence Rules ===
+
+def get_sequence_rules() -> Dict[str, Any]:
+    """Get sequence rules configuration (e.g., not_back_to_back rules)."""
+    return _load_skull().get("sequence_rules", {})
+
+
+def get_not_back_to_back_rules() -> List[Dict[str, Any]]:
+    """Get list of not-back-to-back rules.
+    
+    Each rule has:
+    - activity_a: The primary activity name
+    - activity_b_tags: List of tags for activities that cannot be adjacent
+    """
+    return get_sequence_rules().get("not_back_to_back", [])
+
+
+def are_activities_not_back_to_back(act1: str, act2: str) -> bool:
+    """Check if two activities cannot be scheduled in adjacent slots.
+    
+    Returns True if act1 and act2 should NOT be back-to-back.
+    """
+    rules = get_not_back_to_back_rules()
+    tags = get_activity_tags()
+    
+    for rule in rules:
+        activity_a = rule.get("activity_a", "")
+        b_tags = rule.get("activity_b_tags", [])
+        
+        # Check if act1 is activity_a and act2 has any of the b_tags
+        if act1 == activity_a:
+            for tag in b_tags:
+                if act2 in tags.get(tag, []):
+                    return True
+        
+        # Check reverse (act2 is activity_a, act1 has b_tags)
+        if act2 == activity_a:
+            for tag in b_tags:
+                if act1 in tags.get(tag, []):
+                    return True
+    
+    return False

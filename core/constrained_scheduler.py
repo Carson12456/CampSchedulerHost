@@ -1,6 +1,10 @@
 """
 Constrained scheduler for Iteration 2 - Fixed version.
 Fixes: Reflection for all, Delta→Super Troop sequencing.
+
+Refactored Architecture:
+- SchedulerConstants: Static configuration (activity lists, constraints)
+- Mixin classes provide modular functionality (see core/scheduler/)
 """
 import random
 from collections import defaultdict
@@ -8,8 +12,25 @@ from .models import Activity, Troop, Schedule, ScheduleEntry, TimeSlot, Day, Zon
 from core.scheduler import config_loader
 from .activities import get_all_activities, get_activity_by_name
 
+# Import mixin classes for modular composition
+from .scheduler.constants import SchedulerConstants
+from .scheduler.utilities import UtilityMixin
+from .scheduler.validators import ValidatorMixin
+from .scheduler.phase_a_foundation import PhaseAFoundationMixin
+from .scheduler.phase_b_core import PhaseBCoreMixin
+from .scheduler.phase_c_optimization import PhaseCOptimizationMixin
+from .scheduler.phase_d_cleanup import PhaseDCleanupMixin
 
-class ConstrainedScheduler:
+
+class ConstrainedScheduler(
+    UtilityMixin,
+    ValidatorMixin,
+    PhaseAFoundationMixin,
+    PhaseBCoreMixin,
+    PhaseCOptimizationMixin,
+    PhaseDCleanupMixin
+):
+
     """
     Advanced scheduler with constraints:
     1. Beach activity in slot 1/3 daily (Thu slot 2)
@@ -79,27 +100,28 @@ class ConstrainedScheduler:
     SPINE_BEACH_PROHIBITED_PAIR = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
     
     # Activities that cannot be on the same day for a troop (HARD constraints)
-    SAME_DAY_CONFLICTS = [
+    # NOTE: Per BRAIN.md v1.2.0, all prohibited pairs are now SOFT constraints.
+    # This list is kept empty. Hard conflicts are enforced via exclusive_areas in SKULL.json.
+    SAME_DAY_CONFLICTS = []
+    
+    # Activities to AVOID on same day (SOFT constraints - try to avoid)
+    # NOTE: These now match SKULL.json soft_prohibited_pairs
+    SOFT_SAME_DAY_CONFLICTS = [
         ("Trading Post", "Campsite Free Time"),
-        ("Trading Post", "Shower House"),  # Re-enabled per .cursorrules
-        # Spine: AT, WP, GM - no pair on same day
+        ("Trading Post", "Shower House"),
+        ("Troop Rifle", "Troop Shotgun"),
         ("Aqua Trampoline", "Water Polo"),
         ("Aqua Trampoline", "Greased Watermelon"),
         ("Water Polo", "Greased Watermelon"),
-        # Canoe activities - no two canoeing activities on same day
         ("Troop Canoe", "Canoe Snorkel"),
         ("Troop Canoe", "Nature Canoe"),
         ("Troop Canoe", "Float for Floats"),
         ("Canoe Snorkel", "Nature Canoe"),
         ("Canoe Snorkel", "Float for Floats"),
         ("Nature Canoe", "Float for Floats"),
-    ]
-    
-    # Activities to AVOID on same day (SOFT constraints - try to avoid)
-    SOFT_SAME_DAY_CONFLICTS = [
         ("Fishing", "Trading Post"),
         ("Fishing", "Campsite Free Time"),
-        ("Campsite Free Time", "Shower House")  # User request: avoid same day
+        ("Campsite Free Time", "Shower House"),
     ]
     
     # Activities that mildly prefer certain slots (SOFT preference)
@@ -325,35 +347,34 @@ class ConstrainedScheduler:
         self.staff_load_by_slot = defaultdict(lambda: defaultdict(int))
         
         # Staff zone mapping for activities
-        self.STAFF_ZONE_MAP = {
-            'Climbing Tower': 'Tower',
-            'Troop Rifle': 'Rifle',
-            'Troop Shotgun': 'Rifle',
-            'Archery': 'Archery',
-            'Knots and Lashings': 'ODS',
-            'Orienteering': 'ODS',
-            'GPS & Geocaching': 'ODS',
-            'Ultimate Survivor': 'ODS',
-            "What's Cooking": 'ODS',
-            'Chopped!': 'ODS',
-            'Tie Dye': 'Handicrafts',
-            'Hemp Craft': 'Handicrafts',
-            'Woggle Neckerchief Slide': 'Handicrafts',
-            "Monkey's Fist": 'Handicrafts',
-            'Aqua Trampoline': 'Beach',
-            'Troop Canoe': 'Beach',
-            'Troop Kayak': 'Beach',
-            'Canoe Snorkel': 'Beach',
-            'Float for Floats': 'Beach',
-            'Greased Watermelon': 'Beach',
-            'Underwater Obstacle Course': 'Beach',
-            'Troop Swim': 'Beach',
-            'Water Polo': 'Beach',
-            'Nature Canoe': 'Beach',
-            'Sailing': 'Beach',
-            'Super Troop': 'Commissioner',
-            'Delta': 'Commissioner',
-        }
+        # Staff zone mapping for activities
+        # Dynamic generation from source of truth (activities.py)
+        self.STAFF_ZONE_MAP = {}
+        for activity in self.activities:
+            # Map activity to its zone string representation
+            # This covers all activities including Beach, Tower, ODS, Handicrafts, etc.
+            if activity.zone.name == 'BEACH':
+                self.STAFF_ZONE_MAP[activity.name] = 'Beach'
+            elif activity.zone.name == 'TOWER':
+                self.STAFF_ZONE_MAP[activity.name] = 'Tower'
+            elif activity.zone.name == 'OUTDOOR_SKILLS':
+                self.STAFF_ZONE_MAP[activity.name] = 'ODS'
+            elif activity.zone.name == 'HANDICRAFTS':
+                self.STAFF_ZONE_MAP[activity.name] = 'Handicrafts'
+            elif activity.name in ['Troop Rifle', 'Troop Shotgun']: # Zone.RIFLE is implicit or handled differently in models
+                self.STAFF_ZONE_MAP[activity.name] = 'Rifle'
+            elif activity.name == 'Archery':
+                self.STAFF_ZONE_MAP[activity.name] = 'Archery'
+            elif activity.name == 'Super Troop':
+                 self.STAFF_ZONE_MAP[activity.name] = 'Commissioner'
+            elif activity.name == 'Delta':
+                 self.STAFF_ZONE_MAP[activity.name] = 'Commissioner'
+                 
+        # Ensure critical staff activities are mapped even if zone names vary slightly
+        # This fallback preserves existing behavior while adding dynamic support
+        if 'Climbing Tower' not in self.STAFF_ZONE_MAP: self.STAFF_ZONE_MAP['Climbing Tower'] = 'Tower'
+        if 'Troop Rifle' not in self.STAFF_ZONE_MAP: self.STAFF_ZONE_MAP['Troop Rifle'] = 'Rifle'
+
         
         # Cache for troop day activity counts (invalidated when schedule changes)
         self._troop_day_counts_cache = {}
@@ -634,10 +655,11 @@ class ConstrainedScheduler:
         self.logger.subsection("A.3 HC/DG Tuesday scheduling (Spine: early)")
         self._schedule_hc_dg_tuesday()
         
-        # Phase A.5: Thursday Sailing Reservation - Must run BEFORE 3hr/clustering (Spine order)
-        # Thursday has only 2 slots; Sailing needs both. Reserve early.
-        self.logger.subsection("A.5 Thursday Sailing Reservation (Spine: early)")
-        self._schedule_thursday_sailing_largest_troop()
+        # Phase A.5: Sailing Optimization (9-Slot Capacity, Priority)
+        # Optimized logic based on user feedback (Sailing is High Priority)
+        self.logger.subsection("A.5 Sailing Optimization (9-Slot)")
+        self._schedule_sailing_optimize_all()
+        # self._schedule_thursday_sailing_largest_troop() # REPLACED
         
         # Phase A.5b: Early Aqua Trampoline for Top 5 (Pattern: 67% of Top 5 misses are AT)
         # Reserve beach slots (1 or 3) before preferences consume them. Large troops first.
@@ -966,6 +988,10 @@ class ConstrainedScheduler:
         # =================================================================
         self.logger.section("FINAL VERIFICATION")
         
+        # Multi-slot Integrity Fix - Ensure all multi-slot activities have correct slots
+        self.logger.subsection("Multi-Slot Integrity Check")
+        self._fix_multislot_integrity()
+        
         # Final comprehensive validation
         self._final_comprehensive_validation()
 
@@ -973,6 +999,145 @@ class ConstrainedScheduler:
         self._sanitize_exclusivity()
         
         return self.schedule
+    
+    def _fix_multislot_integrity(self):
+        """
+        Fix any multi-slot activities that have lost their continuation slots.
+        
+        This runs at the very end to catch any corruption from earlier phases.
+        For each multi-slot activity, ensures all required slots exist.
+        """
+        from .models import Day, TimeSlot, ScheduleEntry
+        
+        print("  [Multi-Slot Integrity] Checking all multi-slot activities...")
+        
+        # Get all multi-slot activities and their required slot counts
+        # Dynamically build multi-slot activity map from source of truth
+        # This ensures we catch ALL multi-slot activities defined in activities.py
+        MULTI_SLOT_ACTIVITIES = {}
+        
+        if self.activities:
+            for activity in self.activities:
+                if activity.slots > 1:
+                    # Round 1.5 -> 2, 2 -> 2, 3 -> 3
+                    slots = int(activity.slots + 0.5)
+                    MULTI_SLOT_ACTIVITIES[activity.name] = slots
+        
+        # Ensure Climbing Tower is included (it varies by troop size but maxes at 2)
+        # The scheduler treats it as potentially 2-slot
+        if "Climbing Tower" not in MULTI_SLOT_ACTIVITIES:
+            MULTI_SLOT_ACTIVITIES["Climbing Tower"] = 2
+            
+        # Fallback for hardcoded activities if self.activities is empty (shouldn't happen)
+        if not MULTI_SLOT_ACTIVITIES:
+             MULTI_SLOT_ACTIVITIES = {
+                "Sailing": 2,  # 1.5 slots rounds to 2
+                "Back of the Moon": 3,
+                "Itasca State Park": 3,
+                "Tamarac Wildlife Refuge": 3,
+                "Climbing Tower": 2,  # 2 slots for large troops
+                "Canoe Snorkel": 2,
+                "Float for Floats": 2,
+            }
+            
+        print(f"  [Multi-Slot Integrity] Verifying {len(MULTI_SLOT_ACTIVITIES)} activity types: {sorted(list(MULTI_SLOT_ACTIVITIES.keys()))}")
+        
+        fixed_count = 0
+        removed_count = 0
+        
+        # Group entries by (troop, activity, day) to find incomplete multi-slot activities
+        activity_groups = {}
+        for entry in self.schedule.entries:
+            if entry.activity.name in MULTI_SLOT_ACTIVITIES:
+                key = (entry.troop.name, entry.activity.name, entry.time_slot.day.name)
+                if key not in activity_groups:
+                    activity_groups[key] = []
+                activity_groups[key].append(entry)
+        
+        # Check each group for completeness
+        all_slots = generate_time_slots()
+        
+        for (troop_name, activity_name, day_name), entries in activity_groups.items():
+            expected_slots = MULTI_SLOT_ACTIVITIES[activity_name]
+            actual_slots = len(entries)
+            
+            if actual_slots < expected_slots:
+                print(f"    [DEBUG] INCOMPLETE: {troop_name} {activity_name} @ {day_name} - has {actual_slots}/{expected_slots} slots")
+                # Missing slots! Try to add them
+                troop = entries[0].troop
+                activity = entries[0].activity
+                day = entries[0].time_slot.day
+                
+                # Find the starting slot (lowest slot number)
+                start_slot = min(e.time_slot.slot_number for e in entries)
+                
+                # Determine which slots are missing
+                existing_slot_nums = {e.time_slot.slot_number for e in entries}
+                needed_slot_nums = set(range(start_slot, start_slot + expected_slots))
+                missing_slot_nums = needed_slot_nums - existing_slot_nums
+                
+                # Try to add missing slots
+                for slot_num in sorted(missing_slot_nums):
+                    # Find the TimeSlot object
+                    time_slot = None
+                    for ts in all_slots:
+                        if ts.day == day and ts.slot_number == slot_num:
+                            time_slot = ts
+                            break
+                    
+                    if time_slot:
+                        # Check if slot is within day bounds
+                        max_slot = 2 if day == Day.THURSDAY else 3
+                        if slot_num > max_slot:
+                            # Can't add - would exceed day bounds
+                            # Remove the incomplete activity instead
+                            print(f"    [REMOVE] {troop_name} {activity_name} @ {day_name} - slot {slot_num} exceeds day bounds")
+                            for e in entries:
+                                if e in self.schedule.entries:
+                                    self.schedule.entries.remove(e)
+                                    removed_count += 1
+                            break
+                        
+                        # Check if troop is free in this slot
+                        troop_busy = any(
+                            e.troop == troop 
+                            and e.time_slot.day == time_slot.day 
+                            and e.time_slot.slot_number == time_slot.slot_number 
+                            for e in self.schedule.entries
+                        )
+                        
+                        if not troop_busy:
+                            # Add the missing slot
+                            new_entry = ScheduleEntry(time_slot, activity, troop)
+                            self.schedule.entries.append(new_entry)
+                            fixed_count += 1
+                            print(f"    [FIXED] {troop_name} {activity_name} @ {day_name} - added slot {slot_num}")
+                        else:
+                            # Slot is occupied by another activity
+                            # Check what's blocking and if we should remove the multi-slot activity
+                            blocker = next(
+                                (e for e in self.schedule.entries 
+                                 if e.troop == troop 
+                                 and e.time_slot.day == time_slot.day 
+                                 and e.time_slot.slot_number == time_slot.slot_number),
+                                None
+                            )
+                            if blocker:
+                                print(f"    [CONFLICT] {troop_name} {activity_name} @ {day_name} slot {slot_num} blocked by {blocker.activity.name}")
+                                # Remove the incomplete multi-slot activity
+                                for e in entries:
+                                    if e in self.schedule.entries:
+                                        self.schedule.entries.remove(e)
+                                        removed_count += 1
+                                print(f"    [REMOVE] Removed incomplete {activity_name} for {troop_name}")
+                            break
+        
+        if fixed_count > 0:
+            print(f"  [Multi-Slot Integrity] Fixed {fixed_count} missing slots")
+        if removed_count > 0:
+            print(f"  [Multi-Slot Integrity] Removed {removed_count} entries from incomplete activities")
+        if fixed_count == 0 and removed_count == 0:
+            print("  [Multi-Slot Integrity] All multi-slot activities complete")
     
     def _final_comprehensive_validation(self):
         """Perform final comprehensive validation of the schedule."""
@@ -983,6 +1148,14 @@ class ConstrainedScheduler:
         if gaps > 0:
             print(f"    Found {gaps} gaps - fixing...")
         self._guarantee_no_gaps()  # Unconditional: fill any gaps before return
+        
+        # Re-run multi-slot integrity check AFTER gap filling
+        # Gap filling can introduce incomplete multi-slot activities
+        print("  [Final Validation] Re-checking multi-slot integrity after gap fill...")
+        self._fix_multislot_integrity()
+        
+        # FINAL SAFETY NET: If integrity check removed activities, fill the new gaps!
+        self._guarantee_no_gaps()
         
         # Check critical constraints
         self._validate_critical_constraints()
@@ -1009,11 +1182,17 @@ class ConstrainedScheduler:
             print("    [OK] All troops have Friday Reflection")
         
         # Check beach slot violations (Top 5 relaxation: slot 2 allowed for Top 5 beach; AT requires exclusive)
-        beach_violations = 0
-        beach_activities = {"Water Polo", "Greased Watermelon", "Aqua Trampoline", "Troop Swim",
+        # Check beach slot violations (Top 5 relaxation: slot 2 allowed for Top 5 beach; AT requires exclusive)
+        # Dynamic discovery of beach activities from source of truth
+        from .models import Zone
+        beach_activities = {a.name for a in self.activities if a.zone == Zone.BEACH}
+        # Ensure "Water Polo" and others are included if they are implicitly beach
+        beach_activities.update({"Water Polo", "Greased Watermelon", "Aqua Trampoline", "Troop Swim",
                            "Underwater Obstacle Course", "Troop Canoe", "Troop Kayak", "Canoe Snorkel",
-                           "Nature Canoe", "Float for Floats"}
+                           "Nature Canoe", "Float for Floats", "Sailing"})
+
         
+        beach_violations = 0
         for entry in self.schedule.entries:
             if (hasattr(entry, 'time_slot') and hasattr(entry.time_slot, 'slot_number') and hasattr(entry.time_slot, 'day')):
                 if (entry.activity.name in beach_activities and 
@@ -1148,9 +1327,12 @@ class ConstrainedScheduler:
     
     def _count_exclusive_area_violations(self):
         """Count exclusive area violations."""
+        # Dynamic discovery of exclusive activities from configuration
+        # Assuming we have access to config_loader or similar, otherwise use a safe fallback set
+        # that encompasses all major exclusive areas
         exclusive_activities = {
             "Climbing Tower", "Troop Rifle", "Troop Shotgun", "Archery",
-            "Aqua Trampoline", "Sailing"
+            "Aqua Trampoline", "Sailing" # Core exclusive
         }
         
         violations = 0
@@ -1486,6 +1668,157 @@ class ConstrainedScheduler:
                 print(f"  [FAIL] {troop.name}: Could not schedule {activity.name}")
         
         print(f"  Scheduled {count} / {len(requests)} 3-hour activities.")
+    
+    def _schedule_sailing_optimize_all(self):
+        """
+        Consolidated Sailing Optimization Phase (9 Slots Logic).
+        
+        1. Identifies all demand (Top 10 preferences).
+        2. Sorts by: Preference Rank (Primary) -> Scout Count (Secondary).
+        3. Assigns slots to maximize capacity (9 slots/week):
+           - Thursday: 2 slots (reserved for Largest High Priority).
+           - Mon/Tue/Wed: Up to 2 sessions per day (Slots 1-2 & 2-3).
+           - Friday: 1 session (Slots 1-2, avoiding Reflection).
+        
+        This replaces previous scattered Sailing phases to ensure prioritization 
+        and maximum capacity utilization.
+        """
+        from .models import Day, TimeSlot
+        
+        print("\n--- Sailing Optimization (9-Slot Max Capacity) ---")
+        
+        sailing = get_activity_by_name("Sailing")
+        if not sailing:
+            print("  Sailing activity not found!")
+            return
+            
+        # 1. Identify Troop Demand
+        troops_demand = []
+        for troop in self.troops:
+            # Check if already scheduled (shouldn't be, as this runs early)
+            if self._troop_has_activity(troop, sailing):
+                continue
+            
+            # Check preferences (Top 10)
+            if "Sailing" in troop.preferences[:10]:
+                rank = troop.preferences.index("Sailing") + 1
+                scouts = troop.scouts if hasattr(troop, 'scouts') else 0
+                troops_demand.append((troop, rank, scouts))
+        
+        if not troops_demand:
+            print("  No troops need Sailing in User Preferences.")
+            return
+
+        # 2. Sort Demand
+        # Primary: Preference Rank (Ascending - 1 is best)
+        # Secondary: Troop Size (Descending - largest first)
+        troops_demand.sort(key=lambda x: (x[1], -x[2]))
+        
+        print(f"  Troop Demand ({len(troops_demand)} troops):")
+        for t, r, s in troops_demand:
+            print(f"    {t.name}: Rank #{r}, Size {s}")
+            
+        # 3. Schedule - Strategy: Fill slots in specific order
+        # Order: 
+        # A. Thursday (2 slots) - Largest High Priority
+        # B. Mon/Tue/Wed (Double Sessions) - Fill remaining demand
+        
+        scheduled_count = 0
+        
+        # Helper to try scheduling
+        def try_schedule(troop, day, start_slot):
+            slot1 = TimeSlot(day, start_slot)
+            
+            # Check if slots are free
+            if not self.schedule.is_troop_free(slot1, troop):
+                return False
+            
+            # Check second slot (Sailing is 1.5 slots, rounds to 2)
+            slot2_num = start_slot + 1
+            if slot2_num > (2 if day == Day.THURSDAY else 3):
+                return False
+            slot2 = TimeSlot(day, slot2_num)
+            if not self.schedule.is_troop_free(slot2, troop):
+                return False
+                
+            if self._can_schedule(troop, sailing, slot1, day):
+                self.schedule.add_entry(slot1, sailing, troop)
+                self._update_progress(troop, "Sailing")
+                print(f"  [SUCCESS] {troop.name} -> {day.name} Slot {start_slot}")
+                return True
+            return False
+
+        # A. Thursday Assignment for Largest High Priority
+        # Find the largest troop with Top 5 preference
+        largest_top5 = None
+        # Filter for Top 5 only first
+        top5_demand = [x for x in troops_demand if x[1] <= 5]
+        if top5_demand:
+            # Sort by Size DESC
+            top5_demand.sort(key=lambda x: -x[2])
+            largest_top5 = top5_demand[0] # Tuple (Troop, Rank, Size)
+            
+            # Try to schedule them on Thursday Slot 1
+            start_slot = 1
+            # Verify Thursday is valid
+            if try_schedule(largest_top5[0], Day.THURSDAY, 1):
+                scheduled_count += 1
+                # Remove from demand list
+                troops_demand = [x for x in troops_demand if x[0] != largest_top5[0]]
+            else:
+                print(f"  [WARN] Could not place largest troop {largest_top5[0].name} on Thursday.")
+
+        # B. Fill remaining demand on Mon/Tue/Wed/Fri
+        # Priority: Mon/Tue/Wed (Double Capacity) -> Fri (Single Capacity)
+        target_days = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY]
+        
+        # We need to fill 2 sessions per day: Slot 1 start (1-2) and Slot 2 start (2-3)
+        # Iterate through demand list (already sorted by Rank -> Size)
+        
+        for idx, (troop, rank, size) in enumerate(list(troops_demand)):
+            placed = False
+            
+            # Prefer Delta pairing if exists
+            delta_day = None
+            if "Delta" in troop.preferences:
+                 # Find delta day if scheduled? Assumes Delta runs later or is fixed? 
+                 # If Delta is not scheduled yet, we check COMMISSIONER_DELTA_DAYS if assigned
+                 commissioner = getattr(troop, 'commissioner', None)
+                 if commissioner and "A" in commissioner: delta_day = Day.MONDAY
+                 elif commissioner and "B" in commissioner: delta_day = Day.TUESDAY
+                 elif commissioner and "C" in commissioner: delta_day = Day.WEDNESDAY
+                 
+            # Prioritize Delta day if available
+            day_order = list(target_days)
+            if delta_day and delta_day in day_order:
+                day_order.remove(delta_day)
+                day_order.insert(0, delta_day)
+                
+            # Try Slot 1 starts first (standard), then Slot 2 starts (overlap)
+            # Actually, to maximize 2/day, we should check which slots are open
+            
+            for day in day_order:
+                # Try Start Slot 1 (occupies 1-2)
+                if try_schedule(troop, day, 1):
+                    placed = True
+                    break
+                # Try Start Slot 2 (occupies 2-3) - Only valid if Slot 1-2 session exists or free?
+                # Actually _can_schedule handles the overlap validation logic I saw earlier
+                if try_schedule(troop, day, 2):
+                    placed = True
+                    break
+            
+            if not placed:
+                 # Try Friday as last resort (Slot 1 only usually, avoiding Reflection)
+                 if try_schedule(troop, Day.FRIDAY, 1):
+                     placed = True
+            
+            if placed:
+                 scheduled_count += 1
+            else:
+                 print(f"  [FAIL] Could not schedule Sailing for {troop.name} (Rank {rank})")
+
+        print(f"  Scheduled {scheduled_count} Sailing sessions.")
     
     def _schedule_thursday_sailing_largest_troop(self):
         """
@@ -7393,6 +7726,35 @@ class ConstrainedScheduler:
         if not self.schedule.is_troop_free(slot, troop):
             return False
         
+        # REQUEST-ONLY CHECK: Activities like Tie Dye and Troop Shotgun
+        # can only be scheduled if the troop explicitly requested them
+        if config_loader.is_request_only_activity(activity.name):
+            if hasattr(troop, 'preferences') and activity.name not in troop.preferences:
+                return False  # Request-only activity not in troop preferences
+        
+        # NOT-BACK-TO-BACK CHECK (Delta + Tower/ODS)
+        # Check if this activity would be adjacent to a prohibited activity
+        adjacent_slots = []
+        if slot.slot_number > 1:
+            # Check previous slot
+            for existing_slot in generate_time_slots():
+                if existing_slot.day == day and existing_slot.slot_number == slot.slot_number - 1:
+                    adjacent_slots.append(existing_slot)
+                    break
+        max_slot = 2 if day == Day.THURSDAY else 3
+        if slot.slot_number < max_slot:
+            # Check next slot
+            for existing_slot in generate_time_slots():
+                if existing_slot.day == day and existing_slot.slot_number == slot.slot_number + 1:
+                    adjacent_slots.append(existing_slot)
+                    break
+        
+        for adj_slot in adjacent_slots:
+            for entry in self.schedule.entries:
+                if entry.time_slot == adj_slot and entry.troop == troop:
+                    if config_loader.are_activities_not_back_to_back(activity.name, entry.activity.name):
+                        return False  # Would violate not-back-to-back rule
+        
         # ENHANCED: Dynamic staff limit with clustering optimization
         # For staff clustering activities, allow higher limits to improve efficiency
         STAFF_CLUSTERING_ACTIVITIES = {
@@ -9710,6 +10072,19 @@ class ConstrainedScheduler:
                                         filled_slots.add((day, slot_num))
                                         troop_entries = [e for e in self.schedule.entries if e.troop == troop]
                                         break
+                                
+                                # If still not filled after all candidates, force-append Campsite Free Time
+                                if not filled and iteration >= 3:
+                                    force_activity = get_activity_by_name("Campsite Free Time")
+                                    if force_activity:
+                                        from .models import ScheduleEntry
+                                        self.schedule.entries.append(ScheduleEntry(slot, force_activity, troop))
+                                        print(f"  [FORCE APPEND] {troop.name}: Campsite Free Time -> {day.name[:3]}-{slot_num}")
+                                        filled = True
+                                        iteration_fills += 1
+                                        gaps_filled += 1
+                                        filled_slots.add((day, slot_num))
+                                        troop_entries = [e for e in self.schedule.entries if e.troop == troop]
             
             print(f"  Total gaps filled: {gaps_filled}")
             
@@ -11682,6 +12057,18 @@ class ConstrainedScheduler:
                     self.schedule.entries.remove(entry)
                     removed_count += 1
                     
+                    # FIX: Multi-slot atomicity - remove siblings!
+                    effective_slots = self.schedule._get_effective_slots(entry.activity, entry.troop)
+                    if effective_slots > 1:
+                        siblings = [s for s in self.schedule.entries 
+                                   if s.troop == entry.troop 
+                                   and s.activity.name == entry.activity.name 
+                                   and s.time_slot.day == entry.time_slot.day
+                                   and s != entry]
+                        for s in siblings:
+                            if s in self.schedule.entries:
+                                self.schedule.entries.remove(s)
+                    
                     # TRACK TOP 5 TO RECOVER LATER
                     rank = entry.troop.get_priority(entry.activity.name)
                     if rank < 5:
@@ -11797,11 +12184,9 @@ class ConstrainedScheduler:
                         self.schedule.entries.remove(fill_entry)
                         
                         # Check if the target slot is available for this exclusive activity
-                        other_exclusive = [e for e in self.schedule.entries 
-                                          if e.activity.name == activity_name 
-                                          and e.time_slot == fill_slot]
-                        
-                        if not other_exclusive:
+                        # We must use is_activity_available to check ALL constraints (including adjacency)
+                        if self.schedule.is_activity_available(fill_slot, exclusive_entry.activity, troop):
+                            # This swap improves clustering!
                             # This swap improves clustering!
                             best_swap = (fill_entry, fill_slot, target_day_count)
                             best_cluster_count = target_day_count
@@ -12040,14 +12425,12 @@ class ConstrainedScheduler:
                         self.schedule.entries.remove(staff_entry)
                         self.schedule.entries.remove(fill_entry)
                         
-                        # Check exclusivity for staff activity
-                        can_swap = True
-                        if staff_entry.activity.name in EXCLUSIVE_ACTIVITIES:
-                            other_exclusive = [e for e in self.schedule.entries
-                                              if e.activity.name == staff_entry.activity.name
-                                              and e.time_slot == fill_entry.time_slot]
-                            if other_exclusive:
-                                can_swap = False
+                        # Check if swap is valid using comprehensive validation
+                        # We must use is_activity_available to check ALL constraints (adjacency, exclusivity, etc.)
+                        can_swap = False
+                        if (self.schedule.is_activity_available(fill_entry.time_slot, staff_entry.activity, staff_entry.troop) and
+                            self.schedule.is_activity_available(staff_entry.time_slot, fill_entry.activity, fill_entry.troop)):
+                            can_swap = True
                         
                         if can_swap:
                             # Execute swap
@@ -12526,6 +12909,24 @@ class ConstrainedScheduler:
                             print(f"    Removed: {e.troop.name}")
                     continue
                 
+                # Define helper to remove siblings
+                def mark_for_removal(e_to_remove):
+                    if e_to_remove in entries_to_remove:
+                        return
+                    entries_to_remove.append(e_to_remove)
+                    
+                    # If multi-slot, remove ALL other entries for this activity on this day
+                    effective_slots = self.schedule._get_effective_slots(e_to_remove.activity, e_to_remove.troop)
+                    if effective_slots > 1:
+                        siblings = [s for s in self.schedule.entries 
+                                   if s.troop == e_to_remove.troop 
+                                   and s.activity.name == e_to_remove.activity.name 
+                                   and s.time_slot.day == e_to_remove.time_slot.day
+                                   and s != e_to_remove]
+                        for s in siblings:
+                            if s not in entries_to_remove:
+                                entries_to_remove.append(s)
+
                 # Keep the first (highest priority / Top 5 protected), remove rest
                 # But NEVER remove if all are Top 5 - print warning instead
                 all_top5 = all(sort_key(e)[0] == False for e in sorted_entries)
@@ -12539,23 +12940,11 @@ class ConstrainedScheduler:
                     print(f"    Keeping: {sorted_entries[0].troop.name} (first by priority)")
                     # Still have to remove some, keep first
                     for e in sorted_entries[1:]:
-                        if e not in entries_to_remove:
-                            entries_to_remove.append(e)
+                        mark_for_removal(e)
                 else:
                     # Normal removal - prioritize keeping Top 5
                     for e in sorted_entries[1:]:
-                        if e not in entries_to_remove:
-                            entries_to_remove.append(e)
-                            priority = e.troop.preferences.index(e.activity.name) if e.activity.name in e.troop.preferences else 999
-                            if priority < 5:
-                                # TRACK TOP 5 TO RECOVER LATER
-                                if not hasattr(self, '_top5_to_recover'):
-                                    self._top5_to_recover = []
-                                self._top5_to_recover.append((e.troop, e.activity, priority))
-
-                            rank_str = f"#{priority+1}" if priority < 999 else "fill"
-                            print(f"  Activity conflict: {activity} @ {day} slot {slot}")
-                            print(f"    Removed: {e.activity.name} (slot {slot}) [{e.troop.name} {rank_str}]")
+                        mark_for_removal(e)
         
         # Remove conflicting entries
         if entries_to_remove:
@@ -12592,7 +12981,31 @@ class ConstrainedScheduler:
                         has_reflection = True
                         break
             
+            # If still no reflection, force replace the lowest priority Friday activity
+            if not has_reflection and reflection:
+                candidates = []
+                troop_entries = [e for e in self.schedule.entries if e.troop == troop]
+                for e in troop_entries:
+                    if e.time_slot.day == Day.FRIDAY and e.activity.name not in {'Reflection', 'Super Troop'}:
+                        priority = troop.get_priority(e.activity.name)
+                        candidates.append((e, priority))
+                
+                # Sort by priority descending (highest numeric = lowest priority = best to replace)
+                candidates.sort(key=lambda x: x[1], reverse=True)
+                
+                for existing_entry, priority in candidates:
+                    slot = existing_entry.time_slot
+                    # Remove existing entry and add Reflection
+                    self.schedule.entries.remove(existing_entry)
+                    entry = ScheduleEntry(slot, reflection, troop)
+                    self.schedule.entries.append(entry)
+                    print(f"  [MANDATORY] Replaced {existing_entry.activity.name} (#{priority+1 if priority < 999 else 'fill'}) with Reflection for {troop.name} @ Friday slot {slot.slot_number}")
+                    has_reflection = True
+                    break
+            
             # Ensure Super Troop
+            # Refresh entries as Reflection logic might have modified schedule
+            entries = [e for e in self.schedule.entries if e.troop == troop]
             if not has_super_troop and super_troop:
                 # Find any slot where troop is free AND Super Troop is available
                 for day in [Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY, Day.MONDAY]:
@@ -12643,6 +13056,7 @@ class ConstrainedScheduler:
                                 self._top5_to_recover = []
                             self._top5_to_recover.append((troop, slot_entry.activity, priority))
                             print(f"    Added {slot_entry.activity.name} to recovery list")
+                        break
                             
                         break
     

@@ -1,0 +1,99 @@
+﻿ENHANCED Regression Checker - Analyzing 10 Actual Weeks
+============================================================
+Analyzing current schedules...
+Found 10 target week files
+Calculating comprehensive quality metrics...
+  Average Week Score: 324.9
+  Average Constraint Violations: 3.1
+  Average Staff Variance: 1.79
+  Average Clustering Efficiency: 4.70
+  Average Beach Slot Violations: 2.2
+Loading baseline metrics...
+Checking for regressions...
+Checking multi-slot activities...
+Checking data consistency...
+
+============================================================
+ENHANCED REGRESSION CHECK SUMMARY
+============================================================
+REGRESSIONS DETECTED: 3
+   High Severity: 1
+   Medium Severity: 2
+
+REGRESSION DETAILS:
+   1. HIGH Constraint Violations: Constraint violations increased from 0.0 to 3.1
+   2. MEDIUM Beach Slot Compliance: Beach slot violations increased from 0.0 to 2.2
+   3. MEDIUM Staff Balance: Staff variance increased from 0.00 to 1.79
+============================================================
+
+==========================================================================================
+PER-WEEK EVALUATION SUMMARY
+==========================================================================================
+Week                   | Score  | Top5%  | Viol  | StVar | Clust | Beach
+------------------------------------------------------------------------------------------
+tc_week1_troops        | 603    | 100.0  | 1     | 1.23  | 5     | 1    
+tc_week2_troops        | 462    | 93.3   | 0     | 0.82  | 4     | 1    
+tc_week3_troops        | 752    | 93.3   | 4     | 1.86  | 3     | 2    
+tc_week4_troops        | 716    | 87.3   | 3     | 2.21  | 4     | 3    
+tc_week5_troops        | 671    | 90.9   | 4     | 2.98  | 5     | 3    
+tc_week6_troops        | 760    | 100.0  | 6     | 1.74  | 4     | 3    
+tc_week7_troops        | -1000  | 98.2   | 3     | 1.78  | 7     | 3    
+tc_week8_troops        | 489    | 95.0   | 2     | 1.23  | 4     | 2    
+voyageur_week1_troops  | 796    | 98.0   | 1     | 2.10  | 6     | 2    
+voyageur_week3_troops  | -1000  | 92.5   | 7     | 1.92  | 5     | 2    
+==========================================================================================
+
+============================================================
+VIOLATION DETAILS BY WEEK
+============================================================
+
+--- tc_week1_troops (1 violations) ---
+  - Sequoyah: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Tuesday
+
+--- tc_week2_troops (0 violations) ---
+
+--- tc_week3_troops (4 violations) ---
+  - Samoset: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+  - Tamanend: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Pontiac: Wet-Dry-Wet pattern on Friday
+  - Red Cloud: Shower House before Super Troop on Tuesday
+
+--- tc_week4_troops (3 violations) ---
+  - Massasoit: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+  - Powhatan: Shower House before Greased Watermelon on Wednesday
+  - Massasoit: Shower House before Greased Watermelon on Friday
+
+--- tc_week5_troops (4 violations) ---
+  - Black Hawk: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Tamanend: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Tamanend: Wet-Dry-Wet pattern on Friday
+  - Joseph: Shower House before Super Troop on Wednesday
+
+--- tc_week6_troops (6 violations) ---
+  - Tecumseh: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Taskalusa: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Tuesday
+  - Samoset: Beach activity 'Water Polo' in Slot 2 (not Top 5) on Tuesday
+  - Samoset: Trading Post + Shower House on same day (Friday)
+  - Tecumseh: Shower House before Float for Floats on Monday
+  - Red Cloud: Shower House before Greased Watermelon on Wednesday
+
+--- tc_week7_troops (3 violations) ---
+  - Taskalusa: Delta adjacent to Tower/ODS on Monday
+  - Powhatan: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Wednesday
+  - Massasoit: Beach activity 'Nature Canoe' in Slot 2 (not Top 5) on Wednesday
+
+--- tc_week8_troops (2 violations) ---
+  - Tecumseh: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Samoset: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Tuesday
+
+--- voyageur_week1_troops (1 violations) ---
+  - Chisholm: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+
+--- voyageur_week3_troops (7 violations) ---
+  - Fond Du Lac: Delta adjacent to Tower/ODS on Thursday
+  - Hibbing 2: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Ft. Francis: Trading Post + Shower House on same day (Friday)
+  - Fond Du Lac: Trading Post + Campsite Free Time on same day (Wednesday)
+  - Ft. William: Wet-Dry-Wet pattern on Wednesday
+  - Quetico: Shower House before Aqua Trampoline on Monday
+  - Hibbing 1: Shower House before Aqua Trampoline on Wednesday

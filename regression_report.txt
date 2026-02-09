@@ -1,0 +1,152 @@
+﻿ENHANCED Regression Checker - Analyzing 10 Actual Weeks
+============================================================
+Analyzing current schedules...
+Found 10 target week files
+Calculating comprehensive quality metrics...
+Loading existing schedule from data\schedules\tc_week1_troops_schedule.json...
+Loading existing schedule from data\schedules\tc_week2_troops_schedule.json...
+Loading existing schedule from data\schedules\tc_week3_troops_schedule.json...
+Loading existing schedule from data\schedules\tc_week4_troops_schedule.json...
+Loading existing schedule from data\schedules\tc_week5_troops_schedule.json...
+Loading existing schedule from data\schedules\tc_week6_troops_schedule.json...
+Loading existing schedule from data\schedules\tc_week7_troops_schedule.json...
+Loading existing schedule from data\schedules\tc_week8_troops_schedule.json...
+Loading existing schedule from data\schedules\voyageur_week1_troops_schedule.json...
+Loading existing schedule from data\schedules\voyageur_week3_troops_schedule.json...
+  Average Week Score: -426.4
+  Average Constraint Violations: 7.6
+  Average Staff Variance: 1.25
+  Average Clustering Efficiency: 4.50
+  Average Beach Slot Violations: 2.5
+Loading baseline metrics...
+Checking for regressions...
+Checking multi-slot activities...
+Checking data consistency...
+
+============================================================
+ENHANCED REGRESSION CHECK SUMMARY
+============================================================
+REGRESSIONS DETECTED: 4
+   High Severity: 2
+   Medium Severity: 2
+
+REGRESSION DETAILS:
+   1. HIGH Average Week Score: Average week score dropped from 0.0 to -426.4
+   2. HIGH Constraint Violations: Constraint violations increased from 0.0 to 7.6
+   3. MEDIUM Beach Slot Compliance: Beach slot violations increased from 0.0 to 2.5
+   4. MEDIUM Staff Balance: Staff variance increased from 0.00 to 1.25
+============================================================
+
+==========================================================================================
+PER-WEEK EVALUATION SUMMARY
+==========================================================================================
+Week                   | Score  | Top5%  | Viol  | StVar | Clust | Beach
+------------------------------------------------------------------------------------------
+tc_week1_troops        | -475   | 90.0   | 4     | 0.84  | 4     | 1    
+tc_week2_troops        | -562   | 93.3   | 0     | 0.66  | 4     | 1    
+tc_week3_troops        | -411   | 91.1   | 10    | 0.92  | 5     | 3    
+tc_week4_troops        | -355   | 87.3   | 8     | 1.49  | 3     | 3    
+tc_week5_troops        | -387   | 87.3   | 12    | 1.64  | 4     | 3    
+tc_week6_troops        | -367   | 98.0   | 13    | 1.11  | 4     | 4    
+tc_week7_troops        | -348   | 92.7   | 10    | 1.49  | 4     | 3    
+tc_week8_troops        | -533   | 95.0   | 4     | 0.96  | 4     | 2    
+voyageur_week1_troops  | -380   | 92.0   | 8     | 1.35  | 6     | 3    
+voyageur_week3_troops  | -446   | 90.0   | 7     | 2.07  | 7     | 2    
+==========================================================================================
+
+============================================================
+VIOLATION DETAILS BY WEEK
+============================================================
+
+--- tc_week1_troops (4 violations) ---
+  - Sequoyah: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Tuesday
+  - Sequoyah: Missing Friday Reflection
+  - Samoset: Missing Friday Reflection
+  - Red Cloud: Missing Friday Reflection
+
+--- tc_week2_troops (0 violations) ---
+
+--- tc_week3_troops (10 violations) ---
+  - Samoset: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+  - Tamanend: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Pontiac: Beach activity 'Troop Swim' in Slot 2 (not Top 5) on Friday
+  - Sequoyah: Missing Friday Reflection
+  - Samoset: Missing Friday Reflection
+  - Powhatan: Missing Friday Reflection
+  - Pontiac: Missing Friday Reflection
+  - Black Hawk: Missing Friday Reflection
+  - Taskalusa: Wet-Dry-Wet pattern on Tuesday
+  - Red Cloud: Shower House before Super Troop on Tuesday
+
+--- tc_week4_troops (8 violations) ---
+  - Massasoit: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+  - Skenandoa: Missing Friday Reflection
+  - Powhatan: Missing Friday Reflection
+  - Pontiac: Missing Friday Reflection
+  - Joseph: Missing Friday Reflection
+  - Black Hawk: Missing Friday Reflection
+  - Powhatan: Shower House before Greased Watermelon on Wednesday
+  - Massasoit: Shower House before Greased Watermelon on Friday
+
+--- tc_week5_troops (12 violations) ---
+  - Black Hawk: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Tamanend: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Tecumseh: Missing Friday Reflection
+  - Tamanend: Missing Friday Reflection
+  - Skenandoa: Missing Friday Reflection
+  - Sequoyah: Missing Friday Reflection
+  - Samoset: Missing Friday Reflection
+  - Red Cloud: Missing Friday Reflection
+  - Joseph: Missing Friday Reflection
+  - Tamanend: Wet-Dry-Wet pattern on Friday
+  ... and 2 more
+
+--- tc_week6_troops (13 violations) ---
+  - Tecumseh: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+  - Taskalusa: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Tuesday
+  - Red Cloud: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Friday
+  - Samoset: Beach activity 'Water Polo' in Slot 2 (not Top 5) on Tuesday
+  - Tecumseh: Missing Friday Reflection
+  - Tamanend: Missing Friday Reflection
+  - Samoset: Missing Friday Reflection
+  - Red Cloud: Missing Friday Reflection
+  - Cochise: Missing Friday Reflection
+  - Tecumseh: Wet-Dry-Wet pattern on Friday
+  ... and 3 more
+
+--- tc_week7_troops (10 violations) ---
+  - Powhatan: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Wednesday
+  - Massasoit: Beach activity 'Nature Canoe' in Slot 2 (not Top 5) on Wednesday
+  - Taskalusa: Delta adjacent to Tower/ODS on Monday
+  - Tamanend: Missing Friday Reflection
+  - Samoset: Missing Friday Reflection
+  - Roman Nose: Missing Friday Reflection
+  - Red Cloud: Missing Friday Reflection
+  - Powhatan: Missing Friday Reflection
+  - Cochise: Missing Friday Reflection
+  - Tecumseh: Missing Friday Reflection
+
+--- tc_week8_troops (4 violations) ---
+  - Tecumseh: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Samoset: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Tuesday
+  - Taskalusa: Missing Friday Reflection
+  - Samoset: Missing Friday Reflection
+
+--- voyageur_week1_troops (8 violations) ---
+  - Chisholm: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Friday
+  - Chisholm: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday
+  - Chisholm: Missing Friday Reflection
+  - Vermillion: Missing Friday Reflection
+  - Ft. William: Missing Friday Reflection
+  - Two Harbors 1: Missing Friday Reflection
+  - Two Harbors 2: Missing Friday Reflection
+  - Ft. Francis: Missing Friday Reflection
+
+--- voyageur_week3_troops (7 violations) ---
+  - Hibbing 2: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  - Fond Du Lac: Delta adjacent to Tower/ODS on Thursday
+  - Two Harbors: Missing Friday Reflection
+  - Ft. Francis: Missing Friday Reflection
+  - Duluth: Missing Friday Reflection
+  - Ft. William: Wet-Dry-Wet pattern on Wednesday
+  - Hibbing 1: Shower House before Aqua Trampoline on Wednesday

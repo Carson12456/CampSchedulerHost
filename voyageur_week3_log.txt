@@ -1,0 +1,670 @@
+﻿Generating schedule for voyageur_week3_troops...
+DEBUG: Scheduler loaded from C:\Users\Carson\OneDrive - Minnesota State\Desktop\Projects\CampScheduler\summer-camp-scheduler\core\constrained_scheduler.py
+
+======================================================================
+CONSTRAINED SCHEDULER - PHASE A: FOUNDATION
+======================================================================
+
+--- A.0 Friday Reflection (reserve Friday slots) ---
+
+--- Scheduling Friday Reflection for ALL troops (by campsite proximity) ---
+DEBUG: Checking slots for Reflection...
+  Quetico: Reflection -> Fri-1 (north zone)
+  Two Harbors: Reflection -> Fri-1 (north zone)
+  Hibbing 1: Reflection -> Fri-1 (north zone)
+  Hibbing 2: Reflection -> Fri-2 (middle zone)
+  Ft. Francis: Reflection -> Fri-2 (middle zone)
+  Ft. William: Reflection -> Fri-2 (middle zone)
+  Fond Du Lac: Reflection -> Fri-3 (south zone)
+  Duluth: Reflection -> Fri-3 (south zone)
+
+--- A.0b Super Troop (mandatory) ---
+
+--- Scheduling Super Troop (flexible commissioner preference) ---
+  Quetico: Super Troop -> Mon-1 (commissioner day bias)
+  Two Harbors: Super Troop -> Mon-2 (commissioner day bias)
+  Hibbing 1: Super Troop -> Tue-1 (commissioner day bias)
+  Hibbing 2: Super Troop -> Tue-2 (commissioner day bias)
+  Ft. Francis: Super Troop -> Mon-3 (best available, 3 ST on MONDAY)
+  Ft. William: Super Troop -> Tue-3 (best available, 3 ST on TUESDAY)
+  Fond Du Lac: Super Troop -> Wed-1 (best available, 1 ST on WEDNESDAY)
+  Duluth: Super Troop -> Wed-2 (best available, 2 ST on WEDNESDAY)
+
+--- A.3 HC/DG Tuesday scheduling (Spine: early) ---
+
+--- Early HC/DG Scheduling (Tuesday Only, Top 3) ---
+  Processing History Center requests...
+    [SUCCESS] Ft. William: History Center at Tue-1
+    Ft. Francis wants BOTH HC and DG - attempting back-to-back...
+      Slot 1 free: True, Slot 2 free: True
+      HC at Slot 1 blocked by constraints
+      Slot 2 free: True, Slot 3 free: True
+    [PAIR SUCCESS] Ft. Francis: HC (Tue-2) -> DG (Tue-3)
+  Processing Disc Golf requests...
+
+--- A.5 Sailing Optimization (9-Slot) ---
+
+--- Sailing Optimization (9-Slot Max Capacity) ---
+  Troop Demand (4 troops):
+    Hibbing 1: Rank #2, Size 22
+    Duluth: Rank #4, Size 17
+    Hibbing 2: Rank #4, Size 10
+    Fond Du Lac: Rank #7, Size 17
+  [SUCCESS] Hibbing 1 -> THURSDAY Slot 1
+  [SUCCESS] Duluth -> MONDAY Slot 1
+  [SUCCESS] Hibbing 2 -> WEDNESDAY Slot 1
+  [SUCCESS] Fond Du Lac -> TUESDAY Slot 1
+  Scheduled 4 Sailing sessions.
+
+--- A.5b Early Aqua Trampoline for Top 5 ---
+  [Early AT] Scheduled Aqua Trampoline for 8 troops (Top 5)
+
+--- A.5c Guarantee Top 1 Beach (AT/WP/GM/etc.) ---
+  [Top1 Beach] All top-1 beach preferences placed
+
+--- A.1 Scheduling 3-Hour Activities ---
+
+--- Scheduling 3-hour activities (Top Priority) ---
+  No 3-hour activity requests found.
+
+--- A.7 Delta + Sailing pairing (reserve day) ---
+
+--- Scheduling Delta + Sailing Pairs ---
+  No Delta+Sailing pairs scheduled
+
+--- A.2 Top 10 2-Hour Activities (Priority) ---
+
+--- Scheduling Top 10 2-Hour Activities (Priority) ---
+  [Priority 2-Hour] Two Harbors: Canoe Snorkel (Rank #4)
+  [Priority 2-Hour] Two Harbors: Float for Floats (Rank #10)
+  [Priority 2-Hour] Hibbing 2: Canoe Snorkel (Rank #6)
+  [Smart Reflection] Ft. William: Reflection -> Fri-3 (triggered: 1 slot left)
+  [Priority 2-Hour] Ft. William: Canoe Snorkel (Rank #9)
+
+--- A.4 Early staff area clustering ---
+
+--- Early Staff Area Clustering (Top 8) ---
+  Tower: 5 requests -> 2 primary days: ['Mon', 'Tue']
+    Hibbing 2: Climbing Tower (#2) -> Tue-1
+    Duluth: Climbing Tower (#2) -> Wed-1
+    Fond Du Lac: Climbing Tower (#3) -> Mon-1
+    Hibbing 1: Climbing Tower (#4) -> Fri-1
+    Quetico: Climbing Tower (#6) -> Tue-2
+    Scheduled 5/5 for Tower
+  Rifle: 5 requests -> 2 primary days: ['Mon', 'Tue']
+    Fond Du Lac: Troop Rifle (#2) -> Mon-3
+    Hibbing 1: Troop Shotgun (#5) -> Mon-1
+    Two Harbors: Troop Rifle (#7) -> Tue-1
+    Duluth: Troop Rifle (#8) -> Tue-2
+    Scheduled 4/5 for Rifle
+  ODS: 2 requests -> 1 primary days: ['Mon']
+    Hibbing 2: Chopped! (#3) -> Tue-3
+    Hibbing 1: Chopped! (#6) -> Mon-2
+    Scheduled 2/2 for ODS
+  Handicrafts: 1 requests -> 1 primary days: ['Mon']
+    Hibbing 2: Tie Dye (#5) -> Mon-1
+    Scheduled 1/1 for Handicrafts
+
+
+--- A.6 Priority scheduling for limited activities (Global Rank 0-4) ---
+
+--- Priority Scheduling for Limited Activities (Max Rank: 4) ---
+  Limited activities to check: {'Tamarac Wildlife Refuge', 'Canoe Snorkel', 'Nature Canoe', 'Aqua Trampoline', 'Back of the Moon', 'Archery', 'Water Polo', 'Troop Canoe', 'Troop Shotgun', 'Float for Floats', 'Itasca State Park', 'Troop Rifle'}
+  Found 2 limited activities with requests
+  Attempting to schedule Water Polo for 4 troops...
+  [OK] Ft. William: Water Polo (rank #3)
+  [OK] Duluth: Water Polo (rank #3)
+  [OK] Ft. Francis: Water Polo (rank #4)
+  [OK] Quetico: Water Polo (rank #5)
+  Attempting to schedule Troop Canoe for 1 troops...
+  [OK] Ft. William: Troop Canoe (rank #4)
+  Scheduled 5 limited activities by priority
+
+--- A.8 Sailing pairs for Same-Day bonus ---
+
+--- Scheduling Sailing Pairs (Same-Day Bonus) ---
+  Only 0 troop(s) want Sailing - skipping pairing
+    Quetico: 8 gaps
+    Two Harbors: 7 gaps
+    Hibbing 1: 5 gaps
+    Hibbing 2: 4 gaps
+    Ft. Francis: 9 gaps
+    Ft. William: 7 gaps
+    Fond Du Lac: 6 gaps
+    Duluth: 8 gaps
+  [Phase A (Foundation & Clustering)] Found 54 total gaps [FAIL]
+  [IMMEDIATE FIX] Running emergency gap fill after Phase A (Foundation & Clustering)
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  [Gap Fill] Quetico: 9 Square -> MON-2
+  [Gap Fill] Quetico: Shower House -> TUE-1
+  [Gap Fill] Quetico: Sauna -> THU-2
+  [Gap Fill] Quetico: Archery -> FRI-2
+  [Gap Fill] Quetico: Greased Watermelon -> FRI-3
+  [Gap Fill] Quetico: Monkey's Fist -> WED-1
+  [Gap Fill] Quetico: Campsite Free Time -> WED-2
+  [Gap Fill] Quetico: Gaga Ball -> WED-3
+  [Gap Fill] Two Harbors: Delta -> WED-1
+  [Gap Fill] Two Harbors: Greased Watermelon -> MON-1
+  [Gap Fill] Two Harbors: Gaga Ball -> MON-3
+  [Gap Fill] Two Harbors: 9 Square -> THU-2
+  [Gap Fill] Two Harbors: Water Polo -> FRI-1
+  [Gap Fill] Two Harbors: Troop Shotgun -> FRI-2
+  [Gap Fill] Two Harbors: Fishing -> FRI-3
+  [Gap Fill] Hibbing 1: 9 Square -> MON-3
+  [Gap Fill] Hibbing 1: Campsite Free Time -> TUE-2
+  [Gap Fill] Hibbing 1: What's Cooking -> WED-1
+  [Gap Fill] Hibbing 1: Troop Rifle -> WED-2
+  [Gap Fill] Hibbing 2: Archery -> THU-2
+  [Gap Fill] Hibbing 2: Shower House -> FRI-1
+  [Gap Fill] Hibbing 2: Hemp Craft -> FRI-3
+  [Gap Fill] Ft. Francis: Gaga Ball -> MON-2
+  [Gap Fill] Ft. Francis: Greased Watermelon -> TUE-1
+  [Gap Fill] Ft. Francis: 9 Square -> WED-2
+  [Gap Fill] Ft. Francis: Campsite Free Time -> WED-3
+  [Gap Fill] Ft. Francis: Archery -> THU-1
+  [Gap Fill] Ft. Francis: Shower House -> THU-2
+  [Gap Fill] Ft. Francis: Trading Post -> FRI-1
+  [Gap Fill] Ft. Francis: What's Cooking -> FRI-2
+  [Gap Fill] Ft. Francis: Dr. DNA -> FRI-3
+  [Gap Fill] Ft. William: Gaga Ball -> TUE-2
+  [Gap Fill] Ft. William: 9 Square -> THU-1
+  [Gap Fill] Ft. William: Troop Canoe -> MON-1
+  [Gap Fill] Ft. William: Archery -> MON-2
+  [Gap Fill] Ft. William: Fishing -> MON-3
+  [Gap Fill] Fond Du Lac: Delta -> WED-2
+  [Gap Fill] Fond Du Lac: Archery -> WED-3
+  [Gap Fill] Fond Du Lac: Greased Watermelon -> FRI-1
+  [Gap Fill] Fond Du Lac: 9 Square -> FRI-2
+  [Gap Fill] Fond Du Lac: Campsite Free Time -> THU-1
+  [Gap Fill] Fond Du Lac: Knots and Lashings -> THU-2
+  [Gap Fill] Duluth: Gaga Ball -> TUE-3
+  [Gap Fill] Duluth: 9 Square -> WED-1
+  [Gap Fill] Duluth: Shower House -> WED-3
+  [Gap Fill] Duluth: Archery -> FRI-1
+  [Gap Fill] Duluth: Fishing -> FRI-2
+  [Gap Fill] Duluth: Climbing Tower -> THU-1
+  Total gaps filled: 48
+  Filled 48 gaps this iteration
+    Iteration 2/8...
+  Total gaps filled: 48
+  No gaps filled in iteration 2 - checking if complete...
+  Still have 5 gaps, continuing...
+    Iteration 3/8...
+  Total gaps filled: 48
+  No gaps filled in iteration 3 - checking if complete...
+  Still have 5 gaps, continuing...
+    Iteration 4/8...
+  [RELAXED FILL] Ft. William: Gaga Ball -> WED-2
+  Total gaps filled: 49
+  Filled 1 gaps this iteration
+    Iteration 5/8...
+  Total gaps filled: 49
+  No gaps filled in iteration 5 - checking if complete...
+  Still have 4 gaps, continuing...
+    Iteration 6/8...
+  Total gaps filled: 49
+  No gaps filled in iteration 6 - checking if complete...
+  Still have 4 gaps, continuing...
+    Iteration 7/8...
+  Total gaps filled: 49
+  No gaps filled in iteration 7 - checking if complete...
+  Still have 4 gaps, continuing...
+    Iteration 8/8...
+  Total gaps filled: 49
+  No gaps filled in iteration 8 - checking if complete...
+  Still have 4 gaps, continuing...
+  WARNING: 4 gaps remain after all attempts!
+  [EMERGENCY FILL] Hibbing 1: Campsite Free Time -> FRI-3
+  [EMERGENCY FILL] Hibbing 2: Campsite Free Time -> WED-3
+  [EMERGENCY FILL] Ft. William: Campsite Free Time -> FRI-3
+  [EMERGENCY FILL] Duluth: Campsite Free Time -> MON-3
+  Final gap filling complete. Total filled: 49
+
+======================================================================
+PHASE B: CORE REQUESTS
+======================================================================
+
+--- B.1 Scheduling Top 1 (FIRST PRIORITY) ---
+
+--- Per-Preference Scheduling (ranks 1-1) ---
+
+  [Top 5 - Batch 1] Placing preference #1...
+
+  Placement complete: 0 activities scheduled
+
+--- B.1b Forcing Top 1 (make space before Top 2-5) ---
+  [Top1 Force] All Top 1 preferences placed
+
+--- B.1c Scheduling Top 2-5 ---
+
+--- Per-Preference Scheduling (ranks 2-5) ---
+
+  [Top 5 - Batch 2] Placing preference #2...
+
+  [Top 5 - Batch 3] Placing preference #3...
+
+  [Top 5 - Batch 4] Placing preference #4...
+
+  [Top 5 - Batch 5] Placing preference #5...
+
+  Placement complete: 0 activities scheduled
+
+--- B.2 Guaranteeing 100% Top 5 satisfaction ---
+
+--- ENHANCED: Guaranteeing 90%+ Top 5 Satisfaction (Target: 16/18 available) ---
+  All Top 5 already satisfied
+
+--- B.3 Mandatory Top 5 enforcement ---
+
+--- MANDATORY Top 5 Enforcement (ALL Top 1-5 Required) ---
+  All troops have 100% Top 5 satisfaction!
+
+--- Scheduling Delta (by preference rank, early week bias, Sailing pairing) ---
+  Troops requesting Delta (sorted by rank): [('Two Harbors', 1), ('Fond Du Lac', 4)]
+  WARNING: Could not schedule Delta for Two Harbors (#1)
+  [Promoted Pairing] Fond Du Lac: Sailing on Tuesday, preferring Delta there
+  WARNING: Could not schedule Delta for Fond Du Lac (#4)
+  Scheduled 0/2 Delta requests
+  Commissioner busy slots mapped:
+    Voyageur A: Fri-1, Fri-2, Fri-3, Mon-1, Mon-2, Wed-1, Wed-2, Wed-3
+    Voyageur B: Fri-1, Fri-2, Thu-2, Tue-1, Tue-2, Wed-2
+    Voyageur C: Mon-2, Mon-3, Thu-1, Tue-3
+
+--- B.8 Early Sailing for Top 10 troops ---
+
+--- Early Sailing for Top 10 Troops ---
+  No troops need Sailing in Top 10
+
+--- B.9 Enforce Delta + Sailing same-day pairing ---
+
+--- Enforcing Delta + Sailing Same-Day Pairing ---
+    [Remove Continuations] Skipping optimization (placeholder)
+  Fond Du Lac: Delta moved from slot 2 to slot 3 (Sailing pairing requirement)
+  Paired Delta+Sailing for 1 troop(s)
+
+--- B.10 Consolidate Sailing same-day clustering ---
+
+--- Consolidating Sailing to Cluster 2 Per Day ---
+  Monday: 1 sail(s) - ['Duluth']
+  Tuesday: 1 sail(s) - ['Fond Du Lac']
+  Wednesday: 1 sail(s) - ['Hibbing 2']
+  Thursday: 1 sail(s) - ['Hibbing 1']
+  Iteration 1: No valid moves found
+  No Sailing moves made. Current: 0/4 days with 2+ sails
+  [Phase B (Core Requests)] No gaps detected [OK]
+
+--- B.11 Early Aqua Trampoline sharing (Top 5) ---
+  No additional Aqua Trampoline sharing opportunities found
+
+======================================================================
+PHASE C: REMAINING & OPTIMIZATION
+======================================================================
+
+--- Scheduling Day-Specific Requests (REQUIRED) ---
+
+--- C.2 Staff Optimization (consecutive activities) ---
+
+--- C.3 Balancing staff workload ---
+
+--- C.4 Scheduling Remaining Preferences (Top 6-20) ---
+
+--- Per-Preference Scheduling (ranks 6-20) ---
+
+  [Top 6-10] Prioritizing preferences 6-10...
+    Preference #7...
+    Preference #8...
+    Preference #9...
+DEBUG_TOWER: Ft. Francis (Voyageur C) -> Forced Day: None
+DEBUG_TOWER: Primary Days: {<Day.FRIDAY: 'Friday'>, <Day.TUESDAY: 'Tuesday'>, <Day.MONDAY: 'Monday'>}
+  DEBUG_SLOT MONDAY slot 3: Score 444 (Primary=True)
+  DEBUG_SLOT WEDNESDAY slot 1: Score 228 (Primary=False)
+  DEBUG_SLOT WEDNESDAY slot 2: Score 244 (Primary=False)
+  DEBUG_SLOT WEDNESDAY slot 3: Score 231 (Primary=False)
+  DEBUG_SLOT FRIDAY slot 3: Score 444 (Primary=True)
+    Preference #10...
+
+  [Top 11-15] Prioritizing preferences 11-15...
+DEBUG_TOWER: Two Harbors (Voyageur A) -> Forced Day: None
+DEBUG_TOWER: Primary Days: {<Day.FRIDAY: 'Friday'>, <Day.TUESDAY: 'Tuesday'>, <Day.MONDAY: 'Monday'>}
+  DEBUG_SLOT MONDAY slot 3: Score 428 (Primary=True)
+  DEBUG_SLOT WEDNESDAY slot 1: Score 231 (Primary=False)
+  DEBUG_SLOT WEDNESDAY slot 2: Score 244 (Primary=False)
+  DEBUG_SLOT WEDNESDAY slot 3: Score 225 (Primary=False)
+  DEBUG_SLOT FRIDAY slot 3: Score 444 (Primary=True)
+
+  [Top 16-20] Prioritizing preferences 16-20...
+
+  Placement complete: 6 activities scheduled
+  [WARNING] 10 Top 6-10 preferences could not be placed
+
+--- C.4.5 Guaranteeing Minimum Top 10 (2-3 per troop) ---
+
+--- Guaranteeing Minimum Top 10 (2-3 per troop) ---
+  All troops already meet minimum Top 10 requirement
+
+--- C.5 Guaranteeing Top 10 with exceptions ---
+
+--- Guaranteeing Top 10 (with exceptions) ---
+  [Top10] Hibbing 1: Shower House (#8) <- Troop Rifle
+  Recovered 1 Top 10 preferences
+
+--- C.6 Filling remaining slots ---
+
+--- Scheduling balls activities during sailing ---
+  Hibbing 2: Gaga Ball (30 min) during Sailing at Wed-1
+  Hibbing 2: Gaga Ball (30 min) during Sailing at Wed-2
+  [Phase C.6 (Fill Slot Logic)] No gaps detected [OK]
+
+--- C.7 Aggressively pairing Aqua Trampoline sharing ---
+  No additional Aqua Trampoline sharing opportunities found
+  [Phase C.7 (Aqua Trampoline Sharing)] No gaps detected [OK]
+
+======================================================================
+PHASE D: FINAL POLISH & VERIFICATION
+======================================================================
+
+--- D.1 Optimizing Friday Reflection slots ---
+
+--- D.2 Comprehensive clustering & smart swaps ---
+
+--- Staff Distribution Balancing ---
+  Staff per day: {'MONDAY': 2, 'TUESDAY': 1, 'WEDNESDAY': 3, 'THURSDAY': 0, 'FRIDAY': 0}
+  Average: 1.2
+  Overloaded days: [('MONDAY', 2), ('WEDNESDAY', 3)]
+  Underloaded days: [('THURSDAY', 0), ('FRIDAY', 0)]
+  [Balance] Ft. Francis: Super Troop MONDAY -> THURSDAY
+  [Balance] Two Harbors: Delta WEDNESDAY -> THURSDAY
+  [Balance] Fond Du Lac: Delta WEDNESDAY -> THURSDAY
+  Made 3 balancing swaps
+  New distribution: {'MONDAY': 1, 'TUESDAY': 1, 'WEDNESDAY': 1, 'THURSDAY': 3, 'FRIDAY': 0}
+  No consolidation possible
+
+--- Comprehensive Smart Swap Analysis ---
+  Iteration 1: 0 smart swaps
+  Total comprehensive swaps: 0
+
+--- Aggressive Within-Troop Slot Swaps ---
+  Iteration 1: 0 within-troop swaps
+  Total within-troop swaps: 0
+
+--- Aggressive Within-Troop Swaps for Excess Day Reduction ---
+    [Aggressive Excess Day Reduction] Skipping optimization (placeholder)
+  Total excess day reduction swaps: 0
+
+--- Aggressive Excess Day & Gap Reduction Pass ---
+    [Aggressive Excess Day Reduction] Skipping optimization (placeholder)
+    [Cross Troop Swaps] Tower: 1 excess days, looking for swaps...
+    [Cross Troop Swaps] Rifle Range: 1 excess days, looking for swaps...
+    [Cross Troop Swaps] Outdoor Skills: 3 excess days, looking for swaps...
+  [Phase D.2 (Comprehensive Clustering)] No gaps detected [OK]
+
+--- D.3 Early forced clustering consolidation ---
+  [Phase D.3 (Forced Clustering)] No gaps detected [OK]
+
+--- D.4 Friday Super Troop optimization ---
+
+--- Activity Clustering Optimization (All Days) ---
+  [Cluster] Ft. William: Archery Mon-2 -> Fri-3 (cluster: 1 -> 3)
+  Iteration 1: 1 swaps
+  Total clustering swaps: 1
+
+--- D.5 Flexible Reflection slot optimization ---
+
+--- Flexible Reflection Distribution (Spread Across Slots) ---
+  Voyageur A: Already distributed (1 per slot) [OK]
+  All commissioners already have troops spread across slots
+
+--- D.6 Commissioner load balancing ---
+
+--- Commissioner Load Balancing ---
+  Voyageur A: FRI-1: 1, FRI-3: 1 [OK]
+  Voyageur B: FRI-2: 1 [OK]
+
+--- D.7 Setup Efficiency & Activity Clustering ---
+
+--- Staff Batching (Setup Efficiency) ---
+  No batching opportunities found
+
+--- Activity Clustering Optimization ---
+  Made 0 clustering swaps (including aggressive moves)
+  [Phase D.7 (Activity Clustering)] No gaps detected [OK]
+
+--- D.8 Outlier Activity Optimization ---
+
+--- Outlier Activity Optimization ---
+  Found 16 outlier activities
+  [Debug] Two Harbors: Troop Shotgun (['only-on-day']) - attempted 3 moves, 3 blocked by constraints
+  [Debug] Hibbing 1: What's Cooking (['only-on-day']) - attempted 3 moves, 3 blocked by constraints
+  [Debug] Hibbing 1: Troop Shotgun (['only-on-day']) - attempted 3 moves, 3 blocked by constraints
+  [Debug] Hibbing 1: Chopped! (['only-on-day']) - attempted 3 moves, 3 blocked by constraints
+  No beneficial moves found for 16 outlier activities
+    [Commissioner Day Ownership] Skipping optimization (placeholder)
+
+--- D.9 Post-Fill Cluster Gap Optimization ---
+    [Cluster Gap Post-Fill] Skipping optimization (placeholder)
+
+--- D.8 Top 10 Recovery & Gap Filling ---
+    [Top 10 Recovery from Fills] Skipping optimization (placeholder)
+
+--- D.9 Comprehensive final cleanup ---
+  [Comprehensive Final Cleanup - Max 3 iterations]
+    Iteration 1...
+  Total activity conflicts removed: 1
+  No exclusive area conflicts found
+      Removed conflicts: 1 entries
+  Boundary fix: Two Harbors - Float for Floats @ TUESDAY slot 3
+  Overlap fix: Hibbing 2 @ WEDNESDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Water Polo (#12)
+  Overlap fix: Fond Du Lac @ TUESDAY slot 3
+    Kept Top 5: Aqua Trampoline (#1)
+    Removed: Sailing (#7)
+  [CRITICAL] Multiple Top 5 conflict at MONDAY-3:
+    Fond Du Lac: Troop Rifle (#2)
+    Fond Du Lac: Climbing Tower (#3)
+    Keeping #2, removing others
+  Overlap fix: Ft. William @ FRIDAY slot 3
+    Kept: Canoe Snorkel
+    Removed: Archery
+  Overlap fix: Hibbing 1 @ FRIDAY slot 3
+    Kept Top 5: Climbing Tower (#4)
+    Removed: Campsite Free Time (#7)
+  Overlap fix: Duluth @ MONDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Greased Watermelon (#9)
+  Total issues fixed: 8
+  [Top 5 Recovery] Attempting to recover 1 removed Top 5 activities...
+    [RECOVERED] Fond Du Lac: Climbing Tower (#3) -> MON-1
+  Successfully recovered 1 Top 5 activities
+      Removed overlaps: 8 entries
+  Removed duplicate: Quetico has extra Climbing Tower @ TUESDAY-3
+  Removed duplicate: Ft. William has extra Gaga Ball @ WEDNESDAY-2
+  Removed duplicate: Hibbing 1 has extra Climbing Tower @ FRIDAY-2
+  Removed duplicate: Duluth has extra Climbing Tower @ THURSDAY-2
+  Removed duplicate: Fond Du Lac has extra Climbing Tower @ MONDAY-2
+  Total activity duplicates removed: 5
+  [MANDATORY] Replaced Fishing (#16) with Reflection for Two Harbors @ Friday slot 3
+  Added Super Troop for Two Harbors @ TUESDAY slot 2
+  Added Reflection for Hibbing 1 @ Friday slot 2
+  Added Super Troop for Hibbing 1 @ FRIDAY slot 3
+  Added Super Troop for Hibbing 2 @ WEDNESDAY slot 3
+  [MANDATORY] Replaced Dr. DNA (#fill) with Reflection for Ft. Francis @ Friday slot 3
+  Added Reflection for Ft. William @ Friday slot 3
+  Added Super Troop for Fond Du Lac @ TUESDAY slot 1
+  [MANDATORY] Replaced Fishing (#fill) with Reflection for Duluth @ Friday slot 2
+  Filled Quetico @ TUESDAY slot 3 with Hemp Craft
+  Filled Two Harbors @ TUESDAY slot 3 with 9 Square
+  Filled Two Harbors @ WEDNESDAY slot 1 with Archery
+  Filled Ft. William @ WEDNESDAY slot 2 with Sauna [DUPLICATE]
+  Filled Fond Du Lac @ MONDAY slot 2 with Fishing [DUPLICATE]
+  Filled Fond Du Lac @ TUESDAY slot 2 with Trading Post [DUPLICATE]
+  Filled Duluth @ MONDAY slot 3 with Greased Watermelon
+  Filled Duluth @ THURSDAY slot 2 with Hemp Craft
+        [Beach] Found violation: Two Harbors Canoe Snorkel in WEDNESDAY Slot 2
+        [Beach] Found violation: Hibbing 2 Sailing in WEDNESDAY Slot 2
+        [Beach] Found violation: Hibbing 2 Canoe Snorkel in MONDAY Slot 2
+        [Beach] Found violation: Ft. William Canoe Snorkel in FRIDAY Slot 2
+        [Beach] Found violation: Duluth Sailing in MONDAY Slot 2
+      [Beach] Fixed 0 beach slot violations
+    Iteration 2...
+  No activity conflicts found
+  No exclusive area conflicts found
+  Overlap fix: Quetico @ TUESDAY slot 3
+    Kept: Climbing Tower
+    Removed: Hemp Craft
+  Overlap fix: Hibbing 2 @ WEDNESDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Super Troop (fill)
+  Overlap fix: Fond Du Lac @ MONDAY slot 2
+    Kept Top 5: Climbing Tower (#3)
+    Removed: Fishing (fill)
+  Overlap fix: Ft. William @ FRIDAY slot 3
+    Kept Protected: Reflection
+    Removed: Canoe Snorkel
+  Overlap fix: Hibbing 1 @ FRIDAY slot 2
+    Kept Protected: Reflection
+    Removed: Climbing Tower
+  Overlap fix: Duluth @ MONDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Greased Watermelon (#9)
+  Overlap fix: Duluth @ THURSDAY slot 2
+    Kept Top 5: Climbing Tower (#2)
+    Removed: Hemp Craft (fill)
+  Total issues fixed: 8
+  No overlaps found
+      Removed overlaps: 8 entries
+  No duplicates found
+  Added Super Troop for Hibbing 2 @ WEDNESDAY slot 3
+  Filled Quetico @ TUESDAY slot 3 with Hemp Craft
+  Filled Hibbing 1 @ FRIDAY slot 1 with Climbing Tower
+  Filled Ft. William @ FRIDAY slot 2 with Shower House [DUPLICATE]
+  Filled Ft. William @ FRIDAY slot 1 with Troop Rifle [DUPLICATE]
+  Filled Fond Du Lac @ MONDAY slot 2 with Fishing [DUPLICATE]
+  Filled Duluth @ MONDAY slot 3 with Greased Watermelon
+  Filled Duluth @ THURSDAY slot 2 with Hemp Craft
+        [Beach] Found violation: Two Harbors Canoe Snorkel in WEDNESDAY Slot 2
+        [Beach] Found violation: Hibbing 2 Sailing in WEDNESDAY Slot 2
+        [Beach] Found violation: Hibbing 2 Canoe Snorkel in MONDAY Slot 2
+        [Beach] Found violation: Duluth Sailing in MONDAY Slot 2
+      [Beach] Fixed 0 beach slot violations
+    Iteration 3...
+  No activity conflicts found
+  No exclusive area conflicts found
+  Overlap fix: Quetico @ TUESDAY slot 3
+    Kept: Climbing Tower
+    Removed: Hemp Craft
+  Overlap fix: Hibbing 2 @ WEDNESDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Super Troop (fill)
+  Overlap fix: Fond Du Lac @ MONDAY slot 2
+    Kept Top 5: Climbing Tower (#3)
+    Removed: Fishing (fill)
+  Overlap fix: Hibbing 1 @ FRIDAY slot 2
+    Kept Protected: Reflection
+    Removed: Climbing Tower
+  Overlap fix: Duluth @ MONDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Greased Watermelon (#9)
+  Overlap fix: Duluth @ THURSDAY slot 2
+    Kept Top 5: Climbing Tower (#2)
+    Removed: Hemp Craft (fill)
+  Total issues fixed: 6
+  No overlaps found
+      Removed overlaps: 6 entries
+  No duplicates found
+  Added Super Troop for Hibbing 2 @ WEDNESDAY slot 3
+  Filled Quetico @ TUESDAY slot 3 with Hemp Craft
+  Filled Hibbing 1 @ FRIDAY slot 1 with Climbing Tower
+  Filled Fond Du Lac @ MONDAY slot 2 with Fishing [DUPLICATE]
+  Filled Duluth @ MONDAY slot 3 with Greased Watermelon
+  Filled Duluth @ THURSDAY slot 2 with Hemp Craft
+        [Beach] Found violation: Two Harbors Canoe Snorkel in WEDNESDAY Slot 2
+        [Beach] Found violation: Hibbing 2 Sailing in WEDNESDAY Slot 2
+        [Beach] Found violation: Hibbing 2 Canoe Snorkel in MONDAY Slot 2
+        [Beach] Found violation: Duluth Sailing in MONDAY Slot 2
+      [Beach] Fixed 0 beach slot violations
+    Final gap guarantee...
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  Total gaps filled: 0
+  No gaps filled in iteration 1 - checking if complete...
+  SUCCESS: All gaps filled!
+  Final gap filling complete. Total filled: 0
+    [Sanitize Exclusivity] No exclusivity conflicts found
+  [Cleanup Complete]
+  [Phase D.9 (Final Cleanup)] No gaps detected [OK]
+
+======================================================================
+ENHANCED POST-PROCESSING: CRITICAL CONSTRAINT FIXES
+======================================================================
+  [WARN] Enhanced fixers not available: No module named 'constraint_fixes'
+  Continuing with standard optimization...
+
+======================================================================
+FINAL VERIFICATION
+======================================================================
+
+--- Multi-Slot Integrity Check ---
+  [Multi-Slot Integrity] Checking all multi-slot activities...
+  [Multi-Slot Integrity] Verifying 7 activity types: ['Back of the Moon', 'Canoe Snorkel', 'Climbing Tower', 'Float for Floats', 'Itasca State Park', 'Sailing', 'Tamarac Wildlife Refuge']
+    [DEBUG] INCOMPLETE: Hibbing 2 Climbing Tower @ TUESDAY - has 1/2 slots
+    [CONFLICT] Hibbing 2 Climbing Tower @ TUESDAY slot 2 blocked by 9 Square
+    [REMOVE] Removed incomplete Climbing Tower for Hibbing 2
+    [DEBUG] INCOMPLETE: Quetico Climbing Tower @ TUESDAY - has 1/2 slots
+    [CONFLICT] Quetico Climbing Tower @ TUESDAY slot 3 blocked by Hemp Craft
+    [REMOVE] Removed incomplete Climbing Tower for Quetico
+    [DEBUG] INCOMPLETE: Duluth Climbing Tower @ THURSDAY - has 1/2 slots
+    [CONFLICT] Duluth Climbing Tower @ THURSDAY slot 2 blocked by Hemp Craft
+    [REMOVE] Removed incomplete Climbing Tower for Duluth
+    [DEBUG] INCOMPLETE: Fond Du Lac Climbing Tower @ MONDAY - has 1/2 slots
+    [CONFLICT] Fond Du Lac Climbing Tower @ MONDAY slot 2 blocked by Fishing
+    [REMOVE] Removed incomplete Climbing Tower for Fond Du Lac
+    [DEBUG] INCOMPLETE: Hibbing 1 Climbing Tower @ FRIDAY - has 1/2 slots
+    [CONFLICT] Hibbing 1 Climbing Tower @ FRIDAY slot 2 blocked by Reflection
+    [REMOVE] Removed incomplete Climbing Tower for Hibbing 1
+  [Multi-Slot Integrity] Removed 5 entries from incomplete activities
+  [Final Validation] Checking schedule integrity...
+    Quetico: 1 gaps
+    Hibbing 1: 1 gaps
+    Hibbing 2: 1 gaps
+    Fond Du Lac: 1 gaps
+    Duluth: 1 gaps
+  [Final Validation] Found 5 total gaps [FAIL]
+    Found 5 gaps - fixing...
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  [Gap Fill] Quetico: Fishing -> TUE-2
+  [Gap Fill] Hibbing 1: Fishing -> FRI-1
+  [Gap Fill] Hibbing 2: Climbing Tower -> TUE-1
+  [Gap Fill] Fond Du Lac: Orienteering -> MON-1
+  [Gap Fill] Duluth: Campsite Free Time -> THU-1
+  Total gaps filled: 5
+  Filled 5 gaps this iteration
+    Iteration 2/8...
+  Total gaps filled: 5
+  No gaps filled in iteration 2 - checking if complete...
+  SUCCESS: All gaps filled!
+  Final gap filling complete. Total filled: 5
+  [Final Validation] Re-checking multi-slot integrity after gap fill...
+  [Multi-Slot Integrity] Checking all multi-slot activities...
+  [Multi-Slot Integrity] Verifying 7 activity types: ['Back of the Moon', 'Canoe Snorkel', 'Climbing Tower', 'Float for Floats', 'Itasca State Park', 'Sailing', 'Tamarac Wildlife Refuge']
+    [DEBUG] INCOMPLETE: Hibbing 2 Climbing Tower @ TUESDAY - has 1/2 slots
+    [CONFLICT] Hibbing 2 Climbing Tower @ TUESDAY slot 2 blocked by 9 Square
+    [REMOVE] Removed incomplete Climbing Tower for Hibbing 2
+  [Multi-Slot Integrity] Removed 1 entries from incomplete activities
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  [Gap Fill] Hibbing 2: Climbing Tower -> TUE-1
+  Total gaps filled: 1
+  Filled 1 gaps this iteration
+    Iteration 2/8...
+  Total gaps filled: 1
+  No gaps filled in iteration 2 - checking if complete...
+  SUCCESS: All gaps filled!
+  Final gap filling complete. Total filled: 1
+    [OK] All troops have Friday Reflection
+    [WARNING] 16 beach slot violations
+  [Final Validation] Complete
+    [Sanitize Exclusivity] No exclusivity conflicts found
+Saved schedule to C:\Users\Carson\OneDrive - Minnesota State\Desktop\Projects\CampScheduler\summer-camp-scheduler\data\schedules\voyageur_week3_troops_schedule.json

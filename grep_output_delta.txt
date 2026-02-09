@@ -1,0 +1,947 @@
+﻿
+  
+tc_week7_log.txt:14: 
+ Samoset: Reflection 
+-> Fri-1 (north zone)
+  
+tc_week7_log.txt:15: 
+ Black Hawk: 
+Reflection -> Fri-1 
+(north zone)
+> 
+tc_week7_log.txt:16: 
+ Taskalusa: 
+Reflection -> Fri-2 
+(middle zone)
+  
+tc_week7_log.txt:17: 
+ Powhatan: 
+Reflection -> Fri-2 
+(middle zone)
+  
+tc_week7_log.txt:18: 
+ Red Cloud: 
+Reflection -> Fri-2 
+(middle zone)
+  
+tc_week7_log.txt:25:
+  tc_week7_log.txt:26
+:--- Scheduling 
+Super Troop 
+(flexible 
+commissioner 
+preference) ---
+> 
+tc_week7_log.txt:27: 
+ Taskalusa: Super 
+Troop -> Mon-1 
+(commissioner day 
+bias)
+  
+tc_week7_log.txt:28: 
+ Tamanend: Super 
+Troop -> Tue-1 
+(commissioner day 
+bias)
+  
+tc_week7_log.txt:29: 
+ Samoset: Super 
+Troop -> Mon-2 
+(commissioner day 
+bias)
+  
+tc_week7_log.txt:46: 
+   Tecumseh wants 
+BOTH HC and DG - 
+attempting 
+back-to-back...
+  
+tc_week7_log.txt:47: 
+     Slot 1 free: 
+True, Slot 2 free: 
+True
+> 
+tc_week7_log.txt:48: 
+     HC at Slot 1 
+blocked by 
+constraints
+  
+tc_week7_log.txt:49: 
+     Slot 2 free: 
+True, Slot 3 free: 
+True
+  
+tc_week7_log.txt:50: 
+   [PAIR SUCCESS] 
+Tecumseh: HC (Tue-2) 
+-> DG (Tue-3)
+> 
+tc_week7_log.txt:51: 
+   Taskalusa wants 
+BOTH HC and DG - 
+attempting 
+back-to-back...
+  
+tc_week7_log.txt:52: 
+     Slot 1 free: 
+True, Slot 2 free: 
+True
+> 
+tc_week7_log.txt:53: 
+     HC at Slot 1 
+blocked by 
+constraints
+  
+tc_week7_log.txt:54: 
+     Slot 2 free: 
+True, Slot 3 free: 
+True
+> 
+tc_week7_log.txt:55: 
+     HC at Slot 2 
+blocked by 
+constraints
+  
+tc_week7_log.txt:56: 
+   [PAIR FAIL] Could 
+not schedule 
+back-to-back. 
+Falling back to 
+single HC.
+> 
+tc_week7_log.txt:57: 
+   [SUCCESS] 
+Taskalusa: History 
+Center at Tue-3
+  
+tc_week7_log.txt:58: 
+ Processing Disc 
+Golf requests...
+> 
+tc_week7_log.txt:59: 
+   [SUCCESS] 
+Taskalusa: Disc Golf 
+at Tue-1
+  
+tc_week7_log.txt:60:
+  tc_week7_log.txt:61
+:--- A.5 Sailing 
+Optimization 
+(9-Slot) ---
+  
+tc_week7_log.txt:67: 
+   Tamanend: Rank 
+#6, Size 7
+  
+tc_week7_log.txt:68: 
+   Powhatan: Rank 
+#7, Size 17
+> 
+tc_week7_log.txt:69: 
+   Taskalusa: Rank 
+#8, Size 9
+  
+tc_week7_log.txt:70: 
+   Samoset: Rank 
+#10, Size 8
+  
+tc_week7_log.txt:71: 
+ [WARN] Could not 
+place largest troop 
+Joseph on Thursday.
+  
+tc_week7_log.txt:74: 
+ [SUCCESS] Tamanend 
+-> WEDNESDAY Slot 1
+  
+tc_week7_log.txt:75: 
+ [FAIL] Could not 
+schedule Sailing for 
+Powhatan (Rank 7)
+> 
+tc_week7_log.txt:76: 
+ [FAIL] Could not 
+schedule Sailing for 
+Taskalusa (Rank 8)
+  
+tc_week7_log.txt:77: 
+ [FAIL] Could not 
+schedule Sailing for 
+Samoset (Rank 10)
+  
+tc_week7_log.txt:78: 
+ Scheduled 3 Sailing 
+sessions.
+  
+tc_week7_log.txt:92: 
+ Scheduled 2 / 2 
+3-hour activities.
+  
+tc_week7_log.txt:93:
+> tc_week7_log.txt:94
+:--- A.7 Delta + 
+Sailing pairing 
+(reserve day) ---
+  
+tc_week7_log.txt:95:
+> tc_week7_log.txt:96
+:--- Scheduling 
+Delta + Sailing 
+Pairs ---
+> 
+tc_week7_log.txt:97: 
+ No Delta+Sailing 
+pairs scheduled
+  
+tc_week7_log.txt:98:
+  tc_week7_log.txt:99
+:--- A.2 Top 10 
+2-Hour Activities 
+(Priority) ---
+  tc_week7_log.txt:12
+3:    Scheduled 2/3 
+for Rifle
+  tc_week7_log.txt:12
+4:  ODS: 6 requests 
+-> 2 primary days: 
+['Mon', 'Tue']
+> tc_week7_log.txt:12
+5:    Taskalusa: 
+Chopped! (#1) -> 
+Mon-2
+  tc_week7_log.txt:12
+6:    Samoset: 
+Ultimate Survivor 
+(#1) -> Mon-1
+  tc_week7_log.txt:12
+7:    Red Cloud: 
+Ultimate Survivor 
+(#7) -> Mon-3
+  tc_week7_log.txt:15
+6:--- Scheduling 
+Sailing Pairs 
+(Same-Day Bonus) ---
+  tc_week7_log.txt:15
+7:  No Sailing pairs 
+scheduled
+> tc_week7_log.txt:15
+8:    Taskalusa: 8 
+gaps
+  tc_week7_log.txt:15
+9:    Tamanend: 5 
+gaps
+  tc_week7_log.txt:16
+0:    Samoset: 9 gaps
+  tc_week7_log.txt:17
+1:  [Gap Fill] 
+Starting ABSOLUTE 
+gap detection and 
+filling...
+  tc_week7_log.txt:17
+2:    Iteration 
+1/8...
+> tc_week7_log.txt:17
+3:  [Gap Fill] 
+Taskalusa: Gaga Ball 
+-> MON-3
+> tc_week7_log.txt:17
+4:  [Gap Fill] 
+Taskalusa: Campsite 
+Free Time -> TUE-2
+> tc_week7_log.txt:17
+5:  [Gap Fill] 
+Taskalusa: Fishing 
+-> WED-1
+> tc_week7_log.txt:17
+6:  [Gap Fill] 
+Taskalusa: Loon Lore 
+-> WED-2
+> tc_week7_log.txt:17
+7:  [Gap Fill] 
+Taskalusa: Greased 
+Watermelon -> FRI-1
+> tc_week7_log.txt:17
+8:  [Gap Fill] 
+Taskalusa: Shower 
+House -> FRI-3
+> tc_week7_log.txt:17
+9:  [Gap Fill] 
+Taskalusa: Water 
+Polo -> THU-1
+> tc_week7_log.txt:18
+0:  [Gap Fill] 
+Taskalusa: Delta -> 
+THU-2
+> tc_week7_log.txt:18
+1:  [Gap Fill] 
+Tamanend: Delta -> 
+MON-1
+  tc_week7_log.txt:18
+2:  [Gap Fill] 
+Tamanend: 9 Square 
+-> THU-2
+  tc_week7_log.txt:18
+3:  [Gap Fill] 
+Tamanend: Gaga Ball 
+-> FRI-1
+  tc_week7_log.txt:19
+7:  [Gap Fill] Roman 
+Nose: Greased 
+Watermelon -> WED-3
+  tc_week7_log.txt:19
+8:  [Gap Fill] Roman 
+Nose: Water Polo -> 
+MON-1
+> tc_week7_log.txt:19
+9:  [Gap Fill] Roman 
+Nose: Delta -> MON-2
+  tc_week7_log.txt:20
+0:  [Gap Fill] Roman 
+Nose: Archery -> 
+MON-3
+  tc_week7_log.txt:20
+1:  [Gap Fill] Roman 
+Nose: Shower House 
+-> THU-1
+  tc_week7_log.txt:21
+0:  [Gap Fill] Red 
+Cloud: Troop Swim -> 
+THU-2
+  tc_week7_log.txt:21
+1:  [Gap Fill] Red 
+Cloud: Water Polo -> 
+FRI-1
+> tc_week7_log.txt:21
+2:  [Gap Fill] Red 
+Cloud: Delta -> FRI-2
+  tc_week7_log.txt:21
+3:  [Gap Fill] Red 
+Cloud: Trading Post 
+-> FRI-3
+  tc_week7_log.txt:21
+4:  [Gap Fill] 
+Powhatan: Gaga Ball 
+-> MON-2
+  tc_week7_log.txt:21
+5:  [Gap Fill] 
+Powhatan: 9 Square 
+-> WED-1
+  tc_week7_log.txt:21
+6:  [Gap Fill] 
+Powhatan: Climbing 
+Tower -> TUE-2
+> tc_week7_log.txt:21
+7:  [Gap Fill] 
+Powhatan: Delta -> 
+FRI-1
+  tc_week7_log.txt:21
+8:  [Gap Fill] 
+Powhatan: Trading 
+Post -> FRI-2
+  tc_week7_log.txt:21
+9:  [Gap Fill] 
+Powhatan: Campsite 
+Free Time -> THU-1
+  tc_week7_log.txt:22
+0:  [Gap Fill] 
+Powhatan: Greased 
+Watermelon -> THU-2
+> tc_week7_log.txt:22
+1:  [Gap Fill] 
+Massasoit: Delta -> 
+TUE-3
+  tc_week7_log.txt:22
+2:  [Gap Fill] 
+Massasoit: 9 Square 
+-> FRI-2
+  tc_week7_log.txt:22
+3:  [Gap Fill] 
+Massasoit: Aqua 
+Trampoline -> FRI-3
+  tc_week7_log.txt:23
+2:  [Gap Fill] 
+Joseph: Knots and 
+Lashings -> FRI-2
+  tc_week7_log.txt:23
+3:  [Gap Fill] 
+Joseph: Greased 
+Watermelon -> TUE-1
+> tc_week7_log.txt:23
+4:  [Gap Fill] 
+Joseph: Delta -> 
+TUE-2
+  tc_week7_log.txt:23
+5:  [Gap Fill] 
+Joseph: Campsite 
+Free Time -> TUE-3
+  tc_week7_log.txt:23
+6:  [Gap Fill] 
+Joseph: Fishing -> 
+THU-1
+  tc_week7_log.txt:24
+7:  [Gap Fill] Black 
+Hawk: Gaga Ball -> 
+TUE-3
+  tc_week7_log.txt:24
+8:  [Gap Fill] Black 
+Hawk: Troop Canoe -> 
+THU-2
+> tc_week7_log.txt:24
+9:  [Gap Fill] 
+Tecumseh: Delta -> 
+MON-3
+  tc_week7_log.txt:25
+0:  [Gap Fill] 
+Tecumseh: 9 Square 
+-> THU-1
+  tc_week7_log.txt:25
+1:  [Gap Fill] 
+Tecumseh: Gaga Ball 
+-> FRI-2
+  tc_week7_log.txt:32
+4:  All troops have 
+100% Top 5 
+satisfaction!
+  
+tc_week7_log.txt:325:
+> tc_week7_log.txt:32
+6:--- Scheduling 
+Delta (by preference 
+rank, early week 
+bias, Sailing 
+pairing) ---
+> tc_week7_log.txt:32
+7:  Troops 
+requesting Delta 
+(sorted by rank): 
+[('Massasoit', 1), 
+('Tamanend', 3), 
+('Roman Nose', 4), 
+('Tecumseh', 6), 
+('Powhatan', 9), 
+('Joseph', 10), 
+('Red Cloud', 12), 
+('Taskalusa', 14)]
+> tc_week7_log.txt:32
+8:  WARNING: Could 
+not schedule Delta 
+for Massasoit (#1)
+> tc_week7_log.txt:32
+9:  [Promoted 
+Pairing] Tamanend: 
+Sailing on 
+Wednesday, 
+preferring Delta 
+there
+> tc_week7_log.txt:33
+0:  WARNING: Could 
+not schedule Delta 
+for Tamanend (#3)
+> tc_week7_log.txt:33
+1:  WARNING: Could 
+not schedule Delta 
+for Roman Nose (#4)
+> tc_week7_log.txt:33
+2:  WARNING: Could 
+not schedule Delta 
+for Tecumseh (#6)
+> tc_week7_log.txt:33
+3:  WARNING: Could 
+not schedule Delta 
+for Powhatan (#9)
+> tc_week7_log.txt:33
+4:  [Promoted 
+Pairing] Joseph: 
+Sailing on Monday, 
+preferring Delta 
+there
+> tc_week7_log.txt:33
+5:  WARNING: Could 
+not schedule Delta 
+for Joseph (#10)
+> tc_week7_log.txt:33
+6:  [Promoted 
+Pairing] Red Cloud: 
+Sailing on Tuesday, 
+preferring Delta 
+there
+> tc_week7_log.txt:33
+7:  WARNING: Could 
+not schedule Delta 
+for Red Cloud (#12)
+> tc_week7_log.txt:33
+8:  WARNING: Could 
+not schedule Delta 
+for Taskalusa (#14)
+> tc_week7_log.txt:33
+9:  Scheduled 0/8 
+Delta requests
+  tc_week7_log.txt:34
+0:  Commissioner 
+busy slots mapped:
+  tc_week7_log.txt:34
+1:    Commissioner 
+A: Fri-1, Fri-2, 
+Mon-1, Mon-2, Mon-3, 
+Thu-1, Thu-2, Tue-2, 
+Tue-3, Wed-1, Wed-3
+  tc_week7_log.txt:34
+8:  Troops needing 
+Sailing (Top 10):
+  tc_week7_log.txt:34
+9:    Powhatan: #7, 
+17 scouts
+> tc_week7_log.txt:35
+0:    Taskalusa: #8, 
+9 scouts
+  tc_week7_log.txt:35
+1:    Samoset: #10, 
+8 scouts
+  tc_week7_log.txt:35
+2:  [FAILED] 
+Powhatan: No 
+consecutive slots 
+available
+> tc_week7_log.txt:35
+3:  [Delta Pairing] 
+Taskalusa: 
+preferring Sailing 
+on Thursday
+> tc_week7_log.txt:35
+4:  [FAILED] 
+Taskalusa: No 
+consecutive slots 
+available
+  tc_week7_log.txt:35
+5:  [FAILED] 
+Samoset: No 
+consecutive slots 
+available
+  tc_week7_log.txt:35
+6:  Scheduled 
+Sailing for 0/3 
+troops
+  
+tc_week7_log.txt:357:
+> tc_week7_log.txt:35
+8:--- B.9 Enforce 
+Delta + Sailing 
+same-day pairing ---
+  
+tc_week7_log.txt:359:
+> tc_week7_log.txt:36
+0:--- Enforcing 
+Delta + Sailing 
+Same-Day Pairing ---
+  tc_week7_log.txt:36
+1:    [Remove 
+Continuations] 
+Skipping 
+optimization 
+(placeholder)
+  tc_week7_log.txt:36
+2:    [Remove 
+Continuations] 
+Skipping 
+optimization 
+(placeholder)
+> tc_week7_log.txt:36
+3:    [Is Exclusive 
+Blocked] Skipping 
+optimization 
+(placeholder)
+> tc_week7_log.txt:36
+4:    [Is Exclusive 
+Blocked] Skipping 
+optimization 
+(placeholder)
+> tc_week7_log.txt:36
+5:    [Is Exclusive 
+Blocked] Skipping 
+optimization 
+(placeholder)
+> tc_week7_log.txt:36
+6:    [Is Exclusive 
+Blocked] Skipping 
+optimization 
+(placeholder)
+> tc_week7_log.txt:36
+7:    [Is Exclusive 
+Blocked] Skipping 
+optimization 
+(placeholder)
+  tc_week7_log.txt:36
+8:    [Fill vacated] 
+Red Cloud: Hemp 
+Craft -> Fri-2
+> tc_week7_log.txt:36
+9:  Red Cloud: Delta 
+moved from slot 2 to 
+slot 3 (Sailing 
+pairing requirement)
+  tc_week7_log.txt:37
+0:    [Remove 
+Continuations] 
+Skipping 
+optimization 
+(placeholder)
+  tc_week7_log.txt:37
+1:    [Remove 
+Continuations] 
+Skipping 
+optimization 
+(placeholder)
+  tc_week7_log.txt:37
+2:    [Remove 
+Continuations] 
+Skipping 
+optimization 
+(placeholder)
+> tc_week7_log.txt:37
+3:  Paired 
+Delta+Sailing for 1 
+troop(s)
+  
+tc_week7_log.txt:374:
+  tc_week7_log.txt:37
+5:--- B.10 
+Consolidate Sailing 
+same-day clustering 
+---
+  tc_week7_log.txt:48
+9:  Overloaded days: 
+[('MONDAY', 5)]
+  tc_week7_log.txt:49
+0:  Underloaded 
+days: [('TUESDAY', 
+2), ('THURSDAY', 2), 
+('FRIDAY', 2)]
+> tc_week7_log.txt:49
+1:  [Balance] 
+Tamanend: Delta 
+MONDAY -> TUESDAY
+  tc_week7_log.txt:49
+2:  [Balance] 
+Samoset: Super Troop 
+MONDAY -> TUESDAY
+> tc_week7_log.txt:49
+3:  [Balance] 
+Taskalusa: Super 
+Troop MONDAY -> 
+TUESDAY
+  tc_week7_log.txt:49
+4:  Made 3 balancing 
+swaps
+  tc_week7_log.txt:49
+5:  New 
+distribution: 
+{'MONDAY': 2, 
+'TUESDAY': 5, 
+'WEDNESDAY': 3, 
+'THURSDAY': 2, 
+'FRIDAY': 2}
+  
+tc_week7_log.txt:520:
+  tc_week7_log.txt:52
+1:--- Activity 
+Clustering 
+Optimization (All 
+Days) ---
+> tc_week7_log.txt:52
+2:  [Cluster] 
+Taskalusa: Delta 
+Thu-2 -> Mon-1 
+(cluster: 1 -> 3)
+  tc_week7_log.txt:52
+3:  Iteration 1: 1 
+swaps
+  tc_week7_log.txt:52
+4:  Total clustering 
+swaps: 1
+  tc_week7_log.txt:55
+0:--- Outlier 
+Activity 
+Optimization ---
+  tc_week7_log.txt:55
+1:  Found 31 outlier 
+activities
+> tc_week7_log.txt:55
+2:  [Debug] 
+Taskalusa: Greased 
+Watermelon 
+(['only-on-day']) - 
+attempted 8 moves, 8 
+blocked by 
+constraints
+> tc_week7_log.txt:55
+3:  [Debug] 
+Taskalusa: Chopped! 
+(['only-on-day']) - 
+attempted 5 moves, 5 
+blocked by 
+constraints
+> tc_week7_log.txt:55
+4:  [Debug] 
+Taskalusa: Water 
+Polo 
+(['only-on-day']) - 
+attempted 9 moves, 9 
+blocked by 
+constraints
+> tc_week7_log.txt:55
+5:  [Debug] 
+Tamanend: Chopped! 
+(['only-on-day']) - 
+attempted 6 moves, 6 
+blocked by 
+constraints
+  tc_week7_log.txt:55
+6:  No beneficial 
+moves found for 31 
+outlier activities
+  tc_week7_log.txt:55
+7:    [Commissioner 
+Day Ownership] 
+Skipping 
+optimization 
+(placeholder)
+  tc_week7_log.txt:70
+9:  [Multi-Slot 
+Integrity] Verifying 
+7 activity types: 
+['Back of the Moon', 
+'Canoe Snorkel', 
+'Climbing Tower', 
+'Float for Floats', 
+'Itasca State Park', 
+'Sailing', 'Tamarac 
+Wildlife Refuge']
+  tc_week7_log.txt:71
+0:    [DEBUG] 
+INCOMPLETE: Tecumseh 
+Climbing Tower @ 
+MONDAY - has 1/2 
+slots
+> tc_week7_log.txt:71
+1:    [CONFLICT] 
+Tecumseh Climbing 
+Tower @ MONDAY slot 
+2 blocked by Troop 
+Rifle
+  tc_week7_log.txt:71
+2:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Tecumseh
+  tc_week7_log.txt:71
+3:    [DEBUG] 
+INCOMPLETE: Red 
+Cloud Climbing Tower 
+@ MONDAY - has 1/2 
+slots
+> tc_week7_log.txt:71
+4:    [CONFLICT] Red 
+Cloud Climbing Tower 
+@ MONDAY slot 3 
+blocked by Ultimate 
+Survivor
+  tc_week7_log.txt:71
+5:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Red Cloud
+  tc_week7_log.txt:71
+6:    [DEBUG] 
+INCOMPLETE: Tamanend 
+Climbing Tower @ 
+MONDAY - has 1/2 
+slots
+  tc_week7_log.txt:71
+7:    [DEBUG] 
+INCOMPLETE: Black 
+Hawk Climbing Tower 
+@ TUESDAY - has 1/2 
+slots
+> tc_week7_log.txt:71
+8:    [CONFLICT] 
+Black Hawk Climbing 
+Tower @ TUESDAY slot 
+2 blocked by Shower 
+House
+  tc_week7_log.txt:71
+9:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Black Hawk
+  tc_week7_log.txt:72
+0:    [DEBUG] 
+INCOMPLETE: Powhatan 
+Climbing Tower @ 
+TUESDAY - has 1/2 
+slots
+> tc_week7_log.txt:72
+1:    [CONFLICT] 
+Powhatan Climbing 
+Tower @ TUESDAY slot 
+3 blocked by Troop 
+Rifle
+  tc_week7_log.txt:72
+2:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Powhatan
+  tc_week7_log.txt:72
+3:    [DEBUG] 
+INCOMPLETE: Roman 
+Nose Climbing Tower 
+@ WEDNESDAY - has 
+1/2 slots
+> tc_week7_log.txt:72
+4:    [CONFLICT] 
+Roman Nose Climbing 
+Tower @ WEDNESDAY 
+slot 2 blocked by 
+Gaga Ball
+  tc_week7_log.txt:72
+5:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Roman Nose
+  tc_week7_log.txt:72
+6:    [DEBUG] 
+INCOMPLETE: 
+Massasoit Climbing 
+Tower @ WEDNESDAY - 
+has 1/2 slots
+> tc_week7_log.txt:72
+7:    [CONFLICT] 
+Massasoit Climbing 
+Tower @ WEDNESDAY 
+slot 3 blocked by 
+Troop Rifle
+  tc_week7_log.txt:72
+8:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Massasoit
+  tc_week7_log.txt:72
+9:    [DEBUG] 
+INCOMPLETE: Samoset 
+Climbing Tower @ 
+FRIDAY - has 1/2 
+slots
+> tc_week7_log.txt:73
+0:    [CONFLICT] 
+Samoset Climbing 
+Tower @ FRIDAY slot 
+3 blocked by 
+Reflection
+  tc_week7_log.txt:73
+1:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Samoset
+  tc_week7_log.txt:73
+2:    [DEBUG] 
+INCOMPLETE: Cochise 
+Climbing Tower @ 
+THURSDAY - has 1/2 
+slots
+  tc_week7_log.txt:77
+5:    [DEBUG] 
+INCOMPLETE: Cochise 
+Climbing Tower @ 
+THURSDAY - has 1/2 
+slots
+  tc_week7_log.txt:77
+6:    [DEBUG] 
+INCOMPLETE: Samoset 
+Climbing Tower @ 
+FRIDAY - has 1/2 
+slots
+> tc_week7_log.txt:77
+7:    [CONFLICT] 
+Samoset Climbing 
+Tower @ FRIDAY slot 
+3 blocked by 
+Reflection
+  tc_week7_log.txt:77
+8:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Samoset
+  tc_week7_log.txt:77
+9:    [DEBUG] 
+INCOMPLETE: Roman 
+Nose Climbing Tower 
+@ WEDNESDAY - has 
+1/2 slots
+> tc_week7_log.txt:78
+0:    [CONFLICT] 
+Roman Nose Climbing 
+Tower @ WEDNESDAY 
+slot 2 blocked by 
+Gaga Ball
+  tc_week7_log.txt:78
+1:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Roman Nose
+  tc_week7_log.txt:78
+2:    [DEBUG] 
+INCOMPLETE: Red 
+Cloud Climbing Tower 
+@ MONDAY - has 1/2 
+slots
+> tc_week7_log.txt:78
+3:    [CONFLICT] Red 
+Cloud Climbing Tower 
+@ MONDAY slot 3 
+blocked by Ultimate 
+Survivor
+  tc_week7_log.txt:78
+4:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Red Cloud
+  tc_week7_log.txt:78
+5:    [DEBUG] 
+INCOMPLETE: Black 
+Hawk Climbing Tower 
+@ TUESDAY - has 1/2 
+slots
+> tc_week7_log.txt:78
+6:    [CONFLICT] 
+Black Hawk Climbing 
+Tower @ TUESDAY slot 
+2 blocked by Shower 
+House
+  tc_week7_log.txt:78
+7:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Black Hawk
+  tc_week7_log.txt:78
+8:    [DEBUG] 
+INCOMPLETE: Tecumseh 
+Climbing Tower @ 
+MONDAY - has 1/2 
+slots
+> tc_week7_log.txt:78
+9:    [CONFLICT] 
+Tecumseh Climbing 
+Tower @ MONDAY slot 
+2 blocked by Troop 
+Rifle
+  tc_week7_log.txt:79
+0:    [REMOVE] 
+Removed incomplete 
+Climbing Tower for 
+Tecumseh
+  tc_week7_log.txt:79
+1:  [Multi-Slot 
+Integrity] Removed 5 
+entries from 
+incomplete activities
+
+

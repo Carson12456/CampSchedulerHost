@@ -80,28 +80,28 @@ class ActivityRules:
     BEACH_PROHIBITED_PAIR = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
     
     # Activities that cannot be on the same day for a troop (HARD constraints)
-    SAME_DAY_CONFLICTS = [
+    # NOTE: Per BRAIN.md v1.2.0, all prohibited pairs are now SOFT constraints.
+    # This list is kept empty. Hard conflicts are enforced via exclusive_areas in SKULL.json.
+    SAME_DAY_CONFLICTS = []
+    
+    # Activities to AVOID on same day (SOFT constraints - try to avoid)
+    # NOTE: These now match SKULL.json soft_prohibited_pairs
+    SOFT_SAME_DAY_CONFLICTS = [
         ("Trading Post", "Campsite Free Time"),
-        ("Trading Post", "Shower House"),  # Re-enabled per .cursorrules
-        # Beach prohibited pairs
+        ("Trading Post", "Shower House"),
+        ("Troop Rifle", "Troop Shotgun"),
         ("Aqua Trampoline", "Water Polo"),
         ("Aqua Trampoline", "Greased Watermelon"),
         ("Water Polo", "Greased Watermelon"),
-        # Canoe activities - no two canoeing activities on same day
         ("Troop Canoe", "Canoe Snorkel"),
         ("Troop Canoe", "Nature Canoe"),
         ("Troop Canoe", "Float for Floats"),
         ("Canoe Snorkel", "Nature Canoe"),
         ("Canoe Snorkel", "Float for Floats"),
         ("Nature Canoe", "Float for Floats"),
-    ]
-    
-    # Activities to AVOID on same day (SOFT constraints - try to avoid)
-    SOFT_SAME_DAY_CONFLICTS = [
         ("Fishing", "Trading Post"),
-        ("Fishing", "Shower House"),
-        ("Disc Golf", "Trading Post"),
-        ("Disc Golf", "Shower House"),
+        ("Fishing", "Campsite Free Time"),
+        ("Campsite Free Time", "Shower House"),
     ]
     
     def get_exclusive_areas(self) -> Dict[str, List[str]]:

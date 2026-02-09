@@ -258,12 +258,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Taskalusa",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Black Hawk",
       "activity_name": "Shower House",
       "day": "TUESDAY",
@@ -306,12 +300,6 @@
       "slot": 1
     },
     {
-      "troop_name": "Black Hawk",
-      "activity_name": "Climbing Tower",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Taskalusa",
       "activity_name": "Super Troop",
       "day": "FRIDAY",
@@ -322,7 +310,30 @@
       "activity_name": "Super Troop",
       "day": "WEDNESDAY",
       "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Troop Canoe",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 1
     }
   ],
-  "unscheduled": {}
+  "unscheduled": {
+    "Black Hawk": {
+      "top5": [
+        {
+          "name": "Climbing Tower",
+          "rank": 4,
+          "is_exempt": false
+        }
+      ],
+      "top10": []
+    }
+  }
 }

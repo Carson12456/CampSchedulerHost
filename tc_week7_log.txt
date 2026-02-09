@@ -1,0 +1,810 @@
+﻿Generating schedule for tc_week7_troops...
+DEBUG: Scheduler loaded from C:\Users\Carson\OneDrive - Minnesota State\Desktop\Projects\CampScheduler\summer-camp-scheduler\core\constrained_scheduler.py
+
+======================================================================
+CONSTRAINED SCHEDULER - PHASE A: FOUNDATION
+======================================================================
+
+--- A.0 Friday Reflection (reserve Friday slots) ---
+
+--- Scheduling Friday Reflection for ALL troops (by campsite proximity) ---
+DEBUG: Checking slots for Reflection...
+  Massasoit: Reflection -> Fri-1 (north zone)
+  Tecumseh: Reflection -> Fri-1 (north zone)
+  Samoset: Reflection -> Fri-1 (north zone)
+  Black Hawk: Reflection -> Fri-1 (north zone)
+  Taskalusa: Reflection -> Fri-2 (middle zone)
+  Powhatan: Reflection -> Fri-2 (middle zone)
+  Red Cloud: Reflection -> Fri-2 (middle zone)
+  Cochise: Reflection -> Fri-2 (middle zone)
+  Joseph: Reflection -> Fri-3 (south zone)
+  Tamanend: Reflection -> Fri-3 (south zone)
+  Roman Nose: Reflection -> Fri-3 (south zone)
+
+--- A.0b Super Troop (mandatory) ---
+
+--- Scheduling Super Troop (flexible commissioner preference) ---
+  Taskalusa: Super Troop -> Mon-1 (commissioner day bias)
+  Tamanend: Super Troop -> Tue-1 (commissioner day bias)
+  Samoset: Super Troop -> Mon-2 (commissioner day bias)
+  Roman Nose: Super Troop -> Tue-2 (best available, 2 ST on TUESDAY)
+  Red Cloud: Super Troop -> Tue-3 (commissioner day bias)
+  Powhatan: Super Troop -> Mon-3 (best available, 3 ST on MONDAY)
+  Massasoit: Super Troop -> Wed-1 (best available, 1 ST on WEDNESDAY)
+  Joseph: Super Troop -> Wed-2 (best available, 2 ST on WEDNESDAY)
+  Cochise: Super Troop -> Thu-1 (best available, 1 ST on THURSDAY)
+  Black Hawk: Super Troop -> Wed-3 (best available, 3 ST on WEDNESDAY)
+  Tecumseh: Super Troop -> Thu-2 (best available, 2 ST on THURSDAY)
+
+--- A.3 HC/DG Tuesday scheduling (Spine: early) ---
+
+--- Early HC/DG Scheduling (Tuesday Only, Top 3) ---
+  Processing History Center requests...
+    Massasoit wants BOTH HC and DG - attempting back-to-back...
+      Slot 1 free: True, Slot 2 free: True
+    [PAIR SUCCESS] Massasoit: HC (Tue-1) -> DG (Tue-2)
+    Tecumseh wants BOTH HC and DG - attempting back-to-back...
+      Slot 1 free: True, Slot 2 free: True
+      HC at Slot 1 blocked by constraints
+      Slot 2 free: True, Slot 3 free: True
+    [PAIR SUCCESS] Tecumseh: HC (Tue-2) -> DG (Tue-3)
+    Taskalusa wants BOTH HC and DG - attempting back-to-back...
+      Slot 1 free: True, Slot 2 free: True
+      HC at Slot 1 blocked by constraints
+      Slot 2 free: True, Slot 3 free: True
+      HC at Slot 2 blocked by constraints
+    [PAIR FAIL] Could not schedule back-to-back. Falling back to single HC.
+    [SUCCESS] Taskalusa: History Center at Tue-3
+  Processing Disc Golf requests...
+    [SUCCESS] Taskalusa: Disc Golf at Tue-1
+
+--- A.5 Sailing Optimization (9-Slot) ---
+
+--- Sailing Optimization (9-Slot Max Capacity) ---
+  Troop Demand (6 troops):
+    Joseph: Rank #4, Size 22
+    Red Cloud: Rank #4, Size 7
+    Tamanend: Rank #6, Size 7
+    Powhatan: Rank #7, Size 17
+    Taskalusa: Rank #8, Size 9
+    Samoset: Rank #10, Size 8
+  [WARN] Could not place largest troop Joseph on Thursday.
+  [SUCCESS] Joseph -> MONDAY Slot 1
+  [SUCCESS] Red Cloud -> TUESDAY Slot 1
+  [SUCCESS] Tamanend -> WEDNESDAY Slot 1
+  [FAIL] Could not schedule Sailing for Powhatan (Rank 7)
+  [FAIL] Could not schedule Sailing for Taskalusa (Rank 8)
+  [FAIL] Could not schedule Sailing for Samoset (Rank 10)
+  Scheduled 3 Sailing sessions.
+
+--- A.5b Early Aqua Trampoline for Top 5 ---
+  [Early AT] Scheduled Aqua Trampoline for 9 troops (Top 5)
+
+--- A.5c Guarantee Top 1 Beach (AT/WP/GM/etc.) ---
+  [Top1 Beach] All top-1 beach preferences placed
+
+--- A.1 Scheduling 3-Hour Activities ---
+
+--- Scheduling 3-hour activities (Top Priority) ---
+  Found 2 requests for 3-hour activities. Scheduling in priority order...
+  [SUCCESS] Black Hawk: Itasca State Park (Rank #3)
+  [SUCCESS] Tecumseh: Itasca State Park (Rank #3)
+  Scheduled 2 / 2 3-hour activities.
+
+--- A.7 Delta + Sailing pairing (reserve day) ---
+
+--- Scheduling Delta + Sailing Pairs ---
+  No Delta+Sailing pairs scheduled
+
+--- A.2 Top 10 2-Hour Activities (Priority) ---
+
+--- Scheduling Top 10 2-Hour Activities (Priority) ---
+  [Priority 2-Hour] Tamanend: Canoe Snorkel (Rank #2)
+  [Priority 2-Hour] Samoset: Canoe Snorkel (Rank #2)
+  [Priority 2-Hour] Powhatan: Float for Floats (Rank #10)
+  [Smart Reflection] Black Hawk: Reflection -> Fri-3 (triggered: 1 slot left)
+  [Priority 2-Hour] Black Hawk: Float for Floats (Rank #8)
+
+--- A.4 Early staff area clustering ---
+
+--- Early Staff Area Clustering (Top 8) ---
+  Tower: 7 requests -> 2 primary days: ['Mon', 'Tue']
+    Tecumseh: Climbing Tower (#1) -> Mon-1
+    Red Cloud: Climbing Tower (#3) -> Mon-2
+    Tamanend: Climbing Tower (#4) -> Mon-3
+    Black Hawk: Climbing Tower (#4) -> Tue-1
+    Roman Nose: Climbing Tower (#6) -> Wed-1
+    Massasoit: Climbing Tower (#6) -> Wed-2
+    Cochise: Climbing Tower (#6) -> Thu-2
+    Scheduled 7/7 for Tower
+  Rifle: 3 requests -> 1 primary days: ['Mon']
+    Cochise: Troop Shotgun (#3) -> Mon-1
+    Tecumseh: Troop Rifle (#8) -> Mon-2
+    Scheduled 2/3 for Rifle
+  ODS: 6 requests -> 2 primary days: ['Mon', 'Tue']
+    Taskalusa: Chopped! (#1) -> Mon-2
+    Samoset: Ultimate Survivor (#1) -> Mon-1
+    Red Cloud: Ultimate Survivor (#7) -> Mon-3
+    Tamanend: Chopped! (#8) -> Thu-1
+    Powhatan: Chopped! (#8) -> Tue-1
+    Cochise: Knots and Lashings (#8) -> Wed-1
+    Scheduled 6/6 for ODS
+
+
+--- A.6 Priority scheduling for limited activities (Global Rank 0-4) ---
+
+--- Priority Scheduling for Limited Activities (Max Rank: 4) ---
+  Limited activities to check: {'Troop Canoe', 'Archery', 'Nature Canoe', 'Tamarac Wildlife Refuge', 'Water Polo', 'Troop Shotgun', 'Back of the Moon', 'Troop Rifle', 'Canoe Snorkel', 'Aqua Trampoline', 'Itasca State Park', 'Float for Floats'}
+  Found 2 limited activities with requests
+  Attempting to schedule Troop Canoe for 1 troops...
+  [OK] Cochise: Troop Canoe (rank #5)
+  Attempting to schedule Archery for 6 troops...
+  [OK] Powhatan: Archery (rank #2)
+  [OK] Tecumseh: Archery (rank #2)
+  [OK] Samoset: Archery (rank #3)
+  [Comm Cluster] Cochise Archery: Same comm (Commissioner B) on ['FRIDAY']
+  [Smart Reflection] Cochise: Reflection -> Fri-1 (triggered: 1 slot left)
+  [OK] Cochise: Archery (rank #4)
+  [Comm Cluster] Tamanend Archery: Same comm (Commissioner B) on ['FRIDAY']
+  [OK] Tamanend: Archery (rank #5)
+  [Comm Cluster] Black Hawk Archery: Same comm (Commissioner A) on ['TUESDAY']
+  [OK] Black Hawk: Archery (rank #5)
+  Scheduled 7 limited activities by priority
+
+--- A.8 Sailing pairs for Same-Day bonus ---
+
+--- Scheduling Sailing Pairs (Same-Day Bonus) ---
+  No Sailing pairs scheduled
+    Taskalusa: 8 gaps
+    Tamanend: 5 gaps
+    Samoset: 9 gaps
+    Roman Nose: 11 gaps
+    Red Cloud: 8 gaps
+    Powhatan: 8 gaps
+    Massasoit: 8 gaps
+    Joseph: 9 gaps
+    Cochise: 7 gaps
+    Black Hawk: 5 gaps
+    Tecumseh: 4 gaps
+  [Phase A (Foundation & Clustering)] Found 82 total gaps [FAIL]
+  [IMMEDIATE FIX] Running emergency gap fill after Phase A (Foundation & Clustering)
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  [Gap Fill] Taskalusa: Gaga Ball -> MON-3
+  [Gap Fill] Taskalusa: Campsite Free Time -> TUE-2
+  [Gap Fill] Taskalusa: Fishing -> WED-1
+  [Gap Fill] Taskalusa: Loon Lore -> WED-2
+  [Gap Fill] Taskalusa: Greased Watermelon -> FRI-1
+  [Gap Fill] Taskalusa: Shower House -> FRI-3
+  [Gap Fill] Taskalusa: Water Polo -> THU-1
+  [Gap Fill] Taskalusa: Delta -> THU-2
+  [Gap Fill] Tamanend: Delta -> MON-1
+  [Gap Fill] Tamanend: 9 Square -> THU-2
+  [Gap Fill] Tamanend: Gaga Ball -> FRI-1
+  [Gap Fill] Tamanend: Shower House -> FRI-2
+  [Gap Fill] Tamanend: Ultimate Survivor -> FRI-3
+  [Gap Fill] Samoset: 9 Square -> MON-3
+  [Gap Fill] Samoset: Gaga Ball -> TUE-1
+  [Gap Fill] Samoset: Water Polo -> TUE-3
+  [Gap Fill] Samoset: Troop Canoe -> WED-1
+  [Gap Fill] Samoset: Trading Post -> WED-2
+  [Gap Fill] Samoset: Monkey's Fist -> WED-3
+  [Gap Fill] Samoset: Shower House -> FRI-1
+  [Gap Fill] Samoset: Climbing Tower -> FRI-2
+  [Gap Fill] Samoset: Fishing -> FRI-3
+  [Gap Fill] Roman Nose: 9 Square -> TUE-1
+  [Gap Fill] Roman Nose: Gaga Ball -> WED-2
+  [Gap Fill] Roman Nose: Greased Watermelon -> WED-3
+  [Gap Fill] Roman Nose: Water Polo -> MON-1
+  [Gap Fill] Roman Nose: Delta -> MON-2
+  [Gap Fill] Roman Nose: Archery -> MON-3
+  [Gap Fill] Roman Nose: Shower House -> THU-1
+  [Gap Fill] Roman Nose: Troop Rifle -> THU-2
+  [Gap Fill] Roman Nose: GPS & Geocaching -> FRI-1
+  [Gap Fill] Roman Nose: Fishing -> FRI-2
+  [Gap Fill] Roman Nose: Sauna -> FRI-3
+  [Gap Fill] Red Cloud: Gaga Ball -> MON-1
+  [Gap Fill] Red Cloud: Shower House -> WED-2
+  [Gap Fill] Red Cloud: 9 Square -> WED-3
+  [Gap Fill] Red Cloud: Greased Watermelon -> THU-1
+  [Gap Fill] Red Cloud: Troop Swim -> THU-2
+  [Gap Fill] Red Cloud: Water Polo -> FRI-1
+  [Gap Fill] Red Cloud: Delta -> FRI-2
+  [Gap Fill] Red Cloud: Trading Post -> FRI-3
+  [Gap Fill] Powhatan: Gaga Ball -> MON-2
+  [Gap Fill] Powhatan: 9 Square -> WED-1
+  [Gap Fill] Powhatan: Climbing Tower -> TUE-2
+  [Gap Fill] Powhatan: Delta -> FRI-1
+  [Gap Fill] Powhatan: Trading Post -> FRI-2
+  [Gap Fill] Powhatan: Campsite Free Time -> THU-1
+  [Gap Fill] Powhatan: Greased Watermelon -> THU-2
+  [Gap Fill] Massasoit: Delta -> TUE-3
+  [Gap Fill] Massasoit: 9 Square -> FRI-2
+  [Gap Fill] Massasoit: Aqua Trampoline -> FRI-3
+  [Gap Fill] Massasoit: Troop Canoe -> MON-1
+  [Gap Fill] Massasoit: Fishing -> MON-2
+  [Gap Fill] Massasoit: Dr. DNA -> MON-3
+  [Gap Fill] Massasoit: Gaga Ball -> THU-1
+  [Gap Fill] Massasoit: Shower House -> THU-2
+  [Gap Fill] Joseph: Gaga Ball -> WED-1
+  [Gap Fill] Joseph: Sauna -> WED-3
+  [Gap Fill] Joseph: 9 Square -> FRI-1
+  [Gap Fill] Joseph: Knots and Lashings -> FRI-2
+  [Gap Fill] Joseph: Greased Watermelon -> TUE-1
+  [Gap Fill] Joseph: Delta -> TUE-2
+  [Gap Fill] Joseph: Campsite Free Time -> TUE-3
+  [Gap Fill] Joseph: Fishing -> THU-1
+  [Gap Fill] Joseph: Archery -> THU-2
+  [Gap Fill] Cochise: Monkey's Fist -> FRI-1
+  [Gap Fill] Cochise: 9 Square -> MON-2
+  [Gap Fill] Cochise: Troop Swim -> MON-3
+  [Gap Fill] Cochise: Campsite Free Time -> TUE-1
+  [Gap Fill] Cochise: Gaga Ball -> TUE-2
+  [Gap Fill] Cochise: Fishing -> WED-2
+  [Gap Fill] Cochise: Shower House -> WED-3
+  [Gap Fill] Black Hawk: 9 Square -> WED-2
+  [Gap Fill] Black Hawk: Shower House -> TUE-2
+  [Gap Fill] Black Hawk: Gaga Ball -> TUE-3
+  [Gap Fill] Black Hawk: Troop Canoe -> THU-2
+  [Gap Fill] Tecumseh: Delta -> MON-3
+  [Gap Fill] Tecumseh: 9 Square -> THU-1
+  [Gap Fill] Tecumseh: Gaga Ball -> FRI-2
+  [Gap Fill] Tecumseh: Nature Canoe -> FRI-3
+  Total gaps filled: 80
+  Filled 80 gaps this iteration
+    Iteration 2/8...
+  Total gaps filled: 80
+  No gaps filled in iteration 2 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 3/8...
+  Total gaps filled: 80
+  No gaps filled in iteration 3 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 4/8...
+  Total gaps filled: 80
+  No gaps filled in iteration 4 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 5/8...
+  Total gaps filled: 80
+  No gaps filled in iteration 5 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 6/8...
+  Total gaps filled: 80
+  No gaps filled in iteration 6 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 7/8...
+  Total gaps filled: 80
+  No gaps filled in iteration 7 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 8/8...
+  Total gaps filled: 80
+  No gaps filled in iteration 8 - checking if complete...
+  Still have 1 gaps, continuing...
+  WARNING: 1 gaps remain after all attempts!
+  [EMERGENCY FILL] Black Hawk: Campsite Free Time -> FRI-3
+  Final gap filling complete. Total filled: 80
+
+======================================================================
+PHASE B: CORE REQUESTS
+======================================================================
+
+--- B.1 Scheduling Top 1 (FIRST PRIORITY) ---
+
+--- Per-Preference Scheduling (ranks 1-1) ---
+
+  [Top 5 - Batch 1] Placing preference #1...
+
+  Placement complete: 0 activities scheduled
+
+--- B.1b Forcing Top 1 (make space before Top 2-5) ---
+  [Top1 Force] All Top 1 preferences placed
+
+--- B.1c Scheduling Top 2-5 ---
+
+--- Per-Preference Scheduling (ranks 2-5) ---
+
+  [Top 5 - Batch 2] Placing preference #2...
+
+  [Top 5 - Batch 3] Placing preference #3...
+
+  [Top 5 - Batch 4] Placing preference #4...
+
+  [Top 5 - Batch 5] Placing preference #5...
+
+  Placement complete: 0 activities scheduled
+
+--- B.2 Guaranteeing 100% Top 5 satisfaction ---
+
+--- ENHANCED: Guaranteeing 90%+ Top 5 Satisfaction (Target: 16/18 available) ---
+  All Top 5 already satisfied
+
+--- B.3 Mandatory Top 5 enforcement ---
+
+--- MANDATORY Top 5 Enforcement (ALL Top 1-5 Required) ---
+  All troops have 100% Top 5 satisfaction!
+
+--- Scheduling Delta (by preference rank, early week bias, Sailing pairing) ---
+  Troops requesting Delta (sorted by rank): [('Massasoit', 1), ('Tamanend', 3), ('Roman Nose', 4), ('Tecumseh', 6), ('Powhatan', 9), ('Joseph', 10), ('Red Cloud', 12), ('Taskalusa', 14)]
+  WARNING: Could not schedule Delta for Massasoit (#1)
+  [Promoted Pairing] Tamanend: Sailing on Wednesday, preferring Delta there
+  WARNING: Could not schedule Delta for Tamanend (#3)
+  WARNING: Could not schedule Delta for Roman Nose (#4)
+  WARNING: Could not schedule Delta for Tecumseh (#6)
+  WARNING: Could not schedule Delta for Powhatan (#9)
+  [Promoted Pairing] Joseph: Sailing on Monday, preferring Delta there
+  WARNING: Could not schedule Delta for Joseph (#10)
+  [Promoted Pairing] Red Cloud: Sailing on Tuesday, preferring Delta there
+  WARNING: Could not schedule Delta for Red Cloud (#12)
+  WARNING: Could not schedule Delta for Taskalusa (#14)
+  Scheduled 0/8 Delta requests
+  Commissioner busy slots mapped:
+    Commissioner A: Fri-1, Fri-2, Mon-1, Mon-2, Mon-3, Thu-1, Thu-2, Tue-2, Tue-3, Wed-1, Wed-3
+    Commissioner B: Fri-1, Fri-2, Fri-3, Mon-1, Mon-2, Mon-3, Thu-1, Thu-2, Tue-1, Tue-2, Tue-3, Wed-2
+    Commissioner C: Mon-2, Mon-3, Tue-2
+
+--- B.8 Early Sailing for Top 10 troops ---
+
+--- Early Sailing for Top 10 Troops ---
+  Troops needing Sailing (Top 10):
+    Powhatan: #7, 17 scouts
+    Taskalusa: #8, 9 scouts
+    Samoset: #10, 8 scouts
+  [FAILED] Powhatan: No consecutive slots available
+  [Delta Pairing] Taskalusa: preferring Sailing on Thursday
+  [FAILED] Taskalusa: No consecutive slots available
+  [FAILED] Samoset: No consecutive slots available
+  Scheduled Sailing for 0/3 troops
+
+--- B.9 Enforce Delta + Sailing same-day pairing ---
+
+--- Enforcing Delta + Sailing Same-Day Pairing ---
+    [Remove Continuations] Skipping optimization (placeholder)
+    [Remove Continuations] Skipping optimization (placeholder)
+    [Is Exclusive Blocked] Skipping optimization (placeholder)
+    [Is Exclusive Blocked] Skipping optimization (placeholder)
+    [Is Exclusive Blocked] Skipping optimization (placeholder)
+    [Is Exclusive Blocked] Skipping optimization (placeholder)
+    [Is Exclusive Blocked] Skipping optimization (placeholder)
+    [Fill vacated] Red Cloud: Hemp Craft -> Fri-2
+  Red Cloud: Delta moved from slot 2 to slot 3 (Sailing pairing requirement)
+    [Remove Continuations] Skipping optimization (placeholder)
+    [Remove Continuations] Skipping optimization (placeholder)
+    [Remove Continuations] Skipping optimization (placeholder)
+  Paired Delta+Sailing for 1 troop(s)
+
+--- B.10 Consolidate Sailing same-day clustering ---
+
+--- Consolidating Sailing to Cluster 2 Per Day ---
+  Monday: 1 sail(s) - ['Joseph']
+  Tuesday: 1 sail(s) - ['Red Cloud']
+  Wednesday: 1 sail(s) - ['Tamanend']
+  Iteration 1: No valid moves found
+  No Sailing moves made. Current: 0/3 days with 2+ sails
+  [Phase B (Core Requests)] No gaps detected [OK]
+
+--- B.11 Early Aqua Trampoline sharing (Top 5) ---
+  No additional Aqua Trampoline sharing opportunities found
+
+======================================================================
+PHASE C: REMAINING & OPTIMIZATION
+======================================================================
+
+--- Scheduling Day-Specific Requests (REQUIRED) ---
+  ERROR: Could not schedule Shower House on Friday for Samoset!
+
+--- C.2 Staff Optimization (consecutive activities) ---
+
+--- C.3 Balancing staff workload ---
+
+--- C.4 Scheduling Remaining Preferences (Top 6-20) ---
+
+--- Per-Preference Scheduling (ranks 6-20) ---
+
+  [Top 6-10] Prioritizing preferences 6-10...
+    Preference #7...
+    Preference #8...
+    Preference #9...
+    Preference #10...
+
+  [Top 11-15] Prioritizing preferences 11-15...
+
+  [Top 16-20] Prioritizing preferences 16-20...
+
+  Placement complete: 7 activities scheduled
+  [WARNING] 7 Top 6-10 preferences could not be placed
+
+--- C.4.5 Guaranteeing Minimum Top 10 (2-3 per troop) ---
+
+--- Guaranteeing Minimum Top 10 (2-3 per troop) ---
+  All troops already meet minimum Top 10 requirement
+
+--- C.5 Guaranteeing Top 10 with exceptions ---
+
+--- Guaranteeing Top 10 (with exceptions) ---
+  Skipped 3 exceptions (3-hour/constrained activities)
+
+--- C.6 Filling remaining slots ---
+  [Fill Pref] Tamanend: Campsite Free Time -> Tue-1 (#12)
+  [Fill Pref] Red Cloud: Campsite Free Time -> Tue-3 (#11)
+  [Fill] Tamanend: Campsite Free Time (Pref #12) -> Tue-1
+  [Fill] Red Cloud: Campsite Free Time (Pref #11) -> Tue-3
+
+--- Scheduling balls activities during sailing ---
+    Tamanend: 1 gaps
+    Red Cloud: 1 gaps
+  [Phase C.6 (Fill Slot Logic)] Found 2 total gaps [FAIL]
+  [IMMEDIATE FIX] Running emergency gap fill after Phase C.6 (Fill Slot Logic)
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  [Gap Fill] Tamanend: Fishing -> TUE-1
+  Total gaps filled: 1
+  Filled 1 gaps this iteration
+    Iteration 2/8...
+  Total gaps filled: 1
+  No gaps filled in iteration 2 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 3/8...
+  Total gaps filled: 1
+  No gaps filled in iteration 3 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 4/8...
+  Total gaps filled: 1
+  No gaps filled in iteration 4 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 5/8...
+  Total gaps filled: 1
+  No gaps filled in iteration 5 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 6/8...
+  Total gaps filled: 1
+  No gaps filled in iteration 6 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 7/8...
+  Total gaps filled: 1
+  No gaps filled in iteration 7 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 8/8...
+  Total gaps filled: 1
+  No gaps filled in iteration 8 - checking if complete...
+  Still have 1 gaps, continuing...
+  WARNING: 1 gaps remain after all attempts!
+  [EMERGENCY FILL] Red Cloud: Campsite Free Time -> TUE-3
+  Final gap filling complete. Total filled: 1
+
+--- C.7 Aggressively pairing Aqua Trampoline sharing ---
+  No additional Aqua Trampoline sharing opportunities found
+  [Phase C.7 (Aqua Trampoline Sharing)] No gaps detected [OK]
+
+======================================================================
+PHASE D: FINAL POLISH & VERIFICATION
+======================================================================
+
+--- D.1 Optimizing Friday Reflection slots ---
+
+--- D.2 Comprehensive clustering & smart swaps ---
+
+--- Staff Distribution Balancing ---
+  Staff per day: {'MONDAY': 5, 'TUESDAY': 2, 'WEDNESDAY': 3, 'THURSDAY': 2, 'FRIDAY': 2}
+  Average: 2.8
+  Overloaded days: [('MONDAY', 5)]
+  Underloaded days: [('TUESDAY', 2), ('THURSDAY', 2), ('FRIDAY', 2)]
+  [Balance] Tamanend: Delta MONDAY -> TUESDAY
+  [Balance] Samoset: Super Troop MONDAY -> TUESDAY
+  [Balance] Taskalusa: Super Troop MONDAY -> TUESDAY
+  Made 3 balancing swaps
+  New distribution: {'MONDAY': 2, 'TUESDAY': 5, 'WEDNESDAY': 3, 'THURSDAY': 2, 'FRIDAY': 2}
+  No consolidation possible
+
+--- Comprehensive Smart Swap Analysis ---
+  Iteration 1: 0 smart swaps
+  Total comprehensive swaps: 0
+
+--- Aggressive Within-Troop Slot Swaps ---
+  Iteration 1: 0 within-troop swaps
+  Total within-troop swaps: 0
+
+--- Aggressive Within-Troop Swaps for Excess Day Reduction ---
+    [Aggressive Excess Day Reduction] Skipping optimization (placeholder)
+  Total excess day reduction swaps: 0
+
+--- Aggressive Excess Day & Gap Reduction Pass ---
+    [Aggressive Excess Day Reduction] Skipping optimization (placeholder)
+    [Cross Troop Swaps] Tower: 1 excess days, looking for swaps...
+    [Cross Troop Swaps] Outdoor Skills: 2 excess days, looking for swaps...
+  [Phase D.2 (Comprehensive Clustering)] No gaps detected [OK]
+
+--- D.3 Early forced clustering consolidation ---
+  [Phase D.3 (Forced Clustering)] No gaps detected [OK]
+
+--- D.4 Friday Super Troop optimization ---
+
+--- Activity Clustering Optimization (All Days) ---
+  [Cluster] Taskalusa: Delta Thu-2 -> Mon-1 (cluster: 1 -> 3)
+  Iteration 1: 1 swaps
+  Total clustering swaps: 1
+
+--- D.5 Flexible Reflection slot optimization ---
+
+--- Flexible Reflection Distribution (Spread Across Slots) ---
+  Commissioner A: Already distributed (1 per slot) [OK]
+  All commissioners already have troops spread across slots
+
+--- D.6 Commissioner load balancing ---
+
+--- Commissioner Load Balancing ---
+  Commissioner A: FRI-1: 1, FRI-2: 1 [OK]
+  Commissioner B: FRI-3: 1 [OK]
+
+--- D.7 Setup Efficiency & Activity Clustering ---
+
+--- Staff Batching (Setup Efficiency) ---
+  DEBUG: Tecumseh cannot schedule Trading Post on Day.MONDAY even with relax_constraints
+  No batching opportunities found
+
+--- Activity Clustering Optimization ---
+  Made 0 clustering swaps (including aggressive moves)
+  [Phase D.7 (Activity Clustering)] No gaps detected [OK]
+
+--- D.8 Outlier Activity Optimization ---
+
+--- Outlier Activity Optimization ---
+  Found 31 outlier activities
+  [Debug] Taskalusa: Greased Watermelon (['only-on-day']) - attempted 8 moves, 8 blocked by constraints
+  [Debug] Taskalusa: Chopped! (['only-on-day']) - attempted 5 moves, 5 blocked by constraints
+  [Debug] Taskalusa: Water Polo (['only-on-day']) - attempted 9 moves, 9 blocked by constraints
+  [Debug] Tamanend: Chopped! (['only-on-day']) - attempted 6 moves, 6 blocked by constraints
+  No beneficial moves found for 31 outlier activities
+    [Commissioner Day Ownership] Skipping optimization (placeholder)
+
+--- D.9 Post-Fill Cluster Gap Optimization ---
+    [Cluster Gap Post-Fill] Skipping optimization (placeholder)
+
+--- D.8 Top 10 Recovery & Gap Filling ---
+    [Top 10 Recovery from Fills] Skipping optimization (placeholder)
+
+--- D.9 Comprehensive final cleanup ---
+  [Comprehensive Final Cleanup - Max 3 iterations]
+    Iteration 1...
+  [WARNING] Activity conflict: Gaga Ball @ MONDAY slot 2
+    All 2 troops have this as Top 5:
+      Powhatan (#3)
+      Samoset (#5)
+    Keeping: Powhatan (first by priority)
+  Total activity conflicts removed: 1
+  No exclusive area conflicts found
+      Removed conflicts: 1 entries
+  [CRITICAL] Multiple Top 5 conflict at MONDAY-3:
+    Joseph: Aqua Trampoline (#1)
+    Joseph: Sailing (#4)
+    Keeping #1, removing others
+  Overlap fix: Red Cloud @ TUESDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Campsite Free Time (#11)
+  Overlap fix: Tamanend @ WEDNESDAY slot 3
+    Kept Top 5: Aqua Trampoline (#1)
+    Removed: Sailing (#6)
+  Overlap fix: Black Hawk @ FRIDAY slot 3
+    Kept: Float for Floats
+    Removed: Water Polo
+  Total issues fixed: 6
+  [Top 5 Recovery] Attempting to recover 1 removed Top 5 activities...
+    [RECOVERED] Joseph: Sailing (#4) -> MON-1
+  Successfully recovered 1 Top 5 activities
+      Removed overlaps: 4 entries
+  Removed duplicate: Powhatan has extra Climbing Tower @ TUESDAY-3
+  Removed duplicate: Massasoit has extra Climbing Tower @ WEDNESDAY-3
+  Total activity duplicates removed: 2
+  [MANDATORY] Replaced Ultimate Survivor (#14) with Reflection for Tamanend @ Friday slot 3
+  Replaced Fishing (#fill) with Super Troop for Tamanend @ MONDAY slot 1
+  [MANDATORY] Replaced Fishing (#fill) with Reflection for Samoset @ Friday slot 3
+  [MANDATORY] Replaced Sauna (#13) with Reflection for Roman Nose @ Friday slot 3
+  Replaced Fishing (#12) with Super Troop for Roman Nose @ FRIDAY slot 2
+  [MANDATORY] Replaced Hemp Craft (#fill) with Reflection for Red Cloud @ Friday slot 2
+  Added Super Troop for Red Cloud @ TUESDAY slot 3
+  [MANDATORY] Replaced Trading Post (#fill) with Reflection for Powhatan @ Friday slot 2
+  Replaced Troop Rifle (#13) with Super Troop for Powhatan @ MONDAY slot 3
+  [MANDATORY] Replaced Monkey's Fist (#10) with Reflection for Cochise @ Friday slot 1
+  Added Reflection for Black Hawk @ Friday slot 3
+  [MANDATORY] Replaced Nature Canoe (#16) with Reflection for Tecumseh @ Friday slot 3
+  Replaced Trading Post (#9) with Super Troop for Tecumseh @ THURSDAY slot 2
+  Filled Tamanend @ WEDNESDAY slot 2 with Campsite Free Time
+  Filled Tamanend @ WEDNESDAY slot 1 with Loon Lore [DUPLICATE]
+  Filled Samoset @ MONDAY slot 2 with Loon Lore [DUPLICATE]
+  Filled Powhatan @ TUESDAY slot 3 with Troop Rifle
+  Filled Massasoit @ WEDNESDAY slot 3 with Troop Rifle
+        [Beach] Found violation: Tamanend Canoe Snorkel in TUESDAY Slot 2
+        [Beach] Found violation: Red Cloud Sailing in TUESDAY Slot 2
+        [Beach] Found violation: Powhatan Float for Floats in WEDNESDAY Slot 2
+        [Beach] Found violation: Joseph Sailing in MONDAY Slot 2
+        [Beach] Found violation: Black Hawk Float for Floats in FRIDAY Slot 2
+      [Beach] Fixed 0 beach slot violations
+    Iteration 2...
+  No activity conflicts found
+  No exclusive area conflicts found
+  Overlap fix: Massasoit @ WEDNESDAY slot 3
+    Kept: Climbing Tower
+    Removed: Troop Rifle
+  [CRITICAL] Multiple Top 5 conflict at MONDAY-3:
+    Joseph: Aqua Trampoline (#1)
+    Joseph: Sailing (#4)
+    Keeping #1, removing others
+  Overlap fix: Red Cloud @ TUESDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Super Troop (fill)
+  Overlap fix: Black Hawk @ FRIDAY slot 3
+    Kept Protected: Reflection
+    Removed: Float for Floats
+  Overlap fix: Powhatan @ TUESDAY slot 3
+    Kept: Climbing Tower
+    Removed: Troop Rifle
+  Total issues fixed: 7
+  [Top 5 Recovery] Attempting to recover 1 removed Top 5 activities...
+    [RECOVERED] Joseph: Sailing (#4) -> MON-1
+  Successfully recovered 1 Top 5 activities
+      Removed overlaps: 5 entries
+  No duplicates found
+  Added Super Troop for Red Cloud @ TUESDAY slot 3
+  Filled Powhatan @ TUESDAY slot 3 with Troop Rifle
+  Filled Massasoit @ WEDNESDAY slot 3 with Troop Rifle
+  Filled Black Hawk @ FRIDAY slot 2 with Troop Rifle
+  Filled Black Hawk @ FRIDAY slot 1 with Nature Canoe
+        [Beach] Found violation: Tamanend Canoe Snorkel in TUESDAY Slot 2
+        [Beach] Found violation: Red Cloud Sailing in TUESDAY Slot 2
+        [Beach] Found violation: Powhatan Float for Floats in WEDNESDAY Slot 2
+        [Beach] Found violation: Joseph Sailing in MONDAY Slot 2
+      [Beach] Fixed 0 beach slot violations
+    Iteration 3...
+  No activity conflicts found
+  No exclusive area conflicts found
+  Overlap fix: Massasoit @ WEDNESDAY slot 3
+    Kept: Climbing Tower
+    Removed: Troop Rifle
+  [CRITICAL] Multiple Top 5 conflict at MONDAY-3:
+    Joseph: Aqua Trampoline (#1)
+    Joseph: Sailing (#4)
+    Keeping #1, removing others
+  Overlap fix: Red Cloud @ TUESDAY slot 3
+    Kept Top 5: Sailing (#4)
+    Removed: Super Troop (fill)
+  Overlap fix: Powhatan @ TUESDAY slot 3
+    Kept: Climbing Tower
+    Removed: Troop Rifle
+  Total issues fixed: 5
+  [Top 5 Recovery] Attempting to recover 1 removed Top 5 activities...
+    [RECOVERED] Joseph: Sailing (#4) -> MON-1
+  Successfully recovered 1 Top 5 activities
+      Removed overlaps: 3 entries
+  No duplicates found
+  Added Super Troop for Red Cloud @ TUESDAY slot 3
+  Filled Powhatan @ TUESDAY slot 3 with Troop Rifle
+  Filled Massasoit @ WEDNESDAY slot 3 with Troop Rifle
+        [Beach] Found violation: Tamanend Canoe Snorkel in TUESDAY Slot 2
+        [Beach] Found violation: Red Cloud Sailing in TUESDAY Slot 2
+        [Beach] Found violation: Powhatan Float for Floats in WEDNESDAY Slot 2
+        [Beach] Found violation: Joseph Sailing in MONDAY Slot 2
+      [Beach] Fixed 0 beach slot violations
+    Final gap guarantee...
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  Total gaps filled: 0
+  No gaps filled in iteration 1 - checking if complete...
+  SUCCESS: All gaps filled!
+  Final gap filling complete. Total filled: 0
+    [Sanitize Exclusivity] No exclusivity conflicts found
+  [Cleanup Complete]
+  [Phase D.9 (Final Cleanup)] No gaps detected [OK]
+
+======================================================================
+ENHANCED POST-PROCESSING: CRITICAL CONSTRAINT FIXES
+======================================================================
+  [WARN] Enhanced fixers not available: No module named 'constraint_fixes'
+  Continuing with standard optimization...
+
+======================================================================
+FINAL VERIFICATION
+======================================================================
+
+--- Multi-Slot Integrity Check ---
+  [Multi-Slot Integrity] Checking all multi-slot activities...
+  [Multi-Slot Integrity] Verifying 7 activity types: ['Back of the Moon', 'Canoe Snorkel', 'Climbing Tower', 'Float for Floats', 'Itasca State Park', 'Sailing', 'Tamarac Wildlife Refuge']
+    [DEBUG] INCOMPLETE: Tecumseh Climbing Tower @ MONDAY - has 1/2 slots
+    [CONFLICT] Tecumseh Climbing Tower @ MONDAY slot 2 blocked by Troop Rifle
+    [REMOVE] Removed incomplete Climbing Tower for Tecumseh
+    [DEBUG] INCOMPLETE: Red Cloud Climbing Tower @ MONDAY - has 1/2 slots
+    [CONFLICT] Red Cloud Climbing Tower @ MONDAY slot 3 blocked by Ultimate Survivor
+    [REMOVE] Removed incomplete Climbing Tower for Red Cloud
+    [DEBUG] INCOMPLETE: Tamanend Climbing Tower @ MONDAY - has 1/2 slots
+    [DEBUG] INCOMPLETE: Black Hawk Climbing Tower @ TUESDAY - has 1/2 slots
+    [CONFLICT] Black Hawk Climbing Tower @ TUESDAY slot 2 blocked by Shower House
+    [REMOVE] Removed incomplete Climbing Tower for Black Hawk
+    [DEBUG] INCOMPLETE: Powhatan Climbing Tower @ TUESDAY - has 1/2 slots
+    [CONFLICT] Powhatan Climbing Tower @ TUESDAY slot 3 blocked by Troop Rifle
+    [REMOVE] Removed incomplete Climbing Tower for Powhatan
+    [DEBUG] INCOMPLETE: Roman Nose Climbing Tower @ WEDNESDAY - has 1/2 slots
+    [CONFLICT] Roman Nose Climbing Tower @ WEDNESDAY slot 2 blocked by Gaga Ball
+    [REMOVE] Removed incomplete Climbing Tower for Roman Nose
+    [DEBUG] INCOMPLETE: Massasoit Climbing Tower @ WEDNESDAY - has 1/2 slots
+    [CONFLICT] Massasoit Climbing Tower @ WEDNESDAY slot 3 blocked by Troop Rifle
+    [REMOVE] Removed incomplete Climbing Tower for Massasoit
+    [DEBUG] INCOMPLETE: Samoset Climbing Tower @ FRIDAY - has 1/2 slots
+    [CONFLICT] Samoset Climbing Tower @ FRIDAY slot 3 blocked by Reflection
+    [REMOVE] Removed incomplete Climbing Tower for Samoset
+    [DEBUG] INCOMPLETE: Cochise Climbing Tower @ THURSDAY - has 1/2 slots
+  [Multi-Slot Integrity] Removed 7 entries from incomplete activities
+  [Final Validation] Checking schedule integrity...
+    Samoset: 1 gaps
+    Roman Nose: 1 gaps
+    Red Cloud: 1 gaps
+    Powhatan: 1 gaps
+    Massasoit: 1 gaps
+    Black Hawk: 1 gaps
+    Tecumseh: 1 gaps
+  [Final Validation] Found 7 total gaps [FAIL]
+    Found 7 gaps - fixing...
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  [Gap Fill] Samoset: Climbing Tower -> FRI-2
+  [Gap Fill] Roman Nose: Climbing Tower -> WED-1
+  [Gap Fill] Red Cloud: Climbing Tower -> MON-2
+  [Gap Fill] Powhatan: Fishing -> TUE-2
+  [Gap Fill] Black Hawk: Climbing Tower -> TUE-1
+  [Gap Fill] Tecumseh: Climbing Tower -> MON-1
+  Total gaps filled: 6
+  Filled 6 gaps this iteration
+    Iteration 2/8...
+  Total gaps filled: 6
+  No gaps filled in iteration 2 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 3/8...
+  Total gaps filled: 6
+  No gaps filled in iteration 3 - checking if complete...
+  Still have 1 gaps, continuing...
+    Iteration 4/8...
+  [RELAXED FILL] Massasoit: Nature Canoe -> WED-2
+  Total gaps filled: 7
+  Filled 1 gaps this iteration
+    Iteration 5/8...
+  Total gaps filled: 7
+  No gaps filled in iteration 5 - checking if complete...
+  SUCCESS: All gaps filled!
+  Final gap filling complete. Total filled: 7
+  [Final Validation] Re-checking multi-slot integrity after gap fill...
+  [Multi-Slot Integrity] Checking all multi-slot activities...
+  [Multi-Slot Integrity] Verifying 7 activity types: ['Back of the Moon', 'Canoe Snorkel', 'Climbing Tower', 'Float for Floats', 'Itasca State Park', 'Sailing', 'Tamarac Wildlife Refuge']
+    [DEBUG] INCOMPLETE: Tamanend Climbing Tower @ MONDAY - has 1/2 slots
+    [DEBUG] INCOMPLETE: Cochise Climbing Tower @ THURSDAY - has 1/2 slots
+    [DEBUG] INCOMPLETE: Samoset Climbing Tower @ FRIDAY - has 1/2 slots
+    [CONFLICT] Samoset Climbing Tower @ FRIDAY slot 3 blocked by Reflection
+    [REMOVE] Removed incomplete Climbing Tower for Samoset
+    [DEBUG] INCOMPLETE: Roman Nose Climbing Tower @ WEDNESDAY - has 1/2 slots
+    [CONFLICT] Roman Nose Climbing Tower @ WEDNESDAY slot 2 blocked by Gaga Ball
+    [REMOVE] Removed incomplete Climbing Tower for Roman Nose
+    [DEBUG] INCOMPLETE: Red Cloud Climbing Tower @ MONDAY - has 1/2 slots
+    [CONFLICT] Red Cloud Climbing Tower @ MONDAY slot 3 blocked by Ultimate Survivor
+    [REMOVE] Removed incomplete Climbing Tower for Red Cloud
+    [DEBUG] INCOMPLETE: Black Hawk Climbing Tower @ TUESDAY - has 1/2 slots
+    [CONFLICT] Black Hawk Climbing Tower @ TUESDAY slot 2 blocked by Shower House
+    [REMOVE] Removed incomplete Climbing Tower for Black Hawk
+    [DEBUG] INCOMPLETE: Tecumseh Climbing Tower @ MONDAY - has 1/2 slots
+    [CONFLICT] Tecumseh Climbing Tower @ MONDAY slot 2 blocked by Troop Rifle
+    [REMOVE] Removed incomplete Climbing Tower for Tecumseh
+  [Multi-Slot Integrity] Removed 5 entries from incomplete activities
+  [Gap Fill] Starting ABSOLUTE gap detection and filling...
+    Iteration 1/8...
+  [Gap Fill] Samoset: Climbing Tower -> FRI-2
+  [Gap Fill] Roman Nose: Climbing Tower -> WED-1
+  [Gap Fill] Red Cloud: Climbing Tower -> MON-2
+  [Gap Fill] Black Hawk: Climbing Tower -> TUE-1
+  [Gap Fill] Tecumseh: Climbing Tower -> MON-1
+  Total gaps filled: 5
+  Filled 5 gaps this iteration
+    Iteration 2/8...
+  Total gaps filled: 5
+  No gaps filled in iteration 2 - checking if complete...
+  SUCCESS: All gaps filled!
+  Final gap filling complete. Total filled: 5
+    [OK] All troops have Friday Reflection
+    [WARNING] 20 beach slot violations
+  [Final Validation] Complete
+    [Sanitize Exclusivity] No exclusivity conflicts found
+Saved schedule to C:\Users\Carson\OneDrive - Minnesota State\Desktop\Projects\CampScheduler\summer-camp-scheduler\data\schedules\tc_week7_troops_schedule.json

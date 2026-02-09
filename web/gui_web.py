@@ -323,7 +323,7 @@ def get_evaluation(week_id):
     if week_id not in WEEK_METADATA:
         return jsonify({'error': 'Week not found'}), 404
     try:
-        from utils.evaluate_week_success import evaluate_week
+        from utils.regression_checker import evaluate_week
         meta = WEEK_METADATA[week_id]
         troops_file = meta['file']
         # evaluate_week expects filename like tc_week5_troops.json (relative or absolute)

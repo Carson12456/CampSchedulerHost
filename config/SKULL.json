@@ -170,7 +170,8 @@
             "small_troop_size": 16
         }
     },
-    "prohibited_pairs": [
+    "prohibited_pairs": [],
+    "soft_prohibited_pairs": [
         [
             "Trading Post",
             "Campsite Free Time"
@@ -178,6 +179,10 @@
         [
             "Trading Post",
             "Shower House"
+        ],
+        [
+            "Troop Rifle",
+            "Troop Shotgun"
         ],
         [
             "Aqua Trampoline",
@@ -214,8 +219,35 @@
         [
             "Nature Canoe",
             "Float for Floats"
+        ],
+        [
+            "Fishing",
+            "Trading Post"
+        ],
+        [
+            "Fishing",
+            "Campsite Free Time"
+        ],
+        [
+            "Campsite Free Time",
+            "Shower House"
         ]
     ],
+    "request_only_activities": [
+        "Tie Dye",
+        "Troop Shotgun"
+    ],
+    "sequence_rules": {
+        "not_back_to_back": [
+            {
+                "activity_a": "Delta",
+                "activity_b_tags": [
+                    "tower_ods"
+                ],
+                "comment": "Delta and Tower/ODS can be same day but NEVER adjacent slots"
+            }
+        ]
+    },
     "commissioner_groups": {
         "North": [
             "Massasoit",
@@ -250,7 +282,8 @@
             "Canoe Snorkel",
             "Nature Canoe",
             "Float for Floats",
-            "Sailing"
+            "Sailing",
+            "Sauna"
         ],
         "beach": [
             "Aqua Trampoline",

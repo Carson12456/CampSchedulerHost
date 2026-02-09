@@ -56,11 +56,22 @@ class UnscheduledAnalyzer:
     """
     
     # Exemption rule definitions (from .cursorrules)
-    THREE_HOUR_ACTIVITIES = {"Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"}
-    HC_DG_ACTIVITIES = {"History Center", "Disc Golf"}
+    # Exemption rule definitions (Initialized in constructor)
+    # THREE_HOUR_ACTIVITIES = set() 
+    # HC_DG_ACTIVITIES = set()
     
-    def __init__(self):
+    
+    def __init__(self, activities: List[Any] = None):
         self.week_analyses: Dict[str, WeekAnalysis] = {}
+        
+        # Initialize exemption rules dynamically if activities provided
+        self.THREE_HOUR_ACTIVITIES = {"Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"}
+        self.HC_DG_ACTIVITIES = {"History Center", "Disc Golf"}
+        
+        if activities:
+            # Future improvement: derive these from activity properties
+            # For now, we keep defaults but allow for property-based discovery in future
+            pass
     
     def analyze_week_from_schedule_json(self, schedule_path: str) -> WeekAnalysis:
         """
@@ -132,7 +143,11 @@ class UnscheduledAnalyzer:
         # Calculate statistics
         exempt_misses = sum(1 for miss in missed_top5 if miss.is_exempt)
         counted_misses = len(missed_top5) - exempt_misses
-        success_rate = 100.0 * (total_top5_slots - counted_misses) / max(1, total_top5_slots)
+        
+        if counted_misses == 0:
+            success_rate = 100.0
+        else:
+            success_rate = 100.0 * (total_top5_slots - counted_misses) / max(1, total_top5_slots)
         
         return WeekAnalysis(
             week_name=week_name,

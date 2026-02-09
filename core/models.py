@@ -347,12 +347,39 @@ class Schedule:
                 for area, activities in EXCLUSIVE_AREAS.items():
                     if area == activity_area and entry.activity.name in activities:
                         return False
-            
+
             # Check explicit conflicts
             if activity.name in entry.activity.conflicts_with:
                 return False
             if entry.activity.name in activity.conflicts_with:
                 return False
+        
+        # Check Delta vs Tower/ODS adjacency (Geographic Constraint)
+        # Delta cannot be immediately before or after Tower/ODS activities
+        if requesting_troop:
+            # Define Tower/ODS activities
+            tower_ods_acts = set(EXCLUSIVE_AREAS.get("Tower", []) + EXCLUSIVE_AREAS.get("Outdoor Skills", []))
+            
+            # Check if we are scheduling Delta
+            if activity.name == "Delta":
+                # Check adjacent slots for Tower/ODS
+                troop_entries = self.get_troop_schedule(requesting_troop)
+                for e in troop_entries:
+                    if e.time_slot.day == time_slot.day:
+                        if abs(e.time_slot.slot_number - time_slot.slot_number) == 1:
+                            if e.activity.name in tower_ods_acts:
+                                return False
+            
+            # Check if we are scheduling Tower/ODS
+            elif activity.name in tower_ods_acts:
+                # Check adjacent slots for Delta
+                troop_entries = self.get_troop_schedule(requesting_troop)
+                for e in troop_entries:
+                    if e.time_slot.day == time_slot.day:
+                        if abs(e.time_slot.slot_number - time_slot.slot_number) == 1:
+                            if e.activity.name == "Delta":
+                                return False
+
         
         # Check beach staff limit (max 4 staffed beach activities per slot)
         if activity.name in BEACH_STAFF_ACTIVITIES:
