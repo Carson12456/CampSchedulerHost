@@ -1,6 +1,628 @@
 {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "comment": "Data-driven rules and configuration. Generated from Reference Codebase.",
+    "activities": [
+        {
+            "name": "9 Square",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": null,
+            "tags": [
+                "beach",
+                "fill"
+            ]
+        },
+        {
+            "name": "Gaga Ball",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": null,
+            "tags": [
+                "beach",
+                "fill"
+            ]
+        },
+        {
+            "name": "Fishing",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": null,
+            "tags": [
+                "fill",
+                "low_priority"
+            ]
+        },
+        {
+            "name": "Sauna",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": null,
+            "tags": [
+                "wet",
+                "fill"
+            ]
+        },
+        {
+            "name": "Shower House",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": null,
+            "tags": [
+                "fill",
+                "slot_3_preferred"
+            ]
+        },
+        {
+            "name": "Trading Post",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": null,
+            "tags": [
+                "beach",
+                "fill"
+            ]
+        },
+        {
+            "name": "Aqua Trampoline",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 2,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed",
+                "fill",
+                "high_value"
+            ]
+        },
+        {
+            "name": "Troop Canoe",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 2,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed"
+            ]
+        },
+        {
+            "name": "Troop Kayak",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 2,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed"
+            ]
+        },
+        {
+            "name": "Canoe Snorkel",
+            "duration": 2,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 3,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed",
+                "multi_slot"
+            ]
+        },
+        {
+            "name": "Float for Floats",
+            "duration": 2,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 3,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed",
+                "multi_slot"
+            ]
+        },
+        {
+            "name": "Greased Watermelon",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 2,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed",
+                "fill"
+            ]
+        },
+        {
+            "name": "Underwater Obstacle Course",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 2,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed"
+            ]
+        },
+        {
+            "name": "Troop Swim",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 2,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed",
+                "fill"
+            ]
+        },
+        {
+            "name": "Water Polo",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Beach Staff",
+            "staff_count": 2,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed",
+                "fill"
+            ]
+        },
+        {
+            "name": "Nature Canoe",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Nature Director",
+            "staff_count": 2,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed",
+                "fill"
+            ]
+        },
+        {
+            "name": "Sailing",
+            "duration": 1.5,
+            "zone": "BEACH",
+            "staff_needed": "Boats Director",
+            "staff_count": 1,
+            "tags": [
+                "beach",
+                "wet",
+                "staffed",
+                "multi_slot",
+                "fill",
+                "high_priority"
+            ]
+        },
+        {
+            "name": "Dr. DNA",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Nature Director",
+            "staff_count": 1,
+            "tags": [
+                "beach",
+                "nature",
+                "fill"
+            ]
+        },
+        {
+            "name": "Loon Lore",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Nature Director",
+            "staff_count": 1,
+            "tags": [
+                "beach",
+                "nature",
+                "fill"
+            ]
+        },
+        {
+            "name": "Hemp Craft",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Handicrafts Director",
+            "staff_count": 1,
+            "tags": [
+                "handicrafts",
+                "fill"
+            ]
+        },
+        {
+            "name": "Monkey's Fist",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Handicrafts Director",
+            "staff_count": 1,
+            "tags": [
+                "beach",
+                "handicrafts"
+            ]
+        },
+        {
+            "name": "Tie Dye",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Handicrafts Director",
+            "staff_count": 1,
+            "tags": [
+                "handicrafts",
+                "request_only"
+            ]
+        },
+        {
+            "name": "Woggle Neckerchief Slide",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Handicrafts Director",
+            "staff_count": 1,
+            "tags": [
+                "beach",
+                "handicrafts"
+            ]
+        },
+        {
+            "name": "Archery",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Commissioner",
+            "staff_count": 1,
+            "tags": [
+                "accuracy",
+                "staffed",
+                "fill",
+                "high_value"
+            ]
+        },
+        {
+            "name": "Troop Rifle",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Shooting Sports Director",
+            "staff_count": 1,
+            "tags": [
+                "accuracy",
+                "staffed",
+                "fill"
+            ]
+        },
+        {
+            "name": "Troop Shotgun",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Shooting Sports Director",
+            "staff_count": 1,
+            "tags": [
+                "accuracy",
+                "staffed",
+                "request_only"
+            ]
+        },
+        {
+            "name": "Climbing Tower",
+            "duration": 1,
+            "zone": "TOWER",
+            "staff_needed": "Climbing Tower Director",
+            "staff_count": 2,
+            "tags": [
+                "tower",
+                "staffed",
+                "fill"
+            ]
+        },
+        {
+            "name": "Chopped!",
+            "duration": 1,
+            "zone": "OUTDOOR_SKILLS",
+            "staff_needed": "Outdoor Skills Director",
+            "staff_count": 1,
+            "tags": [
+                "ods",
+                "staffed"
+            ]
+        },
+        {
+            "name": "GPS & Geocaching",
+            "duration": 1,
+            "zone": "OUTDOOR_SKILLS",
+            "staff_needed": "Outdoor Skills Director",
+            "staff_count": 1,
+            "tags": [
+                "ods",
+                "staffed",
+                "fill",
+                "multi_slot"
+            ]
+        },
+        {
+            "name": "Knots and Lashings",
+            "duration": 1,
+            "zone": "OUTDOOR_SKILLS",
+            "staff_needed": "Outdoor Skills Director",
+            "staff_count": 1,
+            "tags": [
+                "ods",
+                "staffed"
+            ]
+        },
+        {
+            "name": "Orienteering",
+            "duration": 1,
+            "zone": "OUTDOOR_SKILLS",
+            "staff_needed": "Outdoor Skills Director",
+            "staff_count": 1,
+            "tags": [
+                "ods",
+                "staffed"
+            ]
+        },
+        {
+            "name": "Ultimate Survivor",
+            "duration": 1,
+            "zone": "OUTDOOR_SKILLS",
+            "staff_needed": "Outdoor Skills Director",
+            "staff_count": 1,
+            "tags": [
+                "ods",
+                "staffed"
+            ]
+        },
+        {
+            "name": "What's Cooking",
+            "duration": 1,
+            "zone": "OUTDOOR_SKILLS",
+            "staff_needed": "Outdoor Skills Director",
+            "staff_count": 1,
+            "tags": [
+                "ods",
+                "staffed"
+            ]
+        },
+        {
+            "name": "Delta",
+            "duration": 1,
+            "zone": "DELTA",
+            "staff_needed": "Commissioner",
+            "staff_count": 1,
+            "tags": [
+                "delta",
+                "staffed"
+            ]
+        },
+        {
+            "name": "Super Troop",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Commissioner",
+            "staff_count": 1,
+            "tags": [
+                "super_troop",
+                "staffed",
+                "mandatory",
+                "fill",
+                "high_value"
+            ]
+        },
+        {
+            "name": "Back of the Moon",
+            "duration": 3,
+            "zone": "OFF_CAMP",
+            "staff_needed": "Staff",
+            "tags": [
+                "off_camp",
+                "3_hour"
+            ]
+        },
+        {
+            "name": "Disc Golf",
+            "duration": 1,
+            "zone": "OFF_CAMP",
+            "staff_needed": null,
+            "tags": [
+                "off_camp",
+                "fill"
+            ]
+        },
+        {
+            "name": "Itasca State Park",
+            "duration": 3,
+            "zone": "OFF_CAMP",
+            "staff_needed": null,
+            "tags": [
+                "off_camp",
+                "3_hour"
+            ]
+        },
+        {
+            "name": "Tamarac Wildlife Refuge",
+            "duration": 3,
+            "zone": "OFF_CAMP",
+            "staff_needed": null,
+            "tags": [
+                "off_camp",
+                "3_hour"
+            ]
+        },
+        {
+            "name": "Campsite Free Time",
+            "duration": 1,
+            "zone": "CAMPSITE",
+            "staff_needed": null,
+            "tags": [
+                "campsite",
+                "fill",
+                "concurrent"
+            ]
+        },
+        {
+            "name": "Reflection",
+            "duration": 1,
+            "zone": "CAMPSITE",
+            "staff_needed": "Commissioner",
+            "staff_count": 1,
+            "tags": [
+                "campsite",
+                "mandatory",
+                "concurrent"
+            ]
+        },
+        {
+            "name": "History Center",
+            "duration": 1,
+            "zone": "OFF_CAMP",
+            "staff_needed": null,
+            "tags": [
+                "off_camp"
+            ]
+        },
+        {
+            "name": "Ecosystem in a Jar",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Nature Director",
+            "tags": [
+                "nature"
+            ]
+        },
+        {
+            "name": "Nature Salad",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Nature Director",
+            "tags": [
+                "nature"
+            ]
+        },
+        {
+            "name": "Nature Bingo",
+            "duration": 1,
+            "zone": "BEACH",
+            "staff_needed": "Nature Director",
+            "tags": [
+                "nature"
+            ]
+        }
+    ],
+    "camp_map": {
+        "campsite_order": [
+            "Massasoit",
+            "Tecumseh",
+            "Samoset",
+            "Black Hawk",
+            "Taskalusa",
+            "Powhatan",
+            "Red Cloud",
+            "Cochise",
+            "Joseph",
+            "Tamanend",
+            "Pontiac",
+            "Skenandoa",
+            "Sequoyah",
+            "Roman Nose"
+        ]
+    },
+    "commissioner_groups": {
+        "North": [
+            "Massasoit",
+            "Tecumseh",
+            "Samoset",
+            "Black Hawk",
+            "Taskalusa"
+        ],
+        "Central": [
+            "Powhatan",
+            "Red Cloud",
+            "Cochise",
+            "Joseph",
+            "Tamanend"
+        ],
+        "South": [
+            "Pontiac",
+            "Skenandoa",
+            "Sequoyah",
+            "Roman Nose"
+        ]
+    },
+    "rotation_schedule": {
+        "Commissioner A": {
+            "Monday": [
+                "Delta",
+                "Sailing",
+                "Troop Rifle",
+                "Super Troop"
+            ],
+            "Tuesday": [],
+            "Wednesday": [
+                "Archery"
+            ],
+            "Thursday": [
+                "Climbing Tower",
+                "Knots and Lashings",
+                "Orienteering",
+                "GPS & Geocaching",
+                "Ultimate Survivor",
+                "What's Cooking",
+                "Chopped!"
+            ],
+            "Friday": []
+        },
+        "Commissioner B": {
+            "Monday": [
+                "Climbing Tower",
+                "Knots and Lashings",
+                "Orienteering",
+                "GPS & Geocaching",
+                "Ultimate Survivor",
+                "What's Cooking",
+                "Chopped!"
+            ],
+            "Tuesday": [
+                "Delta",
+                "Sailing",
+                "Troop Rifle",
+                "Super Troop"
+            ],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [
+                "Archery"
+            ]
+        },
+        "Commissioner C": {
+            "Monday": [
+                "Archery"
+            ],
+            "Tuesday": [
+                "Climbing Tower",
+                "Knots and Lashings",
+                "Orienteering",
+                "GPS & Geocaching",
+                "Ultimate Survivor",
+                "What's Cooking",
+                "Chopped!"
+            ],
+            "Wednesday": [
+                "Delta",
+                "Sailing",
+                "Troop Rifle",
+                "Super Troop"
+            ],
+            "Thursday": [],
+            "Friday": []
+        }
+    },
     "exclusive_areas": {
         "Outdoor Skills": [
             "Knots and Lashings",
@@ -147,12 +769,60 @@
             "Fishing",
             "Campsite Free Time"
         ],
+        "fill_priority": [
+            "Super Troop",
+            "Aqua Trampoline",
+            "Archery",
+            "Water Polo",
+            "Troop Rifle",
+            "Gaga Ball",
+            "9 Square",
+            "Troop Swim",
+            "Sailing",
+            "Trading Post",
+            "GPS & Geocaching",
+            "Hemp Craft",
+            "Dr. DNA",
+            "Loon Lore",
+            "Fishing",
+            "Campsite Free Time"
+        ],
+        "concurrent_activities": [
+            "Reflection",
+            "Campsite Free Time"
+        ],
+        "non_consecutive": [
+            "Trading Post",
+            "Campsite Free Time",
+            "Itasca State Park",
+            "Tamarac Wildlife Refuge",
+            "Back of the Moon",
+            "Disc Golf",
+            "History Center"
+        ],
         "optimization": {
             "area_clustering_priority": [
                 "Tower",
                 "Rifle Range",
                 "Archery",
                 "Outdoor Skills"
+            ],
+            "area_pairs": {
+                "Tower": "Outdoor Skills",
+                "Outdoor Skills": "Tower",
+                "Rifle Range": "Super Troop",
+                "Super Troop": "Rifle Range",
+                "Delta": "Sailing",
+                "Sailing": "Delta",
+                "History Center": "Gaga Ball",
+                "Gaga Ball": "History Center",
+                "Disc Golf": "9 Square"
+            },
+            "cluster_areas": [
+                "Tower",
+                "Rifle Range",
+                "Outdoor Skills",
+                "Handicrafts"
             ],
             "consecutive_activities": [
                 "Tie Dye",
@@ -168,7 +838,32 @@
         "aqua_trampoline_rules": {
             "max_small_troops": 2,
             "small_troop_size": 16
-        }
+        },
+        "zone_capacities": {
+            "Tower": 1,
+            "Rifle": 1,
+            "Archery": 1,
+            "ODS": 1,
+            "Handicrafts": 1,
+            "Beach": 4,
+            "Nature": 1,
+            "Commissioner": 3,
+            "Sailing": 1
+        },
+        "capacity_check_activities": [
+            "Aqua Trampoline",
+            "Sailing",
+            "Water Polo",
+            "Gaga Ball",
+            "9 Square",
+            "Troop Canoe",
+            "Canoe Snorkel",
+            "Nature Canoe",
+            "Float for Floats",
+            "Troop Swim",
+            "Underwater Obstacle Course",
+            "Greased Watermelon"
+        ]
     },
     "prohibited_pairs": [],
     "soft_prohibited_pairs": [
@@ -248,28 +943,6 @@
             }
         ]
     },
-    "commissioner_groups": {
-        "North": [
-            "Massasoit",
-            "Tecumseh",
-            "Samoset",
-            "Black Hawk",
-            "Taskalusa"
-        ],
-        "Central": [
-            "Powhatan",
-            "Red Cloud",
-            "Cochise",
-            "Joseph",
-            "Tamanend"
-        ],
-        "South": [
-            "Pontiac",
-            "Skenandoa",
-            "Sequoyah",
-            "Roman Nose"
-        ]
-    },
     "activity_tags": {
         "wet": [
             "Aqua Trampoline",
@@ -289,6 +962,18 @@
             "Aqua Trampoline",
             "Water Polo",
             "Greased Watermelon",
+            "Troop Swim",
+            "Underwater Obstacle Course",
+            "Troop Canoe",
+            "Troop Kayak",
+            "Canoe Snorkel",
+            "Nature Canoe",
+            "Float for Floats"
+        ],
+        "beach_slot_restricted": [
+            "Water Polo",
+            "Greased Watermelon",
+            "Aqua Trampoline",
             "Troop Swim",
             "Underwater Obstacle Course",
             "Troop Canoe",
@@ -320,7 +1005,19 @@
             "GPS & Geocaching",
             "Float for Floats",
             "Canoe Snorkel"
+        ],
+        "canoe": [
+            "Nature Canoe",
+            "Canoe Snorkel",
+            "Float for Floats",
+            "Troop Canoe",
+            "Troop Kayak"
         ]
+    },
+    "preferences": {
+        "slot_specific": {
+            "Shower House": 3
+        }
     },
     "slot_rules": {
         "beach_allowed_slots": [

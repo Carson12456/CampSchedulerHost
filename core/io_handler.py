@@ -98,8 +98,8 @@ def load_schedule_from_json(file_path, troops, all_activities):
             continue
             
         if troop and activity:
-            slot = TimeSlot(day, slot_num)
-            entry = ScheduleEntry(slot, activity, troop)
+            slot = TimeSlot(day=day, slot_number=slot_num)
+            entry = ScheduleEntry(time_slot=slot, activity=activity, troop=troop)
             schedule.entries.append(entry)
             
     return schedule

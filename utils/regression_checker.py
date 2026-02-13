@@ -20,9 +20,19 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from core.services.unscheduled_analyzer import UnscheduledAnalyzer
 from core.constrained_scheduler import ConstrainedScheduler
-from core.activities import get_all_activities
+from core.activities import get_all_activities, get_activity_by_name
 from core.io_handler import load_troops_from_json, load_schedule_from_json
-from core.models import Day, TimeSlot, EXCLUSIVE_AREAS, generate_time_slots
+from core.models import Day, TimeSlot, generate_time_slots
+from core.scheduler.constants import SchedulerConstants
+from core.scheduler import config_loader
+
+# Alias for backward compatibility if used in this file
+EXCLUSIVE_AREAS = SchedulerConstants.EXCLUSIVE_ACTIVITIES # Wait, EXCLUSIVE_AREAS was a dict in models.py?
+# In regression_checker line 128: EXCLUSIVE_AREAS.get(area, [])
+# So it expects a dict.
+# SchedulerConstants doesn't expose the dict directly?
+# config_loader.get_exclusive_areas() returns the dict.
+EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
 
 # --- Configuration for Scoring (0-1000 perfect, can go negative) ---
 # Target: 1000 = perfect schedule
@@ -71,18 +81,8 @@ DEFAULT_WEIGHTS = {
 
 
 # Staffed Activity Definition
-STAFF_MAP = {
-    'Beach Staff': ['Aqua Trampoline', 'Troop Canoe', 'Troop Kayak', 'Canoe Snorkel',
-                   'Float for Floats', 'Greased Watermelon', 'Underwater Obstacle Course',
-                   'Troop Swim', 'Water Polo', 'Sailing'], # Added Sailing
-    'Tower Director': ['Climbing Tower'],
-    'Rifle Director': ['Troop Rifle', 'Troop Shotgun'],
-    'ODS Director': ['Knots and Lashings', 'Orienteering', 'GPS & Geocaching',
-                    'Ultimate Survivor', "What's Cooking", 'Chopped!'],
-    'Handicrafts': ['Tie Dye', 'Hemp Craft', 'Woggle Neckerchief Slide', "Monkey's Fist"],
-    'Nature': ['Dr. DNA', 'Loon Lore', 'Nature Canoe'],
-    'Archery': ['Archery']
-}
+STAFF_MAP = SchedulerConstants.STAFF_ROLE_MAP
+
 ALL_STAFF_ACTIVITIES = set()
 for acts in STAFF_MAP.values():
     ALL_STAFF_ACTIVITIES.update(acts)
@@ -332,9 +332,7 @@ def evaluate_week(week_file, weights=None):
                 soft_violation_details.append(f"{troop.name}: Multiple canoe activities on {day.value} ({', '.join(acts)})")
     
     # NEW: Wet-Dry-Wet Pattern (Slot 1 wet, Slot 2 dry, Slot 3 wet)
-    WET_ACTIVITIES = ['Aqua Trampoline', 'Troop Canoe', 'Troop Kayak', 'Canoe Snorkel',
-                      'Float for Floats', 'Greased Watermelon', 'Underwater Obstacle Course',
-                      'Troop Swim', 'Water Polo', 'Sailing']
+    WET_ACTIVITIES = SchedulerConstants.WET_ACTIVITIES
     for troop in troops:
         troop_entries = [e for e in schedule.entries if e.troop == troop]
         by_day_slot = defaultdict(dict)
@@ -441,6 +439,46 @@ def evaluate_week(week_file, weights=None):
     hard_violations += exclusive_double_book
     metrics["exclusive_double_book"] = exclusive_double_book
     
+    # NEW: Max Beach Staff & Count
+    # ----------------------------
+    # Max 12 Beach Staff per Slot
+    # Max 4 Staffed Beach Activities per Slot
+    
+    beach_staff_max = config_loader.get_constraints().get("beach_staff_per_slot", 12)
+    beach_acts_max = config_loader.get_constraints().get("max_beach_staffed_activities", 4)
+    
+    beach_staff_violations = 0
+    beach_acts_violations = 0
+    
+    # We need to calculate this per slot
+    slot_beach_staff = defaultdict(int)
+    slot_beach_acts = defaultdict(int)
+    
+    for e in schedule.entries:
+        if e.activity.name in SchedulerConstants.BEACH_STAFFED_ACTIVITIES:
+             # Add staff count
+             staff_needed = config_loader.get_staff_need(e.activity.name)
+             slot_beach_staff[(e.time_slot.day, e.time_slot.slot_number)] += staff_needed
+             slot_beach_acts[(e.time_slot.day, e.time_slot.slot_number)] += 1
+
+    for (day, slot_num), count in slot_beach_staff.items():
+        if count > beach_staff_max:
+             # HARD? Or Soft? BRAIN says "Capacity Safety" -> Hard?
+             # "Capacity Safety" section in BRAIN is under "Hard Constraints" implies logic but let's check.
+             # BRAIN: "Capacity Safety ... Global Staff ... Beach Staff". yes, HARD.
+             hard_violations += 1
+             hard_violation_details.append(f"Beach Staff Overload on {day.value} Slot {slot_num}: {count} > {beach_staff_max}")
+             beach_staff_violations += 1
+
+    for (day, slot_num), count in slot_beach_acts.items():
+        if count > beach_acts_max:
+             hard_violations += 1
+             hard_violation_details.append(f"Beach Activity Saturation on {day.value} Slot {slot_num}: {count} > {beach_acts_max}")
+             beach_acts_violations += 1
+
+    metrics["beach_staff_violations"] = beach_staff_violations
+    metrics["beach_acts_violations"] = beach_acts_violations
+    
     # Store hard/soft violation counts and details
     metrics["hard_violations"] = hard_violations
     metrics["soft_violations"] = soft_violations
@@ -463,6 +501,7 @@ def evaluate_week(week_file, weights=None):
     missing_top5_count = 0
     missing_top10_count = 0
     missing_top14_count = 0
+    missing_top15_count = 0
     
     # HC/DG exemption: if all 3 Tuesday slots are HC or DG, missed HC/DG counts as exempt
     tuesday_hc_dg_slots = set()
@@ -478,6 +517,34 @@ def evaluate_week(week_file, weights=None):
         has_3hr_scheduled = any(e.activity.name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] 
                                for e in schedule.entries if e.troop == troop)
         
+        # --- NEW: Multi-slot slot consumption calculation ---
+        # Calculate how many EXTRA slots are consumed by scheduled activities
+        # Standard activity = 1 slot. 
+        # Sailing = 1.5 slots (consumes 2). Extra = 1.
+        # 3-hour = 3 slots. Extra = 2.
+        # Tower (Large) = 2 slots. Extra = 1.
+        extra_slots_consumed = 0
+        
+        # Get all unique particular activity occurrences for this troop 
+        # (to avoid counting multi-slot parts twice if schema differs)
+        scheduled_activity_names = set(e.activity.name for e in schedule.entries if e.troop == troop)
+        
+        for act_name in scheduled_activity_names:
+            activity = get_activity_by_name(act_name)
+            if not activity: continue
+            
+            # Check for specific multi-slot types
+            if activity.name == "Sailing":
+                extra_slots_consumed += 1 # 1.5 rounded to 2, so 1 extra
+            elif activity.slots == 3:
+                extra_slots_consumed += 2 # 3 slots = 2 extra
+            elif activity.name == "Climbing Tower" and troop.scouts > 15:
+                 # Large troops use 2 slots for Tower
+                 extra_slots_consumed += 1
+        
+        # Initialize exemption counter
+        multi_slot_exemptions = extra_slots_consumed
+
         # Iterate through preferences
         for i, pref_name in enumerate(troop.preferences):
             rank = i + 1
@@ -496,11 +563,21 @@ def evaluate_week(week_file, weights=None):
                 if pref_name not in troop_acts:
                     # Check exemptions before deducting
                     is_exempt = False
-                    if rank <= 5: # Top 5 specific exemptions
-                         if pref_name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] and has_3hr_scheduled:
-                             is_exempt = True
-                         elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                             is_exempt = True
+                    
+                    # 1. 3-Hour Mutually Exclusive Exemption (Generalized to all ranks)
+                    if pref_name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] and has_3hr_scheduled:
+                         is_exempt = True
+                         
+                    # 2. Tuesday HC/DG Saturation Exemption (Generalized to all ranks)
+                    elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
+                         is_exempt = True
+                    
+                    # 3. Multi-slot Consumption Exemption (NEW)
+                    # If not already exempt by specific rules, check if pushed out by multi-slot activities
+                    if not is_exempt and multi_slot_exemptions > 0:
+                        is_exempt = True
+                        multi_slot_exemptions -= 1
+                        # print(f"DEBUG: Exempting {pref_name} for {troop.name} due to multi-slot consumption. Remaining exemptions: {multi_slot_exemptions}")
                     
                     if not is_exempt:
                         current_preference_deductions += weight
@@ -508,6 +585,7 @@ def evaluate_week(week_file, weights=None):
                         if rank <= 5: missing_top5_count += 1
                         if rank <= 10: missing_top10_count += 1
                         if rank <= 14: missing_top14_count += 1
+                        if rank <= 15: missing_top15_count += 1
 
             # --- RANKS 15-20: BONUS IF HIT ---
             elif rank <= 20:
@@ -530,15 +608,17 @@ def evaluate_week(week_file, weights=None):
     
     metrics["missing_top5"] = missing_top5_count
     metrics["missing_top10"] = missing_top10_count
-    metrics["missing_top14"] = missing_top14_count
+    metrics["missing_top15"] = missing_top15_count
     
     # Success percentages (Calculated based on requested vs fulfilled)
     # Only count "requested" items in the denominator
     total_top5_requested = sum(min(5, len(t.preferences)) for t in troops)
     total_top10_requested = sum(min(10, len(t.preferences)) for t in troops)
+    total_top15_requested = sum(min(15, len(t.preferences)) for t in troops)
     
     metrics["top5_pct"] = 100.0 * (total_top5_requested - missing_top5_count) / max(1, total_top5_requested)
     metrics["top10_pct"] = 100.0 * (total_top10_requested - missing_top10_count) / max(1, total_top10_requested)
+    metrics["top15_pct"] = 100.0 * (total_top15_requested - missing_top15_count) / max(1, total_top15_requested)
 
 
     # 8. New Metrics: Early Week Bias & Batching
@@ -940,7 +1020,8 @@ class EnhancedRegressionChecker:
                             "unnecessary_gaps": week_result.get("unnecessary_gaps", 0),
                             "grade": week_result.get("grade", "Unknown"),
                             "violation_details": week_result.get("violation_details", []),
-                            "top5_pct": week_result.get("top5_pct", 0)
+                            "top5_pct": week_result.get("top5_pct", 0),
+                            "top10_pct": week_result.get("top10_pct", 0)
                         })
                 except Exception as e:
                     print(f"  Warning: Could not evaluate {week_name}: {e}")
@@ -1179,11 +1260,11 @@ class EnhancedRegressionChecker:
         print("\n" + "=" * 90)
         print("PER-WEEK EVALUATION SUMMARY")
         print("=" * 90)
-        print(f"{'Week':<22} | {'Score':<6} | {'Top5%':<6} | {'Viol':<5} | {'StVar':<5} | {'Clust':<5} | {'Beach':<5}")
+        print(f"{'Week':<22} | {'Score':<6} | {'Top5%':<6} | {'Top10%':<6} | {'Viol':<5} | {'StVar':<5} | {'Clust':<5}")
         print("-" * 90)
         
         for w in sorted(week_details, key=lambda x: x['week_name']):
-            print(f"{w['week_name']:<22} | {w.get('total_score',0):<6} | {w.get('top5_pct',0):<6.1f} | {w.get('constraint_violations',0):<5} | {w.get('staff_variance',0):<5.2f} | {w.get('clustering_efficiency',0):<5} | {w.get('beach_slot_2_violations',0):<5}")
+            print(f"{w['week_name']:<22} | {w.get('total_score',0):<6} | {w.get('top5_pct',0):<6.1f} | {w.get('top10_pct',0):<6.1f} | {w.get('constraint_violations',0):<5} | {w.get('staff_variance',0):<5.2f} | {w.get('clustering_efficiency',0):<5}")
         
         print("=" * 90)
     

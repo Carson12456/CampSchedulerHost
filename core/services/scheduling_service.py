@@ -98,6 +98,6 @@ class SchedulingService:
         Returns:
             True if placement successful, False otherwise
         """
-        entry = ScheduleEntry(time_slot, activity, troop)
+        entry = ScheduleEntry(time_slot=time_slot, activity=activity, troop=troop)
         self.schedule_repository.save_entry(entry)
         return True

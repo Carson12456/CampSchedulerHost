@@ -9,8 +9,9 @@ Contains methods for validating schedule constraints:
 """
 
 from collections import defaultdict
-from ..models import Day, EXCLUSIVE_AREAS
+from ..models import Day
 from .constants import SchedulerConstants
+from . import config_loader
 
 
 class ValidatorMixin:
@@ -119,7 +120,7 @@ class ValidatorMixin:
             # Get all activities in this slot
             slot_entries = [e for e in self.schedule.entries if e.time_slot == slot]
             
-            for area_name, area_activities in EXCLUSIVE_AREAS.items():
+            for area_name, area_activities in config_loader.get_exclusive_areas().items():
                 # Count how many activities from this area are in the slot
                 area_count = sum(
                     1 for e in slot_entries 

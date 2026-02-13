@@ -67,6 +67,25 @@ def get_staff_need(activity_name: str) -> int:
     return get_staff_needs().get(activity_name, 0)
 
 
+def get_staff_role_map() -> Dict[str, List[str]]:
+    """
+    Get mapping of Staff Role -> List[Activity Names].
+    Derived from the 'activities' list in SKULL.json.
+    """
+    skull = _load_skull()
+    activities = skull.get("activities", [])
+    role_map = {}
+    
+    for act in activities:
+        role = act.get("staff_needed")
+        if role:
+            if role not in role_map:
+                role_map[role] = []
+            role_map[role].append(act["name"])
+    
+    return role_map
+
+
 # === Constraints ===
 
 def get_constraints() -> Dict[str, Any]:
@@ -115,6 +134,11 @@ def get_capacity_limits() -> Dict[str, Any]:
         "tower_extended_size": constraints.get("tower_extended_size", 15),
         "sailing_extended_size": constraints.get("sailing_extended_size", 12)
     }
+
+
+def get_zone_capacities() -> Dict[str, int]:
+    """Get max concurrent activities per zone."""
+    return get_constraints().get("zone_capacities", {})
 
 
 # === Prohibited Pairs ===
@@ -267,3 +291,81 @@ def are_activities_not_back_to_back(act1: str, act2: str) -> bool:
                     return True
     
     return False
+
+
+# === Optimization and Rules ===
+
+def get_concurrent_activities() -> List[str]:
+    """Get list of activities that can schedule multiple troops simultaneously."""
+    return _load_skull().get("concurrent_activities", [])
+
+
+def get_non_consecutive_activities() -> List[str]:
+    """Get list of activities that do not need to be consecutive slots."""
+    return _load_skull().get("non_consecutive", [])
+
+
+def get_fill_priority() -> List[str]:
+    """Get fill priority list."""
+    return _load_skull().get("constraints", {}).get("fill_priority", [])
+
+
+def get_area_pairs() -> Dict[str, str]:
+    """Get area pairing configuration."""
+    return _load_skull().get("optimization", {}).get("area_pairs", {})
+
+
+def get_canoe_activities() -> List[str]:
+    """Get canoe activities (using 'canoe' tag)."""
+    return get_activities_with_tag("canoe")
+
+
+def get_rotation_schedule() -> Dict[str, Dict[str, List[str]]]:
+    """Get commissioner rotation schedule."""
+    return _load_skull().get("rotation_schedule", {})
+
+
+def get_commissioner_activity_days(activity_name: str) -> Dict[str, Any]:
+    """
+    Get the day assignment for a specific activity per commissioner.
+    Returns: {'Commissioner A': Day.MONDAY, ...}
+    derived from rotation_schedule.
+    """
+    from core.models import Day
+    rotation = get_rotation_schedule()
+    result = {}
+    
+    # Map string days to Day enum
+    day_map = {
+        "Monday": Day.MONDAY,
+        "Tuesday": Day.TUESDAY, 
+        "Wednesday": Day.WEDNESDAY,
+        "Thursday": Day.THURSDAY,
+        "Friday": Day.FRIDAY
+    }
+    
+    for comm, schedule in rotation.items():
+        for day_str, activities in schedule.items():
+            if activity_name in activities:
+                # Add for base commissioner (e.g. "Commissioner A")
+                if "Voyageur" not in comm:
+                    result[comm] = day_map.get(day_str)
+                if "Voyageur" not in comm:
+                    result[comm] = day_map.get(day_str)
+                    
+    return result
+
+
+def get_zone_capacities() -> Dict[str, int]:
+    """Get zone capacity configuration."""
+    return _load_skull().get("constraints", {}).get("zone_capacities", {})
+
+
+def get_cluster_areas() -> List[str]:
+    """Get cluster areas for optimization."""
+    return _load_skull().get("optimization", {}).get("cluster_areas", [])
+
+
+def get_capacity_check_activities() -> List[str]:
+    """Get activities that require unified capacity checking."""
+    return _load_skull().get("constraints", {}).get("capacity_check_activities", [])

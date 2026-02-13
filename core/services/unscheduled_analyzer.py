@@ -144,10 +144,12 @@ class UnscheduledAnalyzer:
         exempt_misses = sum(1 for miss in missed_top5 if miss.is_exempt)
         counted_misses = len(missed_top5) - exempt_misses
         
-        if counted_misses == 0:
+        if total_top5_slots == 0:
+            success_rate = 100.0 if counted_misses == 0 else 0.0
+        elif counted_misses == 0:
             success_rate = 100.0
         else:
-            success_rate = 100.0 * (total_top5_slots - counted_misses) / max(1, total_top5_slots)
+            success_rate = 100.0 * (total_top5_slots - counted_misses) / total_top5_slots
         
         return WeekAnalysis(
             week_name=week_name,
@@ -252,7 +254,10 @@ class UnscheduledAnalyzer:
         total_exempt_misses = sum(week.exempt_misses for week in self.week_analyses.values())
         total_counted_misses = sum(week.counted_misses for week in self.week_analyses.values())
         
-        season_success_rate = 100.0 * (total_top5_slots - total_counted_misses) / max(1, total_top5_slots)
+        if total_top5_slots == 0:
+            season_success_rate = 100.0 if total_counted_misses == 0 else 0.0
+        else:
+            season_success_rate = 100.0 * (total_top5_slots - total_counted_misses) / total_top5_slots
         
         # Find weeks with issues
         weeks_with_issues = {

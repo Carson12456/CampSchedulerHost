@@ -5,6 +5,8 @@ Business rules and constraints for activities
 from typing import Dict, List, Set, Tuple, Optional
 
 
+from core.scheduler import config_loader
+
 class ActivityRules:
     """
     Business rules for activity scheduling and constraints.
@@ -15,59 +17,22 @@ class ActivityRules:
     """
     
     # Activity exclusive areas - only one troop can have activities from each area per slot
-    EXCLUSIVE_AREAS = {
-        "Outdoor Skills": ["Knots and Lashings", "Orienteering", "GPS & Geocaching", "Ultimate Survivor", 
-                          "What's Cooking", "Chopped!"],
-        "Tower": ["Climbing Tower"],
-        "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-        "Archery": ["Archery"],
-        "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"],
-        "Nature Center": ["Dr. DNA", "Loon Lore"],
-        # Commissioner-led activities - EXCLUSIVE (one troop at a time per commissioner)
-        "Delta": ["Delta"],
-        "Super Troop": ["Super Troop"],
-        "Sailing": ["Sailing"],  # Sailing IS exclusive - only 1 troop per slot
-        # Note: Reflection can have multiple troops (all troops do Reflection on Friday)
-        # Note: 3-hour off-camp activities can have multiple troops
-        # Beach activities - each exclusive (only one troop per activity per slot)
-        "Aqua Trampoline": ["Aqua Trampoline"],
-        "Water Polo": ["Water Polo"],
-        "Greased Watermelon": ["Greased Watermelon"],
-        "Troop Swim": ["Troop Swim"],
-        "Float for Floats": ["Float for Floats"],
-        "Canoe Snorkel": ["Canoe Snorkel"],
-        "Troop Canoe": ["Troop Canoe"],
-        "Nature Canoe": ["Nature Canoe"],
-        "Fishing": ["Fishing"],
-        # Other activities
-        "History Center": ["History Center"],
-        "Trading Post": ["Trading Post"],
-        "Sauna": ["Sauna"],
-        "Shower House": ["Shower House"],
-        "Disc Golf": ["Disc Golf"],
-    }
+    EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
     
     # Beach activities that should ideally be on different days (soft constraint)
-    BEACH_ACTIVITIES = ["Water Polo", "Greased Watermelon", "Aqua Trampoline", "Troop Swim", 
-                       "Underwater Obstacle Course", "Float for Floats", "Canoe Snorkel"]
+    BEACH_ACTIVITIES = config_loader.get_activities_with_tag("beach")
     
     # WET activities - cannot have Tower/ODS immediately before or after
-    WET_ACTIVITIES = [
-        "Aqua Trampoline", "Water Polo", "Greased Watermelon", "Troop Swim", "Underwater Obstacle Course",
-        "Troop Canoe", "Troop Kayak", "Canoe Snorkel", "Nature Canoe", "Float for Floats", "Sailing", "Sauna"
-    ]
+    WET_ACTIVITIES = config_loader.get_activities_with_tag("wet")
     
     # Tower and ODS activities - cannot be scheduled after wet activities
-    TOWER_ODS_ACTIVITIES = [
-        "Climbing Tower", "Knots and Lashings", "Orienteering", "GPS & Geocaching",
-        "Ultimate Survivor", "What's Cooking", "Chopped!"
-    ]
+    TOWER_ODS_ACTIVITIES = config_loader.get_activities_with_tag("tower_ods")
     
     # Accuracy activities (max 1 per day per troop)
-    ACCURACY_ACTIVITIES = ["Troop Rifle", "Troop Shotgun", "Archery"]
+    ACCURACY_ACTIVITIES = config_loader.get_activities_with_tag("accuracy")
     
     # 3-hour activities
-    THREE_HOUR_ACTIVITIES = ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"]
+    THREE_HOUR_ACTIVITIES = config_loader.get_three_hour_activities()
     
     # Activities that don't need consecutive slot optimization
     NON_CONSECUTIVE_ACTIVITIES = [
@@ -80,29 +45,11 @@ class ActivityRules:
     BEACH_PROHIBITED_PAIR = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
     
     # Activities that cannot be on the same day for a troop (HARD constraints)
-    # NOTE: Per BRAIN.md v1.2.0, all prohibited pairs are now SOFT constraints.
-    # This list is kept empty. Hard conflicts are enforced via exclusive_areas in SKULL.json.
     SAME_DAY_CONFLICTS = []
     
     # Activities to AVOID on same day (SOFT constraints - try to avoid)
-    # NOTE: These now match SKULL.json soft_prohibited_pairs
-    SOFT_SAME_DAY_CONFLICTS = [
-        ("Trading Post", "Campsite Free Time"),
-        ("Trading Post", "Shower House"),
-        ("Troop Rifle", "Troop Shotgun"),
-        ("Aqua Trampoline", "Water Polo"),
-        ("Aqua Trampoline", "Greased Watermelon"),
-        ("Water Polo", "Greased Watermelon"),
-        ("Troop Canoe", "Canoe Snorkel"),
-        ("Troop Canoe", "Nature Canoe"),
-        ("Troop Canoe", "Float for Floats"),
-        ("Canoe Snorkel", "Nature Canoe"),
-        ("Canoe Snorkel", "Float for Floats"),
-        ("Nature Canoe", "Float for Floats"),
-        ("Fishing", "Trading Post"),
-        ("Fishing", "Campsite Free Time"),
-        ("Campsite Free Time", "Shower House"),
-    ]
+    # Convert list of lists to list of tuples for hashability/compatibility
+    SOFT_SAME_DAY_CONFLICTS = [tuple(pair) for pair in config_loader.get_soft_prohibited_pairs()]
     
     def get_exclusive_areas(self) -> Dict[str, List[str]]:
         """Get the exclusive areas mapping."""

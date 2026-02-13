@@ -8,9 +8,14 @@ Refactored Architecture:
 """
 import random
 from collections import defaultdict
-from .models import Activity, Troop, Schedule, ScheduleEntry, TimeSlot, Day, Zone, generate_time_slots, EXCLUSIVE_AREAS
+from .models import Activity, Troop, Schedule, ScheduleEntry, TimeSlot, Day, Zone, generate_time_slots
 from core.scheduler import config_loader
 from .activities import get_all_activities, get_activity_by_name
+import typing
+from typing import List, Dict, Set, Optional, Any
+
+# Alias for backward compatibility if used in this file
+EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
 
 # Import mixin classes for modular composition
 from .scheduler.constants import SchedulerConstants
@@ -41,158 +46,64 @@ class ConstrainedScheduler(
     6. Delta → Super Troop sequence (early week, only 1 Super Troop at a time)
     """
     
+    
     # Default priority order for filling remaining slots when troop doesn't have enough preferences
-    # Note: Gaga Ball and 9 Square are at the END because they're flexible (middle of camp, short duration)
-    # Note: Delta is NOT in this list - it's only scheduled for troops who request it in preferences
-    DEFAULT_FILL_PRIORITY = [
-        "Super Troop",
-        "Aqua Trampoline",
-        # "Climbing Tower", # Removed to prevent accidental stacking as fill
-        "Archery",
-        "Water Polo",
-        "Troop Rifle",
-        "Gaga Ball",  # Balls last - flexible, middle of camp
-        "9 Square",   # Balls last - flexible, middle of camp
-        "Troop Swim",
-        "Sailing",
-        "Trading Post",  # Trading Post / Showerhouse
-        "GPS & Geocaching",  # ODS Activity
-        # "Disc Golf", # Removed to prevent orphan entries (needs pair)
-        "Hemp Craft",  # Handicrafts (Tie Dye removed - only schedule if requested)
-        "Dr. DNA",  # Nature Activity
-        "Loon Lore",  # Nature Activity
-        "Fishing",
-        "Campsite Free Time",  # In site time
-    ]
+    DEFAULT_FILL_PRIORITY = SchedulerConstants.FILL_PRIORITY
     
     # Activities that can have multiple troops at once
-    CONCURRENT_ACTIVITIES = ["Reflection", "Campsite Free Time"]
+    CONCURRENT_ACTIVITIES = SchedulerConstants.CONCURRENT_ACTIVITIES
     
     # Beach activities that should ideally be on different days (soft constraint)
-    BEACH_ACTIVITIES = ["Water Polo", "Greased Watermelon", "Aqua Trampoline", "Troop Swim", "Underwater Obstacle Course", "Float for Floats", "Canoe Snorkel"]
+    BEACH_ACTIVITIES = SchedulerConstants.BEACH_ACTIVITIES
     
     # WET activities - cannot have Tower/ODS immediately before or after
-    WET_ACTIVITIES = [
-        "Aqua Trampoline", "Water Polo", "Greased Watermelon", "Troop Swim", "Underwater Obstacle Course",
-        "Troop Canoe", "Troop Kayak", "Canoe Snorkel", "Nature Canoe", "Float for Floats", "Sailing", "Sauna"
-    ]
+    WET_ACTIVITIES = SchedulerConstants.WET_ACTIVITIES
     
     # Tower and ODS activities - cannot be scheduled after wet activities
-    TOWER_ODS_ACTIVITIES = [
-        "Climbing Tower", "Knots and Lashings", "Orienteering", "GPS & Geocaching",
-        "Ultimate Survivor", "What's Cooking", "Chopped!"
-    ]
+    TOWER_ODS_ACTIVITIES = SchedulerConstants.TOWER_ODS_ACTIVITIES
     
     # Accuracy activities (max 1 per day per troop)
-    ACCURACY_ACTIVITIES = ["Troop Rifle", "Troop Shotgun", "Archery"]
+    ACCURACY_ACTIVITIES = SchedulerConstants.ACCURACY_ACTIVITIES
     
     # 3-hour activities
-    THREE_HOUR_ACTIVITIES = ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"]
+    THREE_HOUR_ACTIVITIES = SchedulerConstants.THREE_HOUR_ACTIVITIES
     
     # Activities that don't need consecutive slot optimization
-    NON_CONSECUTIVE_ACTIVITIES = [
-        "Trading Post", "Campsite Free Time",
-        "Itasca State Park", "Tamarac Wildlife Refuge", "Back of the Moon", 
-        "Disc Golf", "History Center"
-    ]
+    NON_CONSECUTIVE_ACTIVITIES = SchedulerConstants.NON_CONSECUTIVE_ACTIVITIES
     
     # Spine: "Any pair of: Aqua Trampoline, Water Polo, Greased Watermelon" - prohibited same day
-    SPINE_BEACH_PROHIBITED_PAIR = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
+    SPINE_BEACH_PROHIBITED_PAIR = SchedulerConstants.SPINE_BEACH_PROHIBITED_PAIR
     
     # Activities that cannot be on the same day for a troop (HARD constraints)
-    # NOTE: Per BRAIN.md v1.2.0, all prohibited pairs are now SOFT constraints.
-    # This list is kept empty. Hard conflicts are enforced via exclusive_areas in SKULL.json.
-    SAME_DAY_CONFLICTS = []
+    SAME_DAY_CONFLICTS = SchedulerConstants.SAME_DAY_CONFLICTS
     
     # Activities to AVOID on same day (SOFT constraints - try to avoid)
-    # NOTE: These now match SKULL.json soft_prohibited_pairs
-    SOFT_SAME_DAY_CONFLICTS = [
-        ("Trading Post", "Campsite Free Time"),
-        ("Trading Post", "Shower House"),
-        ("Troop Rifle", "Troop Shotgun"),
-        ("Aqua Trampoline", "Water Polo"),
-        ("Aqua Trampoline", "Greased Watermelon"),
-        ("Water Polo", "Greased Watermelon"),
-        ("Troop Canoe", "Canoe Snorkel"),
-        ("Troop Canoe", "Nature Canoe"),
-        ("Troop Canoe", "Float for Floats"),
-        ("Canoe Snorkel", "Nature Canoe"),
-        ("Canoe Snorkel", "Float for Floats"),
-        ("Nature Canoe", "Float for Floats"),
-        ("Fishing", "Trading Post"),
-        ("Fishing", "Campsite Free Time"),
-        ("Campsite Free Time", "Shower House"),
-    ]
+    SOFT_SAME_DAY_CONFLICTS = SchedulerConstants.SOFT_SAME_DAY_CONFLICTS
     
     # Activities that mildly prefer certain slots (SOFT preference)
-    SLOT_PREFERENCES = {
-        "Shower House": 3  # Prefer slot 3
-    }
+    SLOT_PREFERENCES = SchedulerConstants.SLOT_PREFERENCES
     
     # Staff count per activity - for total staff balancing across slots
-    ACTIVITY_STAFF_COUNT = {
-        # Beach Staff (2-3 staff each)
-        'Aqua Trampoline': 2, 'Troop Canoe': 2, 'Troop Kayak': 2,
-        'Canoe Snorkel': 3, 'Float for Floats': 3, 'Greased Watermelon': 2,
-        'Underwater Obstacle Course': 2, 'Troop Swim': 2, 'Water Polo': 2,
-        'Nature Canoe': 1,
-        # Sailing
-        'Sailing': 1,
-        # Shooting Sports
-        'Troop Rifle': 1, 'Troop Shotgun': 1,
-        # Archery
-        'Archery': 1,
-        # Tower (director + assistant)
-        'Climbing Tower': 2,
-        # Outdoor Skills
-        'Orienteering': 1, 'GPS & Geocaching': 1, 'Knots and Lashings': 1,
-        'Ultimate Survivor': 1, "What's Cooking": 1, 'Chopped!': 1,
-        # Nature
-        'Loon Lore': 1, 'Dr. DNA': 1,
-        # Handicrafts
-        'Tie Dye': 1, 'Hemp Craft': 1, 'Woggle Neckerchief Slide': 1, "Monkey's Fist": 1,
-        # Commissioner Activities
-        'Reflection': 1, 'Delta': 1, 'Super Troop': 1,
-    }
-
+    ACTIVITY_STAFF_COUNT = SchedulerConstants.ACTIVITY_STAFF_COUNT
     
     # Beach staff limit - max staffed activities per slot
-    MAX_BEACH_STAFFED_ACTIVITIES = 4
+    MAX_BEACH_STAFFED_ACTIVITIES = SchedulerConstants.MAX_BEACH_STAFFED_ACTIVITIES
     
     # Canoe capacity - max 13 canoes = 26 people per slot
-    MAX_CANOE_CAPACITY = 26
-    CANOE_ACTIVITIES = ['Nature Canoe', 'Canoe Snorkel', 'Float for Floats', 'Troop Canoe']
+    MAX_CANOE_CAPACITY = SchedulerConstants.MAX_CANOE_CAPACITY
+    CANOE_ACTIVITIES = SchedulerConstants.CANOE_ACTIVITIES
     
-    # Beach activities that must follow slot rules (1/3 only, except Thu slot 2)
-    BEACH_SLOT_ACTIVITIES = {
-        "Water Polo", "Greased Watermelon", "Aqua Trampoline", "Troop Swim",
-        "Underwater Obstacle Course", "Troop Canoe", "Troop Kayak", "Canoe Snorkel",
-        "Nature Canoe", "Float for Floats"
-        # "Sailing" removed - allowed in slot 2 due to 1.5 slot duration
-    }
+    # Beach activities that must follow slot rules
+    BEACH_SLOT_ACTIVITIES = SchedulerConstants.BEACH_SLOT_ACTIVITIES
 
     # Beach activities that require staff (2 staff each)
-    BEACH_STAFFED_ACTIVITIES = [
-        'Aqua Trampoline', 'Troop Canoe', 'Troop Kayak', 'Canoe Snorkel',
-        'Float for Floats', 'Greased Watermelon', 'Underwater Obstacle Course',
-        'Troop Swim', 'Water Polo'
-    ]
+    BEACH_STAFFED_ACTIVITIES = SchedulerConstants.BEACH_STAFFED_ACTIVITIES
     
     # Area pairs for chain scheduling (when scheduling one, try to chain the other)
     # NOTE: Delta is NOT paired with Tower/ODS - too far to walk between Delta and those areas
     # NOTE: Archery and Sailing are NOT paired - no need for consecutive scheduling
     # NOTE: Boats do NOT need consecutive scheduling
-    AREA_PAIRS = {
-        "Tower": "Outdoor Skills",
-        "Outdoor Skills": "Tower",
-        "Rifle Range": "Super Troop",
-        "Super Troop": "Rifle Range",
-        "Delta": "Sailing",
-        "Sailing": "Delta",
-        # HC and Disc Golf pair with unstaffed activities for transition time
-        "History Center": "Gaga Ball",
-        "Disc Golf": "9 Square"
-    }
+    AREA_PAIRS = SchedulerConstants.AREA_PAIRS
     
     # Non-exclusive areas (multiple activities can run): Beach, Campsite, Off-Camp
     
@@ -223,23 +134,12 @@ class ConstrainedScheduler(
         # Central (near Lodge/Commons): Taskalusa, Powhatan, Red Cloud, Cochise
         # South (near Tower/Handicrafts): Joseph, Tamanend, Pontiac
         # Far South: Skenandoa, Sequoyah, Roman Nose
-        self.CAMPSITE_ORDER = [
-            # North group
-            "Massasoit", "Tecumseh", "Samoset", "Black Hawk", "Taskalusa",
-            # Mid group
-            "Powhatan", "Red Cloud", "Cochise", "Joseph", "Tamanend",
-            # South group
-            "Pontiac", "Skenandoa", "Sequoyah", "Roman Nose"
-        ]
+        self.CAMPSITE_ORDER = SchedulerConstants.CAMPSITE_ORDER
         
         # Commissioner day assignments - each commissioner has separate days for each activity
         # No two commissioners should do the same activity on the same day
         # Note: This includes troops from multiple weeks - unused troops are just ignored
-        self.COMMISSIONER_TROOPS = {
-            "Commissioner A": ["Massasoit", "Tecumseh", "Samoset", "Black Hawk", "Taskalusa"],
-            "Commissioner B": ["Powhatan", "Red Cloud", "Cochise", "Joseph", "Tamanend"],
-            "Commissioner C": ["Pontiac", "Skenandoa", "Sequoyah", "Roman Nose"]
-        }
+        self.COMMISSIONER_TROOPS = SchedulerConstants.COMMISSIONER_TROOPS
         
         # === AREA PAIR DAY BLOCKING ===
         # Paired areas share the same commissioner day for convenient scheduling
@@ -247,55 +147,42 @@ class ConstrainedScheduler(
         
         # Delta+Boats        # Commissioner Delta days - MATCH Super Troop days for same-day scheduling
         # Delta scheduled in slots 1-2, Super Troop in slot 3
-        # EARLY WEEK BIAS: Shifted to Mon/Tue/Wed
-        self.COMMISSIONER_DELTA_DAYS = {
-            'Commissioner A': Day.MONDAY,
-            'Commissioner B': Day.TUESDAY,
-            'Commissioner C': Day.WEDNESDAY
-        }
+        # MOMENTUM: Loaded from SKULL.json
+        self.COMMISSIONER_DELTA_DAYS = config_loader.get_commissioner_activity_days('Delta')
         
         # Commissioner Super Troop days (same as Delta for full commissioner days)
-        self.COMMISSIONER_SUPER_TROOP_DAYS = {
-            'Commissioner A': Day.MONDAY,
-            'Commissioner B': Day.TUESDAY,
-            'Commissioner C': Day.WEDNESDAY
-        }
+        self.COMMISSIONER_SUPER_TROOP_DAYS = config_loader.get_commissioner_activity_days('Super Troop')
+
         # Rifle Range uses same days as Super Troop (paired area)
-        self.COMMISSIONER_RIFLE_DAYS = self.COMMISSIONER_SUPER_TROOP_DAYS
+        self.COMMISSIONER_RIFLE_DAYS = config_loader.get_commissioner_activity_days('Troop Rifle')
         
         # Archery+Sailing days (Wed/Fri/Mon stagger)
-        self.COMMISSIONER_ARCHERY_DAYS = {
-            "Commissioner A": Day.WEDNESDAY,
-            "Commissioner B": Day.FRIDAY,
-            "Commissioner C": Day.MONDAY
-        }
+        self.COMMISSIONER_ARCHERY_DAYS = config_loader.get_commissioner_activity_days('Archery')
+
         # Sailing uses same days as Delta (paired area)
-        self.COMMISSIONER_SAILING_DAYS = self.COMMISSIONER_DELTA_DAYS
+        # Note: If Sailing isn't explicitly in rotation_schedule, we might need fallback, 
+        # but the config has it.
+        self.COMMISSIONER_SAILING_DAYS = config_loader.get_commissioner_activity_days('Sailing')
         
         # Tower+ODS days (Thu/Mon/Tue - Friday kept free for reflections)
-        self.COMMISSIONER_TOWER_ODS_DAYS = {
-            "Commissioner A": Day.THURSDAY,
-            "Commissioner B": Day.MONDAY,
-            "Commissioner C": Day.TUESDAY
-        }
+        # Using 'Climbing Tower' as the key since it's the anchor activity
+        self.COMMISSIONER_TOWER_ODS_DAYS = config_loader.get_commissioner_activity_days('Climbing Tower')
         
         # Expand configs for Voyageur commissioners (inherit from Commissioner A/B/C)
-        for config in [self.COMMISSIONER_DELTA_DAYS, self.COMMISSIONER_SUPER_TROOP_DAYS]:
+        # This allows mixed fleets (Standard + Voyageur) to coexist
+        for config in [self.COMMISSIONER_DELTA_DAYS, self.COMMISSIONER_SUPER_TROOP_DAYS, 
+                      self.COMMISSIONER_RIFLE_DAYS, self.COMMISSIONER_ARCHERY_DAYS,
+                      self.COMMISSIONER_SAILING_DAYS, self.COMMISSIONER_TOWER_ODS_DAYS]:
             for suffix in ['A', 'B', 'C']:
                 comm_key = f"Commissioner {suffix}"
                 if comm_key in config:
                      config[f"Voyageur {suffix}"] = config[comm_key]
+
         # Copy AREA_PAIRS to instance to allow modification without affecting class
         self.AREA_PAIRS = self.AREA_PAIRS.copy()
         
-        # Voyageur Rule: History Center must have a balls activity before or after
-        # We enforce this by pairing meaningful "Balls" (Gaga Ball) with History Center
-        # ENABLED GLOBALLY (User request: HC/DG need balls/reserve)
-        self.AREA_PAIRS["History Center"] = "Gaga Ball"
-        self.AREA_PAIRS["Gaga Ball"] = "History Center"
-        
-        # Voyageur Rule: Disc Golf is paired with 9 Square
-        self.AREA_PAIRS["Disc Golf"] = "9 Square"
+        # Voyageur Rule: History Center/Disc Golf pairings are now in SKULL.json
+        # No manual addition needed here.
             
         # Build troop -> commissioner mapping
         self.troop_commissioner = {}
@@ -414,7 +301,7 @@ class ConstrainedScheduler(
 
 
     
-    def _check_and_schedule_reflection(self, troop):
+    def _check_and_schedule_reflection(self, troop: Troop) -> bool:
         """
         SMART REFLECTION: Check if troop has only 1 Friday slot remaining.
         If so, immediately schedule Reflection in that slot.
@@ -858,132 +745,6 @@ class ConstrainedScheduler(
         self._immediate_gap_fix_if_needed("Phase D.9 (Final Cleanup)")
         
         # =================================================================
-        # ENHANCED POST-PROCESSING: CRITICAL CONSTRAINT FIXES
-        # =================================================================
-        self.logger.section("ENHANCED POST-PROCESSING: CRITICAL CONSTRAINT FIXES")
-        
-        # Import enhanced fixers
-        try:
-            from constraint_fixes import apply_enhanced_constraint_fixes
-            from staff_balance_optimizer import optimize_staff_workload
-            from advanced_preference_optimizer import optimize_advanced_preferences
-            from real_time_monitor import create_real_time_monitor
-            from adaptive_constraint_system import create_adaptive_constraint_system
-            from schedule_quality_predictor import create_quality_predictor
-            from performance_analytics import create_performance_analytics
-            from ml_activity_predictor import create_ml_activity_predictor
-            from enhanced_clustering_optimizer import enhance_clustering
-            from top5_guarantee_system import guarantee_top5_satisfaction
-            
-            # Apply enhanced constraint fixes
-            self.logger.subsection("Applying enhanced constraint fixes")
-            constraint_fixes = apply_enhanced_constraint_fixes(self.schedule, self.troops, self.activities)
-            print(f"  Applied {constraint_fixes} critical constraint fixes")
-            
-            # Optimize staff workload balance
-            self.logger.subsection("Optimizing staff workload balance")
-            variance_reduction = optimize_staff_workload(self.schedule, self.troops, self.activities, target_variance=1.0)
-            print(f"  Reduced staff variance by {variance_reduction:.2f}")
-            
-            # Advanced preference optimization
-            self.logger.subsection("Advanced preference optimization")
-            preference_improvement = optimize_advanced_preferences(self.schedule, self.troops, self.activities, max_iterations=50)
-            print(f"  Improved preference satisfaction by {preference_improvement:.2f}")
-            
-            # Real-time monitoring check
-            self.logger.subsection("Real-time constraint monitoring")
-            monitor = create_real_time_monitor(self.schedule, self.troops, self.activities)
-            monitor.start_monitoring()
-            
-            # Check for remaining violations
-            violations = monitor.check_schedule_comprehensive()
-            if violations:
-                print(f"  Found {len(violations)} remaining violations during monitoring")
-            else:
-                print("  No violations detected during monitoring")
-            
-            monitor.stop_monitoring()
-            
-            # Adaptive constraint system
-            self.logger.subsection("Adaptive constraint weighting")
-            adaptive_system = create_adaptive_constraint_system(self.schedule, self.troops, self.activities)
-            
-            # Calculate current score and record for learning
-            current_score = adaptive_system.calculate_schedule_score()
-            violations_dict = self._count_violations_by_type()
-            adaptive_system.record_scheduling_result(current_score, violations_dict)
-            
-            # Get adaptation report
-            adaptation_report = adaptive_system.get_adaptation_report()
-            print(f"  Adaptive system score: {current_score:.2f}")
-            print(f"  Constraint adaptations: {len(adaptation_report['constraint_weights'])}")
-            
-            # Quality prediction
-            self.logger.subsection("Schedule quality prediction")
-            predictor = create_quality_predictor(self.schedule, self.troops, self.activities)
-            quality_score = predictor.calculate_comprehensive_score()
-            
-            print(f"  Overall quality score: {quality_score.overall_score:.1f} (Grade: {quality_score.grade})")
-            print(f"  Strengths: {len(quality_score.strengths)}")
-            print(f"  Weaknesses: {len(quality_score.weaknesses)}")
-            print(f"  Recommendations: {len(quality_score.recommendations)}")
-            
-            # Performance analytics
-            self.logger.subsection("Performance analytics")
-            analytics = create_performance_analytics(self.schedule, self.troops, self.activities)
-            
-            # Generate comprehensive analytics
-            analytics_data = analytics.generate_comprehensive_analytics()
-            
-            print(f"  Analytics generated with {len(analytics_data.recommendations)} recommendations")
-            print(f"  Performance metrics calculated")
-            
-            # Print summary report
-            analytics.print_summary_report()
-            
-            # Machine learning-based activity placement prediction
-            self.logger.subsection("Machine learning activity placement prediction")
-            ml_predictor = create_ml_activity_predictor(self.schedule, self.troops, self.activities)
-            
-            # Test predictions for a few sample activities
-            test_predictions = []
-            for troop in self.troops[:3]:  # Test first 3 troops
-                if troop.preferences:
-                    activity_name = troop.preferences[0]  # Test with top preference
-                    prediction = ml_predictor.predict_optimal_placement(activity_name, troop.name)
-                    test_predictions.append(prediction)
-            
-            print(f"  ML predictor generated {len(test_predictions)} test predictions")
-            
-            # Get model insights
-            model_insights = ml_predictor.get_model_insights()
-            print(f"  Model trained on {model_insights['total_placements_analyzed']} placements")
-            print(f"  Model confidence level: {model_insights['confidence_level']:.2f}")
-            
-            # Enhanced clustering optimization
-            self.logger.subsection("Enhanced clustering optimization")
-            clustering_results = enhance_clustering(self.schedule, self.troops, self.activities, max_iterations=50)
-            print(f"  Clustering improvement: {clustering_results['improvement']:.3f}")
-            print(f"  Clustering swaps made: {clustering_results['swaps_made']}")
-            
-            # Top 5 preference guarantee (wrapped - external module may have bugs)
-            self.logger.subsection("Top 5 preference guarantee")
-            try:
-                top5_results = guarantee_top5_satisfaction(self.schedule, self.troops, self.activities, max_iterations=100)
-                print(f"  Top 5 satisfaction: {top5_results['final_satisfied']}/{len(self.troops)} troops")
-                print(f"  Improvement: {top5_results['improvement']} troops")
-                print(f"  Forced placements: {top5_results['forced_placements']}")
-            except Exception as e:
-                print(f"  [WARN] Top 5 guarantee failed: {e}")
-            
-            # Final gap check after enhanced fixes
-            self._immediate_gap_fix_if_needed("Enhanced Post-Processing")
-            
-        except ImportError as e:
-            print(f"  [WARN] Enhanced fixers not available: {e}")
-            print("  Continuing with standard optimization...")
-        
-        # =================================================================
         # FINAL VERIFICATION
         # =================================================================
         self.logger.section("FINAL VERIFICATION")
@@ -1108,7 +869,7 @@ class ConstrainedScheduler(
                         
                         if not troop_busy:
                             # Add the missing slot
-                            new_entry = ScheduleEntry(time_slot, activity, troop)
+                            new_entry = ScheduleEntry(time_slot=time_slot, activity=activity, troop=troop)
                             self.schedule.entries.append(new_entry)
                             fixed_count += 1
                             print(f"    [FIXED] {troop_name} {activity_name} @ {day_name} - added slot {slot_num}")
@@ -1245,128 +1006,7 @@ class ConstrainedScheduler(
         
         return total_gaps
     
-    def _count_violations_by_type(self):
-        """Count violations by type for adaptive system."""
-        from adaptive_constraint_system import ConstraintType
-        
-        violations = {
-            ConstraintType.BEACH_SLOT: 0,
-            ConstraintType.WET_DRY: 0,
-            ConstraintType.FRIDAY_REFLECTION: 0,
-            ConstraintType.EXCLUSIVE_AREA: 0,
-            ConstraintType.STAFF_BALANCE: 0,
-            ConstraintType.PREFERENCE_SATISFACTION: 0,
-            ConstraintType.CLUSTERING_EFFICIENCY: 0
-        }
-        
-        # Count beach slot violations (Top 5 relaxation: slot 2 allowed for Top 5 beach; AT requires exclusive)
-        for entry in self.schedule.entries:
-            if (entry.activity.name in self.BEACH_SLOT_ACTIVITIES and 
-                entry.time_slot.slot_number == 2 and entry.time_slot.day != Day.THURSDAY):
-                troop = entry.troop
-                pref_rank = troop.get_priority(entry.activity.name) if hasattr(troop, 'get_priority') else None
-                if pref_rank is not None and pref_rank < 5:
-                    if entry.activity.name == "Aqua Trampoline" and (troop.scouts + troop.adults) <= 16:
-                        violations[ConstraintType.BEACH_SLOT] += 1
-                else:
-                    violations[ConstraintType.BEACH_SLOT] += 1
-        
-        # Count wet/dry violations - simplified count
-        wet_dry_violations = 0
-        for troop in self.troops:
-            troop_entries = sorted(
-                [e for e in self.schedule.entries if e.troop == troop],
-                key=lambda e: (e.time_slot.day.value, e.time_slot.slot_number)
-            )
-            
-            # Group by day
-            by_day = defaultdict(list)
-            for entry in troop_entries:
-                by_day[entry.time_slot.day].append(entry)
-            
-            for day, day_entries in by_day.items():
-                day_entries.sort(key=lambda e: e.time_slot.slot_number)
-                
-                # Check wet->tower/ods violations
-                for i in range(len(day_entries) - 1):
-                    curr = day_entries[i]
-                    next_e = day_entries[i + 1]
-                    
-                    if (curr.activity.name in self.WET_ACTIVITIES and 
-                        next_e.activity.name in self.TOWER_ODS_ACTIVITIES):
-                        wet_dry_violations += 1
-        
-        violations[ConstraintType.WET_DRY] += wet_dry_violations
-        
-        # Count Friday Reflection violations
-        violations[ConstraintType.FRIDAY_REFLECTION] += self._count_missing_friday_reflection_violations()
-        
-        # Count exclusive area violations
-        violations[ConstraintType.EXCLUSIVE_AREA] += self._count_exclusive_area_violations()
-        
-        # Count staff balance violations (high variance)
-        staff_variance = self._calculate_staff_variance()
-        if staff_variance > 2.0:
-            violations[ConstraintType.STAFF_BALANCE] += int(staff_variance)
-        
-        return violations
-    
-    def _count_missing_friday_reflection_violations(self):
-        """Count Friday Reflection violations."""
-        violations = 0
-        
-        for troop in self.troops:
-            has_reflection = any(
-                e.activity.name == "Reflection" and e.time_slot.day == Day.FRIDAY
-                for e in self.schedule.entries if e.troop == troop
-            )
-            if not has_reflection:
-                violations += 1
-        
-        return violations
-    
-    def _count_exclusive_area_violations(self):
-        """Count exclusive area violations."""
-        # Dynamic discovery of exclusive activities from configuration
-        # Assuming we have access to config_loader or similar, otherwise use a safe fallback set
-        # that encompasses all major exclusive areas
-        exclusive_activities = {
-            "Climbing Tower", "Troop Rifle", "Troop Shotgun", "Archery",
-            "Aqua Trampoline", "Sailing" # Core exclusive
-        }
-        
-        violations = 0
-        slot_activity_troops = defaultdict(set)
-        
-        for entry in self.schedule.entries:
-            if entry.activity.name in exclusive_activities:
-                slot_key = (entry.time_slot.day, entry.time_slot.slot_number, entry.activity.name)
-                slot_activity_troops[slot_key].add(entry.troop.name)  # Use troop name instead of troop object
-        
-        for troops in slot_activity_troops.values():
-            if len(troops) > 1:
-                violations += len(troops) - 1
-        
-        return violations
-    
-    def _calculate_staff_variance(self):
-        """Calculate staff workload variance."""
-        staff_loads = defaultdict(int)
-        
-        for entry in self.schedule.entries:
-            activity_name = entry.activity.name
-            if activity_name in self.STAFF_ZONE_MAP:
-                slot_key = (entry.time_slot.day, entry.time_slot.slot_number)
-                staff_loads[slot_key] += 1
-        
-        if not staff_loads:
-            return 0.0
-        
-        loads = list(staff_loads.values())
-        avg_load = sum(loads) / len(loads)
-        variance = sum((load - avg_load) ** 2 for load in loads) / len(loads)
-        
-        return variance
+
     
     def _get_activity_score(self, troop, activity, slot, day):
         """
@@ -1727,7 +1367,7 @@ class ConstrainedScheduler(
         
         # Helper to try scheduling
         def try_schedule(troop, day, start_slot):
-            slot1 = TimeSlot(day, start_slot)
+            slot1 = TimeSlot(day=day, slot_number=start_slot)
             
             # Check if slots are free
             if not self.schedule.is_troop_free(slot1, troop):
@@ -1737,7 +1377,7 @@ class ConstrainedScheduler(
             slot2_num = start_slot + 1
             if slot2_num > (2 if day == Day.THURSDAY else 3):
                 return False
-            slot2 = TimeSlot(day, slot2_num)
+            slot2 = TimeSlot(day=day, slot_number=slot2_num)
             if not self.schedule.is_troop_free(slot2, troop):
                 return False
                 
@@ -2228,8 +1868,8 @@ class ConstrainedScheduler(
             # Try each preferred day
             for day in preferred_days:
                 # Sailing needs slots 1-2 (consecutive)
-                slot1 = TimeSlot(day, 1)
-                slot2 = TimeSlot(day, 2)
+                slot1 = TimeSlot(day=day, slot_number=1)
+                slot2 = TimeSlot(day=day, slot_number=2)
                 
                 # Check both slots are free
                 if not self.schedule.is_troop_free(slot1, troop):
@@ -2247,8 +1887,8 @@ class ConstrainedScheduler(
             else:
                 # Try slots 2-3 as fallback
                 for day in preferred_days:
-                    slot2 = TimeSlot(day, 2)
-                    slot3 = TimeSlot(day, 3)
+                    slot2 = TimeSlot(day=day, slot_number=2)
+                    slot3 = TimeSlot(day=day, slot_number=3)
                     
                     if not self.schedule.is_troop_free(slot2, troop):
                         continue
@@ -2339,7 +1979,7 @@ class ConstrainedScheduler(
             if delta_entry.time_slot.slot_number == 2:
                 # Try slot 1 first, then slot 3 on the same day
                 for slot_num in (1, 3):
-                    target = TimeSlot(delta_entry.time_slot.day, slot_num)
+                    target = TimeSlot(day=delta_entry.time_slot.day, slot_number=slot_num)
                     if move_entry_to_slot(delta_entry, target):
                         delta_entry = next((e for e in self.schedule.entries if e.troop == troop and e.activity.name == "Delta"), delta_entry)
                         fixes += 1
@@ -2351,7 +1991,7 @@ class ConstrainedScheduler(
                         sailing_day = sailing_entries[0].time_slot.day
                         if delta_entry.time_slot.day != sailing_day:
                             for slot_num in (1, 3):
-                                target = TimeSlot(sailing_day, slot_num)
+                                target = TimeSlot(day=sailing_day, slot_number=slot_num)
                                 if move_entry_to_slot(delta_entry, target):
                                     delta_entry = next((e for e in self.schedule.entries if e.troop == troop and e.activity.name == "Delta"), delta_entry)
                                     fixes += 1
@@ -2367,7 +2007,7 @@ class ConstrainedScheduler(
             
             start_slot = 1 if 1 in sailing_slots else min(sailing_slots)
             target_slot_num = 3 if start_slot == 1 else 1
-            target_slot = TimeSlot(sailing_day, target_slot_num)
+            target_slot = TimeSlot(day=sailing_day, slot_number=target_slot_num)
             
             if delta_entry.time_slot.day == sailing_day and delta_entry.time_slot.slot_number == target_slot_num:
                 continue  # Already paired correctly
@@ -2384,8 +2024,8 @@ class ConstrainedScheduler(
             if delta_slot_num not in (1, 3):
                 continue
             sailing_start_slot = 2 if delta_slot_num == 1 else 1
-            start_slot = TimeSlot(delta_day, sailing_start_slot)
-            target_slots = [TimeSlot(delta_day, sailing_start_slot), TimeSlot(delta_day, sailing_start_slot + 1)]
+            start_slot = TimeSlot(day=delta_day, slot_number=sailing_start_slot)
+            target_slots = [TimeSlot(day=delta_day, slot_number=sailing_start_slot), TimeSlot(day=delta_day, slot_number=sailing_start_slot + 1)]
             
             # Remove existing sailing for this troop first
             removed_sailing = []
@@ -2515,15 +2155,15 @@ class ConstrainedScheduler(
                 # If existing sail is at slot 1, new sail should be at slot 2
                 # If existing sail is at slot 2, new sail should be at slot 1
                 if existing_slot == 1:
-                    target_slot = TimeSlot(target_day, 2)
+                    target_slot = TimeSlot(day=target_day, slot_number=2)
                 else:
-                    target_slot = TimeSlot(target_day, 1)
+                    target_slot = TimeSlot(day=target_day, slot_number=1)
                 
                 # Check if source_troop can move to target_day
                 # First, is the troop free on those slots?
                 if not self.schedule.is_troop_free(target_slot, source_troop):
                     # Try swapping slot number
-                    alt_slot = TimeSlot(target_day, 1 if target_slot.slot_number == 2 else 2)
+                    alt_slot = TimeSlot(day=target_day, slot_number=(1 if target_slot.slot_number == 2 else 2))
                     if not self.schedule.is_troop_free(alt_slot, source_troop):
                         continue
                     target_slot = alt_slot
@@ -2531,7 +2171,7 @@ class ConstrainedScheduler(
                 # Also check slot+1 for sailing continuation
                 next_slot_num = target_slot.slot_number + 1
                 if next_slot_num <= 3:
-                    next_slot = TimeSlot(target_day, next_slot_num)
+                    next_slot = TimeSlot(day=target_day, slot_number=next_slot_num)
                     if not self.schedule.is_troop_free(next_slot, source_troop):
                         # Troop busy in continuation slot, can't move here
                         continue
@@ -4626,7 +4266,7 @@ class ConstrainedScheduler(
                 # Check if they can share (both ≤16)
                 if wanting_size <= AT_MAX_SIZE:
                     # Try to schedule wanting_troop in the same slot
-                    slot = TimeSlot(day, slot_num)
+                    slot = TimeSlot(day=day, slot_number=slot_num)
                     if self.schedule.is_troop_free(slot, wanting_troop):
                         if self._can_schedule(wanting_troop, AT_ACTIVITY, slot, day):
                             self._add_to_schedule(slot, AT_ACTIVITY, wanting_troop)
@@ -4657,7 +4297,7 @@ class ConstrainedScheduler(
                     continue
                 
                 # Try moving solo_troop to other_slot
-                other_slot_obj = TimeSlot(other_day, other_slot)
+                other_slot_obj = TimeSlot(day=other_day, slot_number=other_slot)
                 if self.schedule.is_troop_free(other_slot_obj, solo_troop):
                     # Check if we can move the activity
                     if self._can_schedule(solo_troop, AT_ACTIVITY, other_slot_obj, other_day):
@@ -4668,7 +4308,7 @@ class ConstrainedScheduler(
                         print(f"  [AT Share] Moved {solo_troop.name} ({solo_size}) to share with {other_troop.name} ({other_size}) at {other_day.name} slot {other_slot}")
                         swaps_made += 1
                         # Fill vacated slot
-                        vacated_slot = TimeSlot(day, slot_num)
+                        vacated_slot = TimeSlot(day=day, slot_number=slot_num)
                         self._fill_vacated_slot(solo_troop, vacated_slot)
                         break
         
@@ -5347,14 +4987,7 @@ class ConstrainedScheduler(
         current_load = self.staff_load_by_slot[slot][zone]
         
         # Max capacity depends on zone
-        max_capacity = {
-            'Tower': 1,      # Only 1 Tower activity per slot
-            'Rifle': 1,      # Only 1 Rifle/Shotgun per slot
-            'Archery': 1,    # Only 1 Archery per slot
-            'ODS': 1,        # Only 1 ODS activity per slot
-            'Handicrafts': 1,  # Only 1 Handicraft per slot
-            'Beach': 4,      # Up to 4 beach activities per slot
-        }.get(zone, 1)
+        max_capacity = SchedulerConstants.ZONE_CAPACITIES.get(zone, 1)
         
         # Penalty increases exponentially as we approach max
         if current_load >= max_capacity:
@@ -5666,8 +5299,8 @@ class ConstrainedScheduler(
                                         e.time_slot.day == Day.FRIDAY)]
         
         # Add swapped entries
-        self.schedule.entries.append(ScheduleEntry(slot2, reflection, troop1))
-        self.schedule.entries.append(ScheduleEntry(slot1, reflection, troop2))
+        self.schedule.entries.append(ScheduleEntry(time_slot=slot2, activity= reflection, troop= troop1))
+        self.schedule.entries.append(ScheduleEntry(time_slot=slot1, activity= reflection, troop= troop2))
 
     def _optimize_area_day_filling(self):
         """
@@ -6389,8 +6022,8 @@ class ConstrainedScheduler(
         self.schedule.entries.remove(entry2)
         
         # Create new entries with swapped slots
-        new_entry1 = ScheduleEntry(slot2, entry1.activity, troop1)
-        new_entry2 = ScheduleEntry(slot1, entry2.activity, troop2)
+        new_entry1 = ScheduleEntry(time_slot=slot2, activity= entry1.activity, troop= troop1)
+        new_entry2 = ScheduleEntry(time_slot=slot1, activity= entry2.activity, troop= troop2)
         
         self.schedule.entries.append(new_entry1)
         self.schedule.entries.append(new_entry2)
@@ -6512,8 +6145,8 @@ class ConstrainedScheduler(
             paired = False
             for day in preferred_days:
                 # Option 1: Sailing slots 1-2, Delta slot 3
-                sailing_slot = TimeSlot(day, 1)
-                delta_slot = TimeSlot(day, 3)
+                sailing_slot = TimeSlot(day=day, slot_number=1)
+                delta_slot = TimeSlot(day=day, slot_number=3)
                 if (self._can_schedule(troop, sailing, sailing_slot, day) and
                         self._can_schedule(troop, delta, delta_slot, day)):
                     self._add_to_schedule(sailing_slot, sailing, troop)
@@ -6526,8 +6159,8 @@ class ConstrainedScheduler(
                     break
                 
                 # Option 2: Delta slot 1, Sailing slots 2-3
-                sailing_slot = TimeSlot(day, 2)
-                delta_slot = TimeSlot(day, 1)
+                sailing_slot = TimeSlot(day=day, slot_number=2)
+                delta_slot = TimeSlot(day=day, slot_number=1)
                 if (self._can_schedule(troop, sailing, sailing_slot, day) and
                         self._can_schedule(troop, delta, delta_slot, day)):
                     self._add_to_schedule(sailing_slot, sailing, troop)
@@ -6594,8 +6227,8 @@ class ConstrainedScheduler(
             # Try to schedule on an available day
             scheduled_day = None
             for day in available_days:
-                slot_1 = TimeSlot(day, 1)
-                slot_2 = TimeSlot(day, 2)
+                slot_1 = TimeSlot(day=day, slot_number=1)
+                slot_2 = TimeSlot(day=day, slot_number=2)
                 
                 # Check if both troops can be scheduled
                 # Troop A at slot 1 (occupies 1-2), Troop B at slot 2 (occupies 2-3)
@@ -6665,7 +6298,7 @@ class ConstrainedScheduler(
                 for slot_num in [1, 2, 3]:
                     if day == Day.THURSDAY and slot_num > 2:
                         continue
-                    slot = TimeSlot(day, slot_num)
+                    slot = TimeSlot(day=day, slot_number=slot_num)
                     if self.schedule.is_troop_free(slot, troop):
                         if self._can_schedule(troop, activity, slot, day):
                             self.schedule.add_entry(slot, activity, troop)
@@ -6705,7 +6338,7 @@ class ConstrainedScheduler(
                 for slot_num in [1, 2, 3]:
                     if day == Day.THURSDAY and slot_num > 2:
                         continue
-                    slot = TimeSlot(day, slot_num)
+                    slot = TimeSlot(day=day, slot_number=slot_num)
                     if self.schedule.is_troop_free(slot, troop):
                         if self._can_schedule(troop, activity, slot, day):
                             self.schedule.add_entry(slot, activity, troop)
@@ -6744,7 +6377,7 @@ class ConstrainedScheduler(
                 for slot_num in [1, 2, 3]:
                     if day == Day.THURSDAY and slot_num > 2:
                         continue
-                    slot = TimeSlot(day, slot_num)
+                    slot = TimeSlot(day=day, slot_number=slot_num)
                     if self.schedule.is_troop_free(slot, troop):
                         if self._can_schedule(troop, activity, slot, day):
                             self.schedule.add_entry(slot, activity, troop)
@@ -7862,12 +7495,7 @@ class ConstrainedScheduler(
 
             # CAPACITY-AWARE EXCLUSIVITY CHECK
             # Use unified capacity checking for activities with special rules
-            CAPACITY_CHECK_ACTIVITIES = {
-                'Aqua Trampoline', 'Sailing', 'Water Polo', 
-                'Gaga Ball', '9 Square',
-                'Troop Canoe', 'Canoe Snorkel', 'Nature Canoe', 'Float for Floats',
-                'Climbing Tower'
-            }
+            CAPACITY_CHECK_ACTIVITIES = SchedulerConstants.CAPACITY_CHECK_ACTIVITIES
             
             if activity.name in CAPACITY_CHECK_ACTIVITIES:
                 allow_top5_overload = (relax_constraints and activity.name == 'Aqua Trampoline' and
@@ -7913,7 +7541,7 @@ class ConstrainedScheduler(
             next_slot_num = slot.slot_number + 1
             max_slot = 2 if day == Day.THURSDAY else 3
             if next_slot_num <= max_slot:
-                next_slot = TimeSlot(day, next_slot_num)
+                next_slot = TimeSlot(day=day, slot_number=next_slot_num)
                 next_entries = [e for e in self.schedule.entries 
                                if e.troop == troop and e.time_slot == next_slot]
                 for next_e in next_entries:
@@ -8003,7 +7631,7 @@ class ConstrainedScheduler(
             
             # Check previous slot for conflict
             if slot.slot_number > 1:
-                prev_slot = TimeSlot(day, slot.slot_number - 1)
+                prev_slot = TimeSlot(day=day, slot_number=slot.slot_number - 1)
                 prev_entries = [e for e in self.schedule.entries 
                                if e.troop == troop and e.time_slot == prev_slot]
                 for prev_e in prev_entries:
@@ -8012,7 +7640,7 @@ class ConstrainedScheduler(
             
             # Check next slot for conflict
             if slot.slot_number < max_slot:
-                next_slot = TimeSlot(day, slot.slot_number + 1)
+                next_slot = TimeSlot(day=day, slot_number=slot.slot_number + 1)
                 next_entries = [e for e in self.schedule.entries 
                                if e.troop == troop and e.time_slot == next_slot]
                 for next_e in next_entries:
@@ -9658,7 +9286,7 @@ class ConstrainedScheduler(
         ENHANCED: Special handling for Thursday Slot 3 gaps and smarter activity selection.
         MORE AGGRESSIVE: Increased move attempts and better activity selection.
         """
-        from .models import ScheduleEntry, EXCLUSIVE_AREAS
+        from .models import ScheduleEntry
         
         # Staffed activities (valuable to move into gaps)
         STAFFED_ACTIVITIES = {
@@ -9874,7 +9502,7 @@ class ConstrainedScheduler(
                     try:
                         # Create new entry for target
                         new_entry = ScheduleEntry(
-                            TimeSlot(target_day, target_slot),
+                            TimeSlot(day=target_day, slot_number=target_slot),
                             source_entry.activity,
                             troop
                         )
@@ -10029,7 +9657,7 @@ class ConstrainedScheduler(
                                     if not added:
                                         # Last resort: direct append (bypass add_entry checks)
                                         from .models import ScheduleEntry
-                                        self.schedule.entries.append(ScheduleEntry(slot, activity, troop))
+                                        self.schedule.entries.append(ScheduleEntry(time_slot=slot, activity= activity, troop= troop))
                                         added = True
                                     if added:
                                         print(f"  [FORCE FILL] {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
@@ -10078,7 +9706,7 @@ class ConstrainedScheduler(
                                     force_activity = get_activity_by_name("Campsite Free Time")
                                     if force_activity:
                                         from .models import ScheduleEntry
-                                        self.schedule.entries.append(ScheduleEntry(slot, force_activity, troop))
+                                        self.schedule.entries.append(ScheduleEntry(time_slot=slot, activity= force_activity, troop= troop))
                                         print(f"  [FORCE APPEND] {troop.name}: Campsite Free Time -> {day.name[:3]}-{slot_num}")
                                         filled = True
                                         iteration_fills += 1
@@ -10133,7 +9761,7 @@ class ConstrainedScheduler(
                                 added = self.schedule.add_entry(slot, activity, troop)
                                 if not added:
                                     from .models import ScheduleEntry
-                                    self.schedule.entries.append(ScheduleEntry(slot, activity, troop))
+                                    self.schedule.entries.append(ScheduleEntry(time_slot=slot, activity= activity, troop= troop))
                                 print(f"  [EMERGENCY FILL] {troop.name}: Campsite Free Time -> {day.name[:3]}-{slot_num}")
                                 final_gaps -= 1
         
@@ -10181,7 +9809,7 @@ class ConstrainedScheduler(
                         if activity:
                             if not self.schedule.add_entry(slot, activity, troop):
                                 from .models import ScheduleEntry
-                                self.schedule.entries.append(ScheduleEntry(slot, activity, troop))
+                                self.schedule.entries.append(ScheduleEntry(time_slot=slot, activity= activity, troop= troop))
                             print(f"  [EMERGENCY] {troop.name}: Campsite Free Time -> {day.name[:3]}-{slot_num}")
                             total_gaps_filled += 1
             
@@ -11281,8 +10909,8 @@ class ConstrainedScheduler(
                     self.schedule.entries.remove(cluster_entry)
                     self.schedule.entries.remove(swap_entry)
                     
-                    new_cluster = ScheduleEntry(s['swap_slot'], cluster_entry.activity, troop)
-                    new_swap = ScheduleEntry(s['current_slot'], swap_entry.activity, troop)
+                    new_cluster = ScheduleEntry(time_slot=s['swap_slot'], activity= cluster_entry.activity, troop= troop)
+                    new_swap = ScheduleEntry(time_slot=s['current_slot'], activity= swap_entry.activity, troop= troop)
                     
                     self.schedule.entries.append(new_cluster)
                     self.schedule.entries.append(new_swap)
@@ -11426,8 +11054,8 @@ class ConstrainedScheduler(
                             self.schedule.entries.remove(cluster_entry)
                             self.schedule.entries.remove(swap_entry)
                             
-                            new_cluster = ScheduleEntry(swap_slot, cluster_entry.activity, troop)
-                            new_swap = ScheduleEntry(current_slot, swap_entry.activity, troop)
+                            new_cluster = ScheduleEntry(time_slot=swap_slot, activity= cluster_entry.activity, troop= troop)
+                            new_swap = ScheduleEntry(time_slot=current_slot, activity= swap_entry.activity, troop= troop)
                             
                             self.schedule.entries.append(new_cluster)
                             self.schedule.entries.append(new_swap)
@@ -11620,7 +11248,7 @@ class ConstrainedScheduler(
                 # Try each slot on target day
                 max_slot = 2 if target_day == Day.THURSDAY else 3
                 for slot_num in range(1, max_slot + 1):
-                    target_slot = TimeSlot(target_day, slot_num)
+                    target_slot = TimeSlot(day=target_day, slot_number=slot_num)
                     
                     # Check if troop is free and activity can be scheduled
                     debug_attempts += 1
@@ -11683,7 +11311,7 @@ class ConstrainedScheduler(
                     # Check for cluster gap (slots 1&3 full, slot 2 empty)
                     if 1 in slots_filled and 3 in slots_filled and 2 not in slots_filled:
                         # Try slot 2
-                        target_slot = TimeSlot(day, 2)
+                        target_slot = TimeSlot(day=day, slot_number=2)
                         if self.schedule.is_troop_free(target_slot, troop):
                             # For outlier optimization, allow relaxed constraints and ignore day requests
                             if self._can_schedule(troop, activity, target_slot, day, relax_constraints=True, ignore_day_requests=True):
@@ -11721,7 +11349,7 @@ class ConstrainedScheduler(
                     if not is_adjacent:
                         continue
                     
-                    target_slot = TimeSlot(day, slot_num)
+                    target_slot = TimeSlot(day=day, slot_number=slot_num)
                     if not self.schedule.is_troop_free(target_slot, troop):
                         continue
                     
@@ -11748,7 +11376,7 @@ class ConstrainedScheduler(
                 self.schedule.entries.remove(entry)
                 
                 # Add to new slot
-                new_entry = ScheduleEntry(best_move['target_slot'], activity, troop)
+                new_entry = ScheduleEntry(time_slot=best_move['target_slot'], activity= activity, troop= troop)
                 self.schedule.entries.append(new_entry)
                 
                 moves_made += 1
@@ -12202,8 +11830,8 @@ class ConstrainedScheduler(
                         self.schedule.entries.remove(exclusive_entry)
                         self.schedule.entries.remove(fill_entry)
                         
-                        new_exclusive = ScheduleEntry(fill_slot, exclusive_entry.activity, troop)
-                        new_fill = ScheduleEntry(current_slot, fill_entry.activity, troop)
+                        new_exclusive = ScheduleEntry(time_slot=fill_slot, activity= exclusive_entry.activity, troop= troop)
+                        new_fill = ScheduleEntry(time_slot=current_slot, activity= fill_entry.activity, troop= troop)
                         
                         self.schedule.entries.append(new_exclusive)
                         self.schedule.entries.append(new_fill)
@@ -12302,7 +11930,7 @@ class ConstrainedScheduler(
                         
                         if can_fit:
                             # Make the swap!
-                            new_entry = ScheduleEntry(slot, pref_activity, troop)
+                            new_entry = ScheduleEntry(time_slot=slot, activity= pref_activity, troop= troop)
                             self.schedule.entries.append(new_entry)
                             
                             iteration_swaps += 1
@@ -12434,8 +12062,8 @@ class ConstrainedScheduler(
                         
                         if can_swap:
                             # Execute swap
-                            new_staff = ScheduleEntry(fill_entry.time_slot, staff_entry.activity, staff_entry.troop)
-                            new_fill = ScheduleEntry(staff_entry.time_slot, fill_entry.activity, fill_entry.troop)
+                            new_staff = ScheduleEntry(time_slot=fill_entry.time_slot, activity= staff_entry.activity, troop= staff_entry.troop)
+                            new_fill = ScheduleEntry(time_slot=staff_entry.time_slot, activity= fill_entry.activity, troop= fill_entry.troop)
                             
                             self.schedule.entries.append(new_staff)
                             self.schedule.entries.append(new_fill)
@@ -12973,9 +12601,9 @@ class ConstrainedScheduler(
             if not has_reflection and reflection:
                 # Find empty Friday slot
                 for slot_num in [1, 2, 3]:
-                    slot = TimeSlot(Day.FRIDAY, slot_num)
+                    slot = TimeSlot(day=Day.FRIDAY, slot_number=slot_num)
                     if self.schedule.is_troop_free(slot, troop):
-                        entry = ScheduleEntry(slot, reflection, troop)
+                        entry = ScheduleEntry(time_slot=slot, activity= reflection, troop= troop)
                         self.schedule.entries.append(entry)
                         print(f"  Added Reflection for {troop.name} @ Friday slot {slot_num}")
                         has_reflection = True
@@ -12997,7 +12625,7 @@ class ConstrainedScheduler(
                     slot = existing_entry.time_slot
                     # Remove existing entry and add Reflection
                     self.schedule.entries.remove(existing_entry)
-                    entry = ScheduleEntry(slot, reflection, troop)
+                    entry = ScheduleEntry(time_slot=slot, activity= reflection, troop= troop)
                     self.schedule.entries.append(entry)
                     print(f"  [MANDATORY] Replaced {existing_entry.activity.name} (#{priority+1 if priority < 999 else 'fill'}) with Reflection for {troop.name} @ Friday slot {slot.slot_number}")
                     has_reflection = True
@@ -13011,9 +12639,9 @@ class ConstrainedScheduler(
                 for day in [Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY, Day.MONDAY]:
                     max_slot = 2 if day == Day.THURSDAY else 3
                     for slot_num in range(1, max_slot + 1):
-                        slot = TimeSlot(day, slot_num)
+                        slot = TimeSlot(day=day, slot_number=slot_num)
                         if self.schedule.is_troop_free(slot, troop) and self.schedule.is_activity_available(slot, super_troop, troop):
-                            entry = ScheduleEntry(slot, super_troop, troop)
+                            entry = ScheduleEntry(time_slot=slot, activity= super_troop, troop= troop)
                             self.schedule.entries.append(entry)
                             print(f"  Added Super Troop for {troop.name} @ {day.name} slot {slot_num}")
                             has_super_troop = True
@@ -13028,7 +12656,7 @@ class ConstrainedScheduler(
                     for day in [Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY, Day.MONDAY]:
                         max_slot = 2 if day == Day.THURSDAY else 3
                         for slot_num in range(1, max_slot + 1):
-                            slot = TimeSlot(day, slot_num)
+                            slot = TimeSlot(day=day, slot_number=slot_num)
                             slot_entry = next((e for e in entries if e.time_slot == slot), None)
                             
                             # Can only replace if not protected
@@ -13045,7 +12673,7 @@ class ConstrainedScheduler(
                     for slot, slot_entry, priority in candidates:
                         # Remove the existing entry and add Super Troop
                         self.schedule.entries.remove(slot_entry)
-                        entry = ScheduleEntry(slot, super_troop, troop)
+                        entry = ScheduleEntry(time_slot=slot, activity= super_troop, troop= troop)
                         self.schedule.entries.append(entry)
                         print(f"  Replaced {slot_entry.activity.name} (#{priority+1 if priority < 999 else 'fill'}) with Super Troop for {troop.name} @ {slot.day.name} slot {slot.slot_number}")
                         has_super_troop = True
@@ -13129,7 +12757,7 @@ class ConstrainedScheduler(
                 sorted_slots = sorted(range(1, max_slot + 1), key=adjacency_score, reverse=True)
                 
                 for slot_num in sorted_slots:
-                    slot = TimeSlot(day, slot_num)
+                    slot = TimeSlot(day=day, slot_number=slot_num)
                     
                     # Check if this slot is free (considering multi-slot extensions)
                     if self.schedule.is_troop_free(slot, troop):
@@ -13318,7 +12946,7 @@ class ConstrainedScheduler(
 
                         
                         if best_fill:
-                            entry = ScheduleEntry(slot, best_fill, troop)
+                            entry = ScheduleEntry(time_slot=slot, activity= best_fill, troop= troop)
                             self.schedule.entries.append(entry)
                             troop_activities.add(best_fill.name)
                             print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {best_fill.name}")
@@ -13329,7 +12957,7 @@ class ConstrainedScheduler(
                             for activity_name in fill_activities:
                                 activity = get_activity_by_name(activity_name)
                                 if activity and self._can_schedule(troop, activity, slot, day):
-                                    entry = ScheduleEntry(slot, activity, troop)
+                                    entry = ScheduleEntry(time_slot=slot, activity= activity, troop= troop)
                                     self.schedule.entries.append(entry)
                                     print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity_name} [DUPLICATE]")
                                     filled = True
@@ -13341,7 +12969,7 @@ class ConstrainedScheduler(
                                 if activity.name in ['Delta', 'Super Troop', 'Reflection']:
                                     continue  # Skip mandatory/special activities
                                 if self._can_schedule(troop, activity, slot, day):
-                                    entry = ScheduleEntry(slot, activity, troop)
+                                    entry = ScheduleEntry(time_slot=slot, activity= activity, troop= troop)
                                     self.schedule.entries.append(entry)
                                     print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity.name} [LAST RESORT]")
                                     filled = True
@@ -13354,7 +12982,7 @@ class ConstrainedScheduler(
                                     continue
                                 # Try with relaxed constraints
                                 if self._can_schedule(troop, activity, slot, day, relax_constraints=True):
-                                    entry = ScheduleEntry(slot, activity, troop)
+                                    entry = ScheduleEntry(time_slot=slot, activity= activity, troop= troop)
                                     self.schedule.entries.append(entry)
                                     print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity.name} [RELAXED CONSTRAINTS]")
                                     filled = True
@@ -13836,7 +13464,7 @@ class ConstrainedScheduler(
     
     def _standard_clustering_optimization(self, IGNORED):
         """Standard clustering optimization for isolated activities."""
-        from .models import EXCLUSIVE_AREAS, Day
+        from .models import Day
         
         candidates = []
         
@@ -13935,7 +13563,7 @@ class ConstrainedScheduler(
     
     def _aggressive_area_clustering(self, IGNORED):
         """Aggressive area-based clustering consolidation."""
-        from .models import EXCLUSIVE_AREAS, Day
+        from .models import Day
         
         total_moves = 0
         
@@ -13985,7 +13613,7 @@ class ConstrainedScheduler(
     
     def _force_cluster_consolidation(self):
         """Force consolidation of badly clustered activities."""
-        from .models import EXCLUSIVE_AREAS, Day
+        from .models import Day
         
         total_forced = 0
         
@@ -14035,7 +13663,7 @@ class ConstrainedScheduler(
         This method aggressively moves cluster activities from excess days to consolidate
         them into the minimum required number of days, reducing excess cluster day penalties.
         """
-        from .models import EXCLUSIVE_AREAS, Day
+        from .models import Day
         import math
         
         total_consolidated = 0
@@ -14141,7 +13769,7 @@ class ConstrainedScheduler(
         - NEW: Smart activity prioritization to protect high-value activities
         - NEW: Better cross-day consolidation logic
         """
-        from .models import EXCLUSIVE_AREAS, Day
+        from .models import Day
         import math
         
         ultra_moves = 0
@@ -14258,13 +13886,13 @@ class ConstrainedScheduler(
         FIX 2026-01-30: Use strict constraint checking (not relaxed) and
         add post-swap validation to prevent wet/dry pattern violations.
         """
-        from .models import EXCLUSIVE_AREAS, Day
+        from .models import Day
         import math
         
         swaps_made = 0
         
         # Target cluster areas
-        cluster_areas = ["Tower", "Rifle Range", "Outdoor Skills", "Handicrafts"]
+        cluster_areas = SchedulerConstants.CLUSTER_AREAS
         
         for area in cluster_areas:
             activities = EXCLUSIVE_AREAS.get(area, [])
@@ -14445,7 +14073,7 @@ class ConstrainedScheduler(
                     replacement = self._find_suitable_replacement(entry, troop, accuracy_activities)
                     if replacement:
                         self.schedule.remove_entry(entry)
-                        new_entry = ScheduleEntry(entry.time_slot, replacement, troop)
+                        new_entry = ScheduleEntry(time_slot=entry.time_slot, activity= replacement, troop= troop)
                         self.schedule.add_entry(new_entry.time_slot, new_entry.activity, new_entry.troop)
                         fixed += 1
                         print(f"        [Accuracy] Replaced {entry.activity.name} with {replacement.name}")
@@ -14492,7 +14120,7 @@ class ConstrainedScheduler(
                                             time_slot = ts
                                             break
                                     if time_slot:
-                                        new_entry = ScheduleEntry(time_slot, wet_replacement, troop)
+                                        new_entry = ScheduleEntry(time_slot=time_slot, activity= wet_replacement, troop= troop)
                                         self.schedule.add_entry(time_slot, wet_replacement, troop)
                                         fixed += 1
                                         print(f"        [Wet-Dry] Fixed {troop.name} {day.name}: {middle_entry.activity.name} -> {wet_replacement.name}")
@@ -14506,7 +14134,7 @@ class ConstrainedScheduler(
         
         FIX 2026-01-30: Added missing method that was called but not implemented.
         """
-        from .models import EXCLUSIVE_AREAS
+        # EXCLUSIVE_AREAS already at module scope
         
         print("      [Same Area] Checking same area same day conflicts...")
         fixed = 0
@@ -14682,7 +14310,7 @@ class ConstrainedScheduler(
                                         time_slot = ts
                                         break
                                 if time_slot:
-                                    new_entry = ScheduleEntry(time_slot, replacement, troop)
+                                    new_entry = ScheduleEntry(time_slot=time_slot, activity= replacement, troop= troop)
                                     self.schedule.add_entry(time_slot, replacement, troop)
                                     fixed += 1
                                     print(f"        [Same Area] Fixed {troop.name} {day.name}: {entry.activity.name} -> {replacement.name}")
@@ -14848,7 +14476,7 @@ class ConstrainedScheduler(
                             replacement = self._find_capacity_replacement(entry, day, slot)
                             if replacement:
                                 self.schedule.remove_entry(entry)
-                                new_entry = ScheduleEntry(time_slot, replacement, entry.troop)
+                                new_entry = ScheduleEntry(time_slot=time_slot, activity= replacement, troop= entry.troop)
                                 self.schedule.add_entry(time_slot, replacement, entry.troop)
                                 fixed += 1
                                 print(f"        [Capacity] Moved {entry.troop.name} from {activity_name} to {replacement.name}")
@@ -14933,7 +14561,7 @@ class ConstrainedScheduler(
         print("      [Exclusive] Checking exclusive area conflicts...")
         fixed = 0
         
-        from .models import EXCLUSIVE_AREAS
+        # EXCLUSIVE_AREAS already at module scope
         
         for area, activities in EXCLUSIVE_AREAS.items():
             # Check each time slot for exclusive area conflicts
@@ -15540,8 +15168,8 @@ class ConstrainedScheduler(
         
         # Conservative clustering - only move activities that won't affect constraints
         try:
-            from .models import EXCLUSIVE_AREAS
-        except ImportError:
+            _exclusive = EXCLUSIVE_AREAS
+        except NameError:
             print("        [Safe Clustering] Skipped - EXCLUSIVE_AREAS not available")
             return 0
         
@@ -15651,7 +15279,7 @@ class ConstrainedScheduler(
         - NEW: Better prioritization of target consolidation days
         - NEW: More aggressive swap attempts
         """
-        from .models import EXCLUSIVE_AREAS, Day
+        from .models import Day
         import math
         
         swaps_made = 0

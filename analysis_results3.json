@@ -1,0 +1,140 @@
+[
+  {
+    "week": "tc_week1_troops",
+    "score": 851,
+    "hard": 0,
+    "soft": 0,
+    "top5": 100.0,
+    "top10": 95.0,
+    "gaps": 0,
+    "hard_details": [],
+    "soft_details": []
+  },
+  {
+    "week": "tc_week2_troops",
+    "score": 886,
+    "hard": 0,
+    "soft": 0,
+    "top5": 93.33333333333333,
+    "top10": 96.42857142857143,
+    "gaps": 0,
+    "hard_details": [],
+    "soft_details": []
+  },
+  {
+    "week": "tc_week3_troops",
+    "score": 977,
+    "hard": 0,
+    "soft": 1,
+    "top5": 95.55555555555556,
+    "top10": 92.04545454545455,
+    "gaps": 0,
+    "hard_details": [],
+    "soft_details": [
+      "Samoset: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday"
+    ]
+  },
+  {
+    "week": "tc_week4_troops",
+    "score": 819,
+    "hard": 0,
+    "soft": 1,
+    "top5": 92.72727272727273,
+    "top10": 90.9090909090909,
+    "gaps": 0,
+    "hard_details": [],
+    "soft_details": [
+      "Taskalusa: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday"
+    ]
+  },
+  {
+    "week": "tc_week5_troops",
+    "score": 825,
+    "hard": 0,
+    "soft": 3,
+    "top5": 96.36363636363636,
+    "top10": 85.45454545454545,
+    "gaps": 0,
+    "hard_details": [],
+    "soft_details": [
+      "Tamanend: Aqua Trampoline in Slot 2 (small troop) on Wednesday",
+      "Joseph: Beach activity 'Aqua Trampoline' in Slot 2 (not Top 5) on Friday",
+      "Pontiac: Trading Post + Shower House on same day (Wednesday)"
+    ]
+  },
+  {
+    "week": "tc_week6_troops",
+    "score": -1000,
+    "hard": 1,
+    "soft": 5,
+    "top5": 100.0,
+    "top10": 90.0,
+    "gaps": 0,
+    "hard_details": [
+      "Exclusive double-book: Super Troop on Wednesday Slot 3 (2 troops)"
+    ],
+    "soft_details": [
+      "Tamanend: Aqua Trampoline in Slot 2 (small troop) on Monday",
+      "Tecumseh: Aqua Trampoline in Slot 2 (small troop) on Tuesday",
+      "Tecumseh: Wet->Tower/ODS transition on Tuesday (Slot 2->3)",
+      "Red Cloud: Wet->Tower/ODS transition on Monday (Slot 1->2)",
+      "Tecumseh: Shower House before Troop Swim on Monday"
+    ]
+  },
+  {
+    "week": "tc_week7_troops",
+    "score": -1000,
+    "hard": 1,
+    "soft": 1,
+    "top5": 100.0,
+    "top10": 90.9090909090909,
+    "gaps": 0,
+    "hard_details": [
+      "Powhatan: Delta adjacent to Tower/ODS on Tuesday"
+    ],
+    "soft_details": [
+      "Roman Nose: Beach activity 'Water Polo' in Slot 2 (not Top 5) on Wednesday"
+    ]
+  },
+  {
+    "week": "tc_week8_troops",
+    "score": 806,
+    "hard": 0,
+    "soft": 0,
+    "top5": 95.0,
+    "top10": 80.0,
+    "gaps": 0,
+    "hard_details": [],
+    "soft_details": []
+  },
+  {
+    "week": "voyageur_week1_troops",
+    "score": 995,
+    "hard": 0,
+    "soft": 1,
+    "top5": 98.0,
+    "top10": 93.81443298969072,
+    "gaps": 0,
+    "hard_details": [],
+    "soft_details": [
+      "Fond Du Lac: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Tuesday"
+    ]
+  },
+  {
+    "week": "voyageur_week3_troops",
+    "score": -1000,
+    "hard": 2,
+    "soft": 2,
+    "top5": 97.5,
+    "top10": 86.25,
+    "gaps": 0,
+    "hard_details": [
+      "Fond Du Lac: Delta adjacent to Tower/ODS on Thursday",
+      "Exclusive double-book: 9 Square on Monday Slot 3 (2 troops)"
+    ],
+    "soft_details": [
+      "Ft. Francis: Trading Post + Shower House on same day (Friday)",
+      "Fond Du Lac: Trading Post + Campsite Free Time on same day (Wednesday)"
+    ]
+  }
+]

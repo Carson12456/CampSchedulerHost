@@ -99,7 +99,7 @@ def load_schedule_from_json(schedule_file):
                 if not time_slot: missing.append(f"Slot: {entry_data.get('day')}-{entry_data.get('slot')}")
                 raise ValueError(f"Invalid schedule entry data: {', '.join(missing)}")
                 
-            entry = ScheduleEntry(time_slot, activity, troop)
+            entry = ScheduleEntry(time_slot=time_slot, activity=activity, troop=troop)
             schedule.entries.append(entry)
         except Exception as e:
             raise ValueError(f"Error processing schedule entry: {e}")

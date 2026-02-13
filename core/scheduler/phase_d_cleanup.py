@@ -11,9 +11,10 @@ Contains methods for Phase D of the scheduling algorithm:
 """
 
 from collections import defaultdict
-from ..models import Day, TimeSlot, ScheduleEntry, generate_time_slots, EXCLUSIVE_AREAS
+from ..models import Day, TimeSlot, ScheduleEntry, generate_time_slots
 from ..activities import get_activity_by_name
 from .constants import SchedulerConstants
+from . import config_loader
 
 
 class PhaseDCleanupMixin:
@@ -38,7 +39,7 @@ class PhaseDCleanupMixin:
         # Staff-intensive activities that benefit from clustering
         cluster_activities = []
         for area in ["Tower", "Outdoor Skills", "Archery"]:
-            cluster_activities.extend(EXCLUSIVE_AREAS.get(area, []))
+            cluster_activities.extend(config_loader.get_exclusive_areas().get(area, []))
         
         print("  Optimizing Friday Reflection placement for clustering...")
         
@@ -120,8 +121,8 @@ class PhaseDCleanupMixin:
         ]
         
         # Add swapped entries
-        self.schedule.entries.append(ScheduleEntry(slot2, reflection, troop1))
-        self.schedule.entries.append(ScheduleEntry(slot1, reflection, troop2))
+        self.schedule.entries.append(ScheduleEntry(time_slot=slot2, activity=reflection, troop=troop1))
+        self.schedule.entries.append(ScheduleEntry(time_slot=slot1, activity=reflection, troop=troop2))
     
     # =========================================================================
     # D.2: COMPREHENSIVE CLUSTERING OPTIMIZATION
@@ -340,7 +341,7 @@ class PhaseDCleanupMixin:
                 if target_slot_num > 2 and day == Day.THURSDAY:
                     continue  # Thursday only has 2 slots
                 
-                new_time_slot = TimeSlot(day, target_slot_num)
+                new_time_slot = TimeSlot(day=day, slot_number=target_slot_num)
                 
                 # Check if move is valid
                 if (self.schedule.is_troop_free(new_time_slot, troop) and

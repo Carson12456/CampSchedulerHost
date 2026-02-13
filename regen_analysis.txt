@@ -1,0 +1,25 @@
+﻿tc_week1_troops           Scr=   851 H=0 S= 0 T5=100.0% T10= 95.0% G=0 
+tc_week2_troops           Scr=   886 H=0 S= 0 T5= 93.3% T10= 96.4% G=0 
+tc_week3_troops           Scr= -1000 H=1 S= 2 T5= 95.6% T10= 90.9% G=0 ***
+  HARD: Black Hawk: Delta adjacent to Tower/ODS on Thursday
+  SOFT: Samoset: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday
+  SOFT: Pontiac: Beach activity 'Troop Swim' in Slot 2 (not Top 5) on Wednesday
+tc_week4_troops           Scr=   819 H=0 S= 1 T5= 92.7% T10= 90.9% G=0 
+  SOFT: Taskalusa: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday
+tc_week5_troops           Scr=   871 H=0 S= 3 T5= 96.4% T10= 87.3% G=0 
+  SOFT: Tamanend: Aqua Trampoline in Slot 2 (small troop) on Wednesday
+  SOFT: Tecumseh: Beach activity 'Troop Swim' in Slot 2 (not Top 5) on Wednesday
+  SOFT: Pontiac: Trading Post + Shower House on same day (Wednesday)
+tc_week6_troops           Scr=   888 H=0 S= 0 T5=100.0% T10= 90.0% G=0 
+tc_week7_troops           Scr=   873 H=0 S= 2 T5=100.0% T10= 92.7% G=0 
+  SOFT: Roman Nose: Beach activity 'Water Polo' in Slot 2 (not Top 5) on Wednesday
+  SOFT: Powhatan: Multiple accuracy activities on Friday (Troop Shotgun, Archery)
+tc_week8_troops           Scr=   806 H=0 S= 0 T5= 95.0% T10= 80.0% G=0 
+voyageur_week1_troops     Scr=  1012 H=0 S= 1 T5= 98.0% T10= 93.8% G=0 
+  SOFT: Fond Du Lac: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Tuesday
+voyageur_week3_troops     Scr= -1000 H=2 S= 2 T5= 97.5% T10= 86.2% G=0 ***
+  HARD: Fond Du Lac: Delta adjacent to Tower/ODS on Thursday
+  HARD: Exclusive double-book: 9 Square on Monday Slot 3 (2 troops)
+  SOFT: Ft. Francis: Trading Post + Shower House on same day (Friday)
+  SOFT: Fond Du Lac: Trading Post + Campsite Free Time on same day (Wednesday)
+TOTAL Hard=3 Soft=11

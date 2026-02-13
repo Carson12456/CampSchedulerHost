@@ -9,71 +9,71 @@ def get_all_activities() -> list[Activity]:
     
     activities = [
         # Beach Zone - Unstaffed
-        Activity("9 Square", 1, Zone.BEACH),
-        Activity("Gaga Ball", 1, Zone.BEACH),
-        Activity("Fishing", 1, Zone.BEACH),
-        Activity("Sauna", 1, Zone.BEACH),
-        Activity("Shower House", 1, Zone.BEACH),
-        Activity("Trading Post", 1, Zone.BEACH),
+        Activity(name="9 Square", slots=1, zone=Zone.BEACH),
+        Activity(name="Gaga Ball", slots=1, zone=Zone.BEACH),
+        Activity(name="Fishing", slots=1, zone=Zone.BEACH),
+        Activity(name="Sauna", slots=1, zone=Zone.BEACH),
+        Activity(name="Shower House", slots=1, zone=Zone.BEACH),
+        Activity(name="Trading Post", slots=1, zone=Zone.BEACH),
         
         # Beach Zone - Staffed (2+ beach staff)
-        Activity("Aqua Trampoline", 1, Zone.BEACH, "Beach Staff"),
-        Activity("Troop Canoe", 1, Zone.BEACH, "Beach Staff"),
-        Activity("Troop Kayak", 1, Zone.BEACH, "Beach Staff"),
-        Activity("Canoe Snorkel", 2, Zone.BEACH, "Beach Staff"),
-        Activity("Float for Floats", 2, Zone.BEACH, "Beach Staff"),
-        Activity("Greased Watermelon", 1, Zone.BEACH, "Beach Staff"),
-        Activity("Underwater Obstacle Course", 1, Zone.BEACH, "Beach Staff", ["Troop Swim"]),
-        Activity("Troop Swim", 1, Zone.BEACH, "Beach Staff", ["Underwater Obstacle Course"]),
-        Activity("Water Polo", 1, Zone.BEACH, "Beach Staff"),
-        Activity("Nature Canoe", 1, Zone.BEACH, "Nature Director"),
+        Activity(name="Aqua Trampoline", slots=1, zone=Zone.BEACH, staff="Beach Staff"),
+        Activity(name="Troop Canoe", slots=1, zone=Zone.BEACH, staff="Beach Staff"),
+        Activity(name="Troop Kayak", slots=1, zone=Zone.BEACH, staff="Beach Staff"),
+        Activity(name="Canoe Snorkel", slots=2, zone=Zone.BEACH, staff="Beach Staff"),
+        Activity(name="Float for Floats", slots=2, zone=Zone.BEACH, staff="Beach Staff"),
+        Activity(name="Greased Watermelon", slots=1, zone=Zone.BEACH, staff="Beach Staff"),
+        Activity(name="Underwater Obstacle Course", slots=1, zone=Zone.BEACH, staff="Beach Staff", conflicts_with=["Troop Swim"]),
+        Activity(name="Troop Swim", slots=1, zone=Zone.BEACH, staff="Beach Staff", conflicts_with=["Underwater Obstacle Course"]),
+        Activity(name="Water Polo", slots=1, zone=Zone.BEACH, staff="Beach Staff"),
+        Activity(name="Nature Canoe", slots=1, zone=Zone.BEACH, staff="Nature Director"),
         
         # Beach Zone - Director staffed
-        Activity("Sailing", 1.5, Zone.BEACH, "Boats Director"),  # 1.5 slots = 90 min
-        Activity("Dr. DNA", 1, Zone.BEACH, "Nature Director"),
-        Activity("Loon Lore", 1, Zone.BEACH, "Nature Director"),
-        Activity("Hemp Craft", 1, Zone.BEACH, "Handicrafts Director"),
-        Activity("Monkey's Fist", 1, Zone.BEACH, "Handicrafts Director"),
-        Activity("Tie Dye", 1, Zone.BEACH, "Handicrafts Director"),
-        Activity("Woggle Neckerchief Slide", 1, Zone.BEACH, "Handicrafts Director"),
-        Activity("Archery", 1, Zone.BEACH, "Commissioner"),
-        Activity("Troop Rifle", 1, Zone.BEACH, "Shooting Sports Director", ["Troop Shotgun"]),
-        Activity("Troop Shotgun", 1, Zone.BEACH, "Shooting Sports Director", ["Troop Rifle"]),
+        Activity(name="Sailing", slots=1.5, zone=Zone.BEACH, staff="Boats Director"),  # 1.5 slots = 90 min
+        Activity(name="Dr. DNA", slots=1, zone=Zone.BEACH, staff="Nature Director"),
+        Activity(name="Loon Lore", slots=1, zone=Zone.BEACH, staff="Nature Director"),
+        Activity(name="Hemp Craft", slots=1, zone=Zone.BEACH, staff="Handicrafts Director"),
+        Activity(name="Monkey's Fist", slots=1, zone=Zone.BEACH, staff="Handicrafts Director"),
+        Activity(name="Tie Dye", slots=1, zone=Zone.BEACH, staff="Handicrafts Director"),
+        Activity(name="Woggle Neckerchief Slide", slots=1, zone=Zone.BEACH, staff="Handicrafts Director"),
+        Activity(name="Archery", slots=1, zone=Zone.BEACH, staff="Commissioner"),
+        Activity(name="Troop Rifle", slots=1, zone=Zone.BEACH, staff="Shooting Sports Director", conflicts_with=["Troop Shotgun"]),
+        Activity(name="Troop Shotgun", slots=1, zone=Zone.BEACH, staff="Shooting Sports Director", conflicts_with=["Troop Rifle"]),
         
         # Tower Zone
-        Activity("Climbing Tower", 1, Zone.TOWER, "Climbing Tower Director"),  # Duration varies by troop size
+        Activity(name="Climbing Tower", slots=1, zone=Zone.TOWER, staff="Climbing Tower Director"),  # Duration varies by troop size
         
         # Outdoor Skills Zone
-        Activity("Chopped!", 1, Zone.OUTDOOR_SKILLS, "Outdoor Skills Director"),
-        Activity("GPS & Geocaching", 1, Zone.OUTDOOR_SKILLS, "Outdoor Skills Director"),
-        Activity("Knots and Lashings", 1, Zone.OUTDOOR_SKILLS, "Outdoor Skills Director"),
-        Activity("Orienteering", 1, Zone.OUTDOOR_SKILLS, "Outdoor Skills Director"),
-        Activity("Ultimate Survivor", 1, Zone.OUTDOOR_SKILLS, "Outdoor Skills Director"),
-        Activity("What's Cooking", 1, Zone.OUTDOOR_SKILLS, "Outdoor Skills Director"),
+        Activity(name="Chopped!", slots=1, zone=Zone.OUTDOOR_SKILLS, staff="Outdoor Skills Director"),
+        Activity(name="GPS & Geocaching", slots=1, zone=Zone.OUTDOOR_SKILLS, staff="Outdoor Skills Director"),
+        Activity(name="Knots and Lashings", slots=1, zone=Zone.OUTDOOR_SKILLS, staff="Outdoor Skills Director"),
+        Activity(name="Orienteering", slots=1, zone=Zone.OUTDOOR_SKILLS, staff="Outdoor Skills Director"),
+        Activity(name="Ultimate Survivor", slots=1, zone=Zone.OUTDOOR_SKILLS, staff="Outdoor Skills Director"),
+        Activity(name="What's Cooking", slots=1, zone=Zone.OUTDOOR_SKILLS, staff="Outdoor Skills Director"),
         
         # Delta Zone
-        Activity("Delta", 1, Zone.DELTA, "Commissioner"),
+        Activity(name="Delta", slots=1, zone=Zone.DELTA, staff="Commissioner"),
         
         # Trading Post
-        Activity("Super Troop", 1, Zone.BEACH, "Commissioner"),  # Ideally Commissioner
+        Activity(name="Super Troop", slots=1, zone=Zone.BEACH, staff="Commissioner"),  # Ideally Commissioner
         
         # Off-camp
-        Activity("Back of the Moon", 3, Zone.OFF_CAMP, "Staff"),
-        Activity("Disc Golf", 1, Zone.OFF_CAMP),
-        Activity("Itasca State Park", 3, Zone.OFF_CAMP),
-        Activity("Tamarac Wildlife Refuge", 3, Zone.OFF_CAMP),
+        Activity(name="Back of the Moon", slots=3, zone=Zone.OFF_CAMP, staff="Staff"),
+        Activity(name="Disc Golf", slots=1, zone=Zone.OFF_CAMP),
+        Activity(name="Itasca State Park", slots=3, zone=Zone.OFF_CAMP),
+        Activity(name="Tamarac Wildlife Refuge", slots=3, zone=Zone.OFF_CAMP),
         
         # Campsite
-        Activity("Campsite Free Time", 1, Zone.CAMPSITE),
-        Activity("Reflection", 1, Zone.CAMPSITE, "Commissioner"),  # Friday only
+        Activity(name="Campsite Free Time", slots=1, zone=Zone.CAMPSITE),
+        Activity(name="Reflection", slots=1, zone=Zone.CAMPSITE, staff="Commissioner"),  # Friday only
         
         # Other
-        Activity("History Center", 1, Zone.OFF_CAMP),  # Off-camp location
+        Activity(name="History Center", slots=1, zone=Zone.OFF_CAMP),  # Off-camp location
         
         # Nature Activities (Nature Director)
-        Activity("Ecosystem in a Jar", 1, Zone.BEACH, "Nature Director"),
-        Activity("Nature Salad", 1, Zone.BEACH, "Nature Director"),
-        Activity("Nature Bingo", 1, Zone.BEACH, "Nature Director"),
+        Activity(name="Ecosystem in a Jar", slots=1, zone=Zone.BEACH, staff="Nature Director"),
+        Activity(name="Nature Salad", slots=1, zone=Zone.BEACH, staff="Nature Director"),
+        Activity(name="Nature Bingo", slots=1, zone=Zone.BEACH, staff="Nature Director"),
     ]
     
     return activities

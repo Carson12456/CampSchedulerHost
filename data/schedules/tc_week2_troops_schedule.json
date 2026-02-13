@@ -1,10 +1,10 @@
 {
-  "week_id": "tc_week2_troops",
   "troops": [
     {
       "name": "Taskalusa",
       "scouts": 7,
       "adults": 2,
+      "campsite": "Taskalusa",
       "commissioner": "Commissioner C",
       "preferences": [
         "Aqua Trampoline",
@@ -25,12 +25,14 @@
         "Troop Swim",
         "Tamarac Wildlife Refuge",
         "Dr. DNA"
-      ]
+      ],
+      "day_requests": {}
     },
     {
       "name": "Massasoit",
       "scouts": 12,
       "adults": 1,
+      "campsite": "Massasoit",
       "commissioner": "Commissioner A",
       "preferences": [
         "Sauna",
@@ -41,12 +43,14 @@
         "Delta",
         "Monkey's Fist",
         "Hemp Craft"
-      ]
+      ],
+      "day_requests": {}
     },
     {
       "name": "Black Hawk",
       "scouts": 22,
       "adults": 2,
+      "campsite": "Black Hawk",
       "commissioner": "Commissioner B",
       "preferences": [
         "Aqua Trampoline",
@@ -67,7 +71,8 @@
         "GPS & Geocaching",
         "Loon Lore",
         "Troop Shotgun"
-      ]
+      ],
+      "day_requests": {}
     }
   ],
   "entries": [
@@ -92,12 +97,6 @@
     {
       "troop_name": "Massasoit",
       "activity_name": "Super Troop",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Disc Golf",
       "day": "TUESDAY",
       "slot": 1
     },
@@ -128,32 +127,32 @@
     {
       "troop_name": "Massasoit",
       "activity_name": "Canoe Snorkel",
-      "day": "THURSDAY",
-      "slot": 1
+      "day": "TUESDAY",
+      "slot": 2
     },
     {
       "troop_name": "Massasoit",
       "activity_name": "Canoe Snorkel",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Float for Floats",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Float for Floats",
       "day": "THURSDAY",
       "slot": 2
     },
     {
-      "troop_name": "Black Hawk",
-      "activity_name": "Float for Floats",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Float for Floats",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Massasoit",
       "activity_name": "What's Cooking",
       "day": "MONDAY",
-      "slot": 3
+      "slot": 2
     },
     {
       "troop_name": "Taskalusa",
@@ -166,12 +165,6 @@
       "activity_name": "Monkey's Fist",
       "day": "MONDAY",
       "slot": 2
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Monkey's Fist",
-      "day": "TUESDAY",
-      "slot": 1
     },
     {
       "troop_name": "Massasoit",
@@ -182,13 +175,13 @@
     {
       "troop_name": "Black Hawk",
       "activity_name": "Archery",
-      "day": "WEDNESDAY",
-      "slot": 3
+      "day": "TUESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Massasoit",
       "activity_name": "Archery",
-      "day": "FRIDAY",
+      "day": "WEDNESDAY",
       "slot": 2
     },
     {
@@ -207,30 +200,48 @@
       "troop_name": "Taskalusa",
       "activity_name": "Campsite Free Time",
       "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Climbing Tower",
+      "day": "THURSDAY",
       "slot": 2
     },
     {
       "troop_name": "Massasoit",
       "activity_name": "Sauna",
-      "day": "FRIDAY",
+      "day": "WEDNESDAY",
       "slot": 3
     },
     {
       "troop_name": "Massasoit",
       "activity_name": "Delta",
-      "day": "TUESDAY",
+      "day": "FRIDAY",
       "slot": 2
     },
     {
       "troop_name": "Massasoit",
       "activity_name": "Gaga Ball",
-      "day": "WEDNESDAY",
-      "slot": 2
+      "day": "FRIDAY",
+      "slot": 3
     },
     {
       "troop_name": "Massasoit",
-      "activity_name": "Fishing",
-      "day": "WEDNESDAY",
+      "activity_name": "9 Square",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Campsite Free Time",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Campsite Free Time",
+      "day": "TUESDAY",
       "slot": 3
     },
     {
@@ -247,32 +258,26 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Campsite Free Time",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "Tie Dye",
-      "day": "THURSDAY",
+      "day": "TUESDAY",
       "slot": 2
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Shower House",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "9 Square",
-      "day": "TUESDAY",
+      "day": "MONDAY",
       "slot": 2
     },
     {
       "troop_name": "Taskalusa",
       "activity_name": "Archery",
-      "day": "THURSDAY",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Disc Golf",
+      "day": "TUESDAY",
       "slot": 1
     },
     {
@@ -283,14 +288,14 @@
     },
     {
       "troop_name": "Massasoit",
-      "activity_name": "Campsite Free Time",
-      "day": "TUESDAY",
+      "activity_name": "Monkey's Fist",
+      "day": "MONDAY",
       "slot": 3
     },
     {
       "troop_name": "Black Hawk",
       "activity_name": "Troop Rifle",
-      "day": "TUESDAY",
+      "day": "MONDAY",
       "slot": 3
     },
     {
@@ -302,8 +307,14 @@
     {
       "troop_name": "Taskalusa",
       "activity_name": "Super Troop",
-      "day": "FRIDAY",
-      "slot": 2
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Shower House",
+      "day": "WEDNESDAY",
+      "slot": 3
     },
     {
       "troop_name": "Black Hawk",
@@ -316,24 +327,7 @@
       "activity_name": "Troop Canoe",
       "day": "WEDNESDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 1
     }
   ],
-  "unscheduled": {
-    "Black Hawk": {
-      "top5": [
-        {
-          "name": "Climbing Tower",
-          "rank": 4,
-          "is_exempt": false
-        }
-      ],
-      "top10": []
-    }
-  }
+  "unscheduled": {}
 }

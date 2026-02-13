@@ -173,9 +173,11 @@ class PhaseCOptimizationMixin:
                     if not activity:
                         continue
                     
-                    # Basic constraint check
-                    if activity.name in ["Climbing Tower", "Troop Rifle", "Troop Shotgun", "Archery"]:
-                        # Check exclusivity
+                    
+                    # Basic constraint check - ensure exclusive activities aren't double-booked
+                    if activity.name in SchedulerConstants.EXCLUSIVE_ACTIVITIES:
+                        # Check exclusivity: Is ANY execution of this activity already scheduled in this slot?
+                        # NOTE: This enforces 1-per-slot for ALL exclusive activities (Tower, Rifle, Archery, ODS stations etc)
                         blocked = any(
                             e.time_slot == slot and e.activity.name == activity.name
                             for e in self.schedule.entries
