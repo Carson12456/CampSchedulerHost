@@ -287,17 +287,14 @@ class ConstrainedScheduler(
             # Delta vs ODS is now handled as SAME DAY conflict (checked in _can_schedule)
         
         # ODS activities list for easy checking
-        self.ODS_ACTIVITIES = {'Knots and Lashings', 'Orienteering', 'GPS & Geocaching',
-                               'Ultimate Survivor', "What's Cooking", 'Chopped!'}
+        self.ODS_ACTIVITIES = SchedulerConstants.ODS_ACTIVITIES
         
         # === FILL ACTIVITIES ===
         # Low-priority activities used to fill gaps, can be swapped freely for clustering
-        self.FILL_ACTIVITIES = {'Gaga Ball', '9 Square', 'Campsite Free Time','Trading Post', 
-                                'Shower House', 'Sauna', 'Aqua Trampoline', 'Water Polo', 
-                                'Greased Watermelon', 'Nature Canoe', 'Dr. DNA', 'Loon Lore' }
+        self.FILL_ACTIVITIES = SchedulerConstants.FILL_ACTIVITIES
                                 
         # Concurrent activities (can have multiple troops)
-        self.CONCURRENT_ACTIVITIES = {'Reflection', 'Campsite Free Time'}
+        self.CONCURRENT_ACTIVITIES = SchedulerConstants.CONCURRENT_ACTIVITIES
 
 
     

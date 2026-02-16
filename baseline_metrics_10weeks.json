@@ -1,0 +1,279 @@
+{
+  "timestamp": "C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampScheduler\\summer-camp-scheduler",
+  "season_success_rate": 100.0,
+  "total_top5_slots": 0,
+  "total_exempt_misses": 0,
+  "total_counted_misses": 0,
+  "weeks_with_issues": 0,
+  "week_details": {
+    "tc_week1_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week3_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week4_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week5_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week6_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week7_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week1_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_troops": {
+      "total_troops": 0,
+      "total_top5_slots": 0,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    }
+  },
+  "target_weeks": [
+    "tc_week1_troops",
+    "tc_week2_troops",
+    "tc_week3_troops",
+    "tc_week4_troops",
+    "tc_week5_troops",
+    "tc_week6_troops",
+    "tc_week7_troops",
+    "tc_week8_troops",
+    "voyageur_week1_troops",
+    "voyageur_week3_troops"
+  ],
+  "quality_metrics": {
+    "average_week_score": 315.9,
+    "average_constraint_violations": 2.1,
+    "average_staff_variance": 1.560204081632653,
+    "average_clustering_efficiency": 5.0,
+    "average_beach_slot_violations": 1.9,
+    "week_details": [
+      {
+        "week_name": "tc_week1_troops",
+        "total_score": 851,
+        "preference_score": 427.2,
+        "constraint_violations": 0,
+        "staff_variance": 2.0255102040816326,
+        "clustering_efficiency": 6,
+        "beach_slot_2_violations": 1,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [],
+        "top5_pct": 100.0,
+        "top10_pct": 95.0
+      },
+      {
+        "week_name": "tc_week2_troops",
+        "total_score": 886,
+        "preference_score": 441.4,
+        "constraint_violations": 0,
+        "staff_variance": 0.7806122448979592,
+        "clustering_efficiency": 2,
+        "beach_slot_2_violations": 1,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [],
+        "top5_pct": 93.33333333333333,
+        "top10_pct": 96.42857142857143
+      },
+      {
+        "week_name": "tc_week3_troops",
+        "total_score": 977,
+        "preference_score": 411.5,
+        "constraint_violations": 1,
+        "staff_variance": 0.9642857142857143,
+        "clustering_efficiency": 3,
+        "beach_slot_2_violations": 2,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Samoset: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Monday"
+        ],
+        "top5_pct": 95.55555555555556,
+        "top10_pct": 92.04545454545455
+      },
+      {
+        "week_name": "tc_week4_troops",
+        "total_score": 819,
+        "preference_score": 399.20000000000005,
+        "constraint_violations": 1,
+        "staff_variance": 1.836734693877551,
+        "clustering_efficiency": 7,
+        "beach_slot_2_violations": 3,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Taskalusa: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday"
+        ],
+        "top5_pct": 92.72727272727273,
+        "top10_pct": 90.9090909090909
+      },
+      {
+        "week_name": "tc_week5_troops",
+        "total_score": 825,
+        "preference_score": 386.0,
+        "constraint_violations": 3,
+        "staff_variance": 1.6326530612244898,
+        "clustering_efficiency": 4,
+        "beach_slot_2_violations": 4,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Tamanend: Aqua Trampoline in Slot 2 (small troop) on Wednesday",
+          "Joseph: Beach activity 'Aqua Trampoline' in Slot 2 (not Top 5) on Friday",
+          "Pontiac: Trading Post + Shower House on same day (Wednesday)"
+        ],
+        "top5_pct": 96.36363636363636,
+        "top10_pct": 85.45454545454545
+      },
+      {
+        "week_name": "tc_week6_troops",
+        "total_score": -1000,
+        "preference_score": 0,
+        "constraint_violations": 6,
+        "staff_variance": 1.9234693877551021,
+        "clustering_efficiency": 7,
+        "beach_slot_2_violations": 2,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Exclusive double-book: Super Troop on Wednesday Slot 3 (2 troops)",
+          "Tamanend: Aqua Trampoline in Slot 2 (small troop) on Monday",
+          "Tecumseh: Aqua Trampoline in Slot 2 (small troop) on Tuesday",
+          "Tecumseh: Wet->Tower/ODS transition on Tuesday (Slot 2->3)",
+          "Red Cloud: Wet->Tower/ODS transition on Monday (Slot 1->2)",
+          "Tecumseh: Shower House before Troop Swim on Monday"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 90.0
+      },
+      {
+        "week_name": "tc_week7_troops",
+        "total_score": -1000,
+        "preference_score": 0,
+        "constraint_violations": 2,
+        "staff_variance": 1.739795918367347,
+        "clustering_efficiency": 6,
+        "beach_slot_2_violations": 2,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Powhatan: Delta adjacent to Tower/ODS on Tuesday",
+          "Roman Nose: Beach activity 'Water Polo' in Slot 2 (not Top 5) on Wednesday"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 90.9090909090909
+      },
+      {
+        "week_name": "tc_week8_troops",
+        "total_score": 806,
+        "preference_score": 420.5,
+        "constraint_violations": 0,
+        "staff_variance": 0.5714285714285714,
+        "clustering_efficiency": 6,
+        "beach_slot_2_violations": 0,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [],
+        "top5_pct": 95.0,
+        "top10_pct": 80.0
+      },
+      {
+        "week_name": "voyageur_week1_troops",
+        "total_score": 995,
+        "preference_score": 421.6,
+        "constraint_violations": 1,
+        "staff_variance": 1.596938775510204,
+        "clustering_efficiency": 4,
+        "beach_slot_2_violations": 2,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Fond Du Lac: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Tuesday"
+        ],
+        "top5_pct": 98.0,
+        "top10_pct": 93.81443298969072
+      },
+      {
+        "week_name": "voyageur_week3_troops",
+        "total_score": -1000,
+        "preference_score": 0,
+        "constraint_violations": 7,
+        "staff_variance": 2.5306122448979593,
+        "clustering_efficiency": 5,
+        "beach_slot_2_violations": 2,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Exclusive double-book: Super Troop on Thursday Slot 1 (2 troops)",
+          "Hibbing 2: Aqua Trampoline in Slot 2 (small troop) on Tuesday",
+          "Hibbing 1: Tower/ODS->Wet transition on Monday (Slot 1->2)",
+          "Hibbing 2: Tower/ODS->Wet transition on Tuesday (Slot 1->2)",
+          "Hibbing 2: Wet->Tower/ODS transition on Tuesday (Slot 2->3)",
+          "Hibbing 1: Same area 'Rifle Range' twice on Wednesday",
+          "Hibbing 1: Multiple accuracy activities on Wednesday (Troop Rifle, Troop Shotgun)"
+        ],
+        "top5_pct": 95.0,
+        "top10_pct": 85.0
+      }
+    ]
+  }
+}

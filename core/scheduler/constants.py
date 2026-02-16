@@ -93,6 +93,8 @@ class SchedulerConstants:
     BEACH_ACTIVITIES = config_loader.get_activities_with_tag("beach")
     WET_ACTIVITIES = config_loader.get_activities_with_tag("wet")
     TOWER_ODS_ACTIVITIES = config_loader.get_activities_with_tag("tower_ods")
+    # Derived ODS Activities (Outdoor Skills exclusive area)
+    ODS_ACTIVITIES = set(config_loader.get_exclusive_areas().get("Outdoor Skills", []))
     ACCURACY_ACTIVITIES = config_loader.get_activities_with_tag("accuracy")
     CANOE_ACTIVITIES = config_loader.get_activities_with_tag("canoe")
     
