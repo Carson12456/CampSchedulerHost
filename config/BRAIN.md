@@ -1,6 +1,6 @@
 # 🧠 BRAIN: Central Source of Truth
 
-**Version:** 2.1.0 | **Last Updated:** 2026-02-10 | **Status:** BLUEPRINT
+**Version:** 2.1.1 | **Last Updated:** 2026-02-18 | **Status:** BLUEPRINT
 
 This document is the **System Blueprint** for the Summer Camp Scheduler. It defines the "Laws of Physics" for the scheduling engine—every constraint, rotation logic, scoring metric, and algorithmic phase is documented here.
 
@@ -79,6 +79,8 @@ Troops should NOT do these pairs on the **same day**:
 *   **Pattern:** Avoid **Wet → Dry → Wet** sandwiches.
 *   **Transition:** Avoid **Wet → Tower/ODS** (or vice versa) immediately back-to-back.
 *   **Slot Preference:** Beach activities prefer **Slot 1 or 3**.
+    *   **Prioritization Rule:** On non-Thursday days, scheduler must attempt Slot 1/3 first and use Slot 2 only as a true fallback when preferred slots are infeasible.
+    *   **2-Slot Beach Start Rule:** For `Canoe Snorkel` and `Float for Floats`, start in Slot 1 when feasible; allow Slot 2 start only when Slot 1 is not schedulable.
     *   *Exception:* Thursday allows Slot 2 for Beach.
     *   *Exception:* Sailing is always 1.5 slots (meaning it runs slot 1 and 2, then the second activity runs slot 2 and 3. This is because they only actually run for 1.5 hours but appear and are scheduled as 2 slots).
 
@@ -95,7 +97,7 @@ The scheduler aims for a perfect score of **1000**.
 | Category | Points | Logic |
 | :--- | :--- | :--- |
 | **1. Preferences** | **450** | **Base Score.** Deductions for misses, bonuses for deep hits.<br>• **Top 5 Miss:** -5.4 to -2.7 per miss (Weighted by rank).<br>• **Rank 6-14 Miss:** -2.6 to -1.2 per miss.<br>• **Rank 15-20 Hit:** +1.0 to +0.2 Bonus.<br>• **Multi-Slot Exemption:** If a troop has multi-slot activities (Sailing, 3-hr blocks), missed low-ranked items are **exempt** from penalties proportional to slots consumed. |
-| **2. Efficiency** | **250** | **Base Score.** Measures clustering and logistics.<br>• **Excess Day:** -25 pts (Spread too thin).<br>• **Cluster Gap:** -15 pts (1-x-3 pattern). |
+| **2. Efficiency** | **250** | **Base Score.** Measures clustering and logistics.<br>• **Excess Day:** -25 pts. For each cluster area, compute `required_days = ceil(total_activities / 3)`. Any day count above `required_days` is excess (spread too thin).<br>• **Cluster Gap:** -15 pts. A gap is when the same cluster area is in Slots 1 and 3, but Slot 2 is empty for that troop/day (`1, -, 3`). |
 | **3. Soft Compl.** | **150** | **Base Score.** Adherence to Soft Constraints.<br>• **Violation:** -10 pts per prohibited pair/pattern.<br>• **Beach Slot 2:** -3 pts per non-Thursday use. |
 | **4. Staff Balance** | **100** | **Base Score.** Even distribution of staff load.<br>• **Variance:** -5 pts per variance unit.<br>• **Severe Underuse:** -3 pts per dead slot. |
 | **5. Bonuses** | **50** | **Add-ons.**<br>• **AT Sharing:** +50 pts (2 small troops share AT).<br>• **Early Week:** +10 pts (Front-loading Mon/Tue).<br>• **Sailing Pairs:** +10 pts (Same-day sailing). |
@@ -144,6 +146,12 @@ The `ConstrainedScheduler` executes in specific phases to ensure priorities are 
 *   **Sailing:** Counts as **1.5 slots**. On Thursday, it consumes the whole morning (2 slots).
 *   **Water Polo:** Can accommodate **2 small troops** (<8 people) simultaneously.
 *   **Aqua Trampoline:** Can accommodate **2 small troops** (<16 people) simultaneously (Bonus +50 pts).
+
+### Clustering Metric Clarification
+*   **Excess Day Formula:** For each cluster area, `required_days = ceil(activity_count / 3)`. If an area uses more than `required_days`, each extra day counts as an excess day.
+*   **Example (Excess Day):** 7 activities -> `ceil(7/3) = 3` required days. If scheduled across 4 days, that is **1 excess day**.
+*   **Cluster Gap Definition:** A cluster gap is specifically `Slot 1 = area activity`, `Slot 2 = empty`, `Slot 3 = same area activity` for a troop/day.  
+*   **Intent:** Either fill Slot 2 appropriately or move one of the outer activities toward Slot 2 to avoid fragmented same-day clustering.
 
 ### Scoring Exemptions
 *   **Activity Duplication:** If a troop requests multiple 3-hour activities (e.g., Tamarac & Itasca), successfully scheduling ONE exempts the others from "Missed Preference" penalties.

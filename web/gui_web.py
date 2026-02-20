@@ -3,10 +3,11 @@ Web-based GUI for Summer Camp Scheduler using Flask.
 This generates an HTML interface that properly displays 1.5-slot activities.
 yaya
 """
-from flask import Flask, render_template, send_from_directory, request, jsonify
+from flask import Flask, render_template, send_from_directory, request, jsonify, Response
 from pathlib import Path
 import json
 import sys
+from datetime import datetime
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -299,9 +300,10 @@ def index():
     
     # Create week_data mapping for dropdown display (use metadata, not loaded data)
     week_data_display = {week_id: meta['week_number'] for week_id, meta in WEEK_METADATA.items()}
+    serialized_troops = [troop.model_dump(mode='json') for troop in data['troops']]
     
     return render_template('index.html', 
-                         troops=data['troops'],
+                         troops=serialized_troops,
                          time_slots=time_slots,
                          week_number=data['week_number'],
                          available_weeks=available_weeks,
@@ -329,6 +331,7 @@ def get_evaluation(week_id):
         # evaluate_week expects filename like tc_week5_troops.json (relative or absolute)
         week_file_path = str(troops_file)
         metrics = evaluate_week(week_file_path)
+        score_components = metrics.get('score_components', {}) or {}
         return jsonify({
             'final_score': metrics.get('final_score', 0),
             'constraint_violations': metrics.get('constraint_violations', 0),
@@ -337,7 +340,473 @@ def get_evaluation(week_id):
             'schedule_invalid': metrics.get('schedule_invalid', False),
             'missing_top5': metrics.get('missing_top5', 0),
             'top5_pct': metrics.get('top5_pct', 0),
+            'score_components': score_components,
+            'component_summary': {
+                'preference_points': score_components.get('preference_points', 0),
+                'cluster_efficiency_points': score_components.get('cluster_efficiency_points', 0),
+                'soft_constraint_points': score_components.get('soft_constraint_points', 0),
+                'staff_balance_points': score_components.get('staff_balance_points', 0),
+                'bonuses_points': (
+                    score_components.get('early_week_points', 0)
+                    + score_components.get('promoted_pairing_points', 0)
+                    + score_components.get('activity_batching_points', 0)
+                    + score_components.get('sailing_full_day_points', 0)
+                    + score_components.get('sailing_same_day_points', 0)
+                    + score_components.get('at_sharing_bonus', 0)
+                ),
+            },
         })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def _determine_week_health(schedule_invalid, top5_pct, constraint_violations):
+    """Return an easy-to-read health label for non-technical users."""
+    if schedule_invalid:
+        return "Needs Immediate Fix"
+    if top5_pct >= 85 and constraint_violations == 0:
+        return "Excellent"
+    if top5_pct >= 75 and constraint_violations <= 2:
+        return "Good"
+    if top5_pct >= 65:
+        return "Fair"
+    return "Needs Improvement"
+
+
+def _build_actions(metrics):
+    """Generate plain-language action items from metric values."""
+    actions = []
+    if metrics.get('schedule_invalid', False):
+        actions.append("Regenerate this week first: the schedule is marked invalid and should not be used as-is.")
+    if metrics.get('exclusive_double_book', 0) > 0:
+        actions.append("Fix exclusive-area conflicts (like Tower/Delta/Super Troop in the same slot for multiple troops).")
+    if metrics.get('missing_top5', 0) > 0:
+        actions.append("Improve Top 5 request coverage by moving flexible activities to protect high-priority choices.")
+    if metrics.get('beach_slot_2_uses', 0) > 0:
+        actions.append("Reduce beach activities in slot 2 when possible; slot 1 or 3 is preferred for flow and scoring.")
+    if metrics.get('severe_underused_slots', 0) > 0 or metrics.get('staff_variance', 0.0) > 2.5:
+        actions.append("Rebalance staff-heavy activities so workload is spread more evenly across the week.")
+    if metrics.get('cluster_gaps', 0) > 0 or metrics.get('excess_cluster_days', 0) > 0:
+        actions.append("Tighten clustering in Tower/Rifle/Outdoor Skills/Handicrafts to reduce travel and gaps.")
+    if not actions:
+        actions.append("No urgent changes needed. This week is balanced and can be shared confidently.")
+    return actions
+
+
+def _build_success_report(week_id, week_name, metrics, data):
+    """Create a plain-English success report suitable for non-programmers."""
+    troops = data.get('troops', []) or []
+    unscheduled = data.get('unscheduled', {}) or {}
+    total_scouts = sum(getattr(t, 'scouts', 0) for t in troops)
+    total_adults = sum(getattr(t, 'adults', 0) for t in troops)
+
+    exempt_top5 = 0
+    exempt_top10 = 0
+    for troop_data in unscheduled.values():
+        exempt_top5 += sum(1 for item in troop_data.get('top5', []) if item.get('is_exempt'))
+        exempt_top10 += sum(1 for item in troop_data.get('top10', []) if item.get('is_exempt'))
+
+    top5_pct = float(metrics.get('top5_pct', 0.0))
+    top10_pct = float(metrics.get('top10_pct', 0.0))
+    top15_pct = float(metrics.get('top15_pct', 0.0))
+    constraint_violations = int(metrics.get('constraint_violations', 0))
+    schedule_invalid = bool(metrics.get('schedule_invalid', False))
+    final_score = int(metrics.get('final_score', 0))
+
+    health = _determine_week_health(schedule_invalid, top5_pct, constraint_violations)
+    actions = _build_actions(metrics)
+
+    scorecard = [
+        {
+            'metric': 'Overall Week Score',
+            'value': final_score,
+            'status': health,
+            'why_it_matters': 'Single roll-up score that combines requests, constraints, staff balance, and bonuses.'
+        },
+        {
+            'metric': 'Top 5 Request Success',
+            'value': f"{top5_pct:.1f}%",
+            'status': 'On Target' if top5_pct >= 80 else 'Below Target',
+            'why_it_matters': 'Shows how often the most important troop requests were delivered.'
+        },
+        {
+            'metric': 'Top 10 Request Success',
+            'value': f"{top10_pct:.1f}%",
+            'status': 'On Target' if top10_pct >= 85 else 'Watch',
+            'why_it_matters': 'Measures broader request coverage beyond only the top 5 items.'
+        },
+        {
+            'metric': 'Schedule Validity',
+            'value': 'Invalid' if schedule_invalid else 'Valid',
+            'status': 'Needs Fix' if schedule_invalid else 'Pass',
+            'why_it_matters': 'Invalid schedules include hard-rule conflicts and should be corrected before use.'
+        },
+        {
+            'metric': 'Total Constraint Violations',
+            'value': constraint_violations,
+            'status': 'Good' if constraint_violations == 0 else 'Needs Review',
+            'why_it_matters': 'Counts both hard and soft rule breaks that can reduce quality or feasibility.'
+        },
+        {
+            'metric': 'Exclusive Double-Book Conflicts',
+            'value': int(metrics.get('exclusive_double_book', 0)),
+            'status': 'Pass' if int(metrics.get('exclusive_double_book', 0)) == 0 else 'Fail',
+            'why_it_matters': 'Tracks impossible collisions in one-troop-only activities (for example Tower).'
+        },
+        {
+            'metric': 'Beach Slot 2 Uses',
+            'value': int(metrics.get('beach_slot_2_uses', 0)),
+            'status': 'Good' if int(metrics.get('beach_slot_2_uses', 0)) == 0 else 'Penalty Risk',
+            'why_it_matters': 'Beach activities in slot 2 are allowed but typically reduce quality score.'
+        },
+        {
+            'metric': 'Staff Balance Variance',
+            'value': round(float(metrics.get('staff_variance', 0.0)), 2),
+            'status': 'Balanced' if float(metrics.get('staff_variance', 0.0)) <= 2.5 else 'Uneven',
+            'why_it_matters': 'Lower variance means staff workload is spread more evenly across time slots.'
+        },
+        {
+            'metric': 'Cluster Efficiency Penalties',
+            'value': int(metrics.get('excess_cluster_days', 0)) + int(metrics.get('cluster_gaps', 0)),
+            'status': 'Good' if (int(metrics.get('excess_cluster_days', 0)) + int(metrics.get('cluster_gaps', 0))) == 0 else 'Needs Tuning',
+            'why_it_matters': 'Highlights scattered scheduling in high-movement areas that can create friction.'
+        },
+        {
+            'metric': 'Exempted Misses (Top 5 / Top 10)',
+            'value': f"{exempt_top5} / {exempt_top10}",
+            'status': 'Info',
+            'why_it_matters': 'Shows misses that are intentionally exempt due to multi-slot or special-rule exceptions.'
+        },
+        {
+            'metric': 'Top 15 Request Success',
+            'value': f"{top15_pct:.1f}%",
+            'status': 'Info',
+            'why_it_matters': 'Useful secondary quality signal for deeper preference satisfaction.'
+        },
+    ]
+
+    metric_definitions = [
+        {'name': 'Top 5 Success', 'plain_language': 'How often each troop got activities from its five most important requests.'},
+        {'name': 'Constraint Violations', 'plain_language': 'How many scheduling rules were broken. Hard breaks can invalidate a week.'},
+        {'name': 'Exclusive Double-Book', 'plain_language': 'When two troops are scheduled in a one-troop-only activity at the same time.'},
+        {'name': 'Staff Variance', 'plain_language': 'How uneven the staff load is from slot to slot; lower is better.'},
+        {'name': 'Cluster Efficiency', 'plain_language': 'How tightly related activities are grouped to avoid unnecessary spread and gaps.'},
+        {'name': 'Beach Slot 2 Uses', 'plain_language': 'Beach activities scheduled in slot 2. These are generally less preferred than slot 1 or 3.'},
+    ]
+
+    raw_metrics = {}
+    for key, value in metrics.items():
+        if isinstance(value, (int, float, bool, str)):
+            raw_metrics[key] = value
+
+    generated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    report = {
+        'week_id': week_id,
+        'week_name': week_name,
+        'generated_at': generated_at,
+        'executive_summary': {
+            'health': health,
+            'overall_score': final_score,
+            'schedule_valid': not schedule_invalid,
+            'total_troops': len(troops),
+            'total_people': total_scouts + total_adults,
+            'scouts': total_scouts,
+            'adults': total_adults,
+            'top5_success': round(top5_pct, 1),
+            'top10_success': round(top10_pct, 1),
+            'top15_success': round(top15_pct, 1),
+        },
+        'scorecard': scorecard,
+        'recommended_actions': actions,
+        'metric_definitions': metric_definitions,
+        'raw_metrics': raw_metrics,
+    }
+
+    lines = [
+        f"Camp Scheduler Success Report - {week_name}",
+        f"Generated: {generated_at}",
+        "",
+        "Executive Summary",
+        f"- Health: {health}",
+        f"- Overall Score: {final_score}",
+        f"- Schedule Valid: {'Yes' if not schedule_invalid else 'No'}",
+        f"- Troops: {len(troops)}",
+        f"- People Scheduled: {total_scouts + total_adults} ({total_scouts} scouts, {total_adults} adults)",
+        f"- Top 5 Success: {top5_pct:.1f}%",
+        f"- Top 10 Success: {top10_pct:.1f}%",
+        f"- Top 15 Success: {top15_pct:.1f}%",
+        "",
+        "Scorecard",
+    ]
+    for item in scorecard:
+        lines.append(f"- {item['metric']}: {item['value']} [{item['status']}]")
+        lines.append(f"  Why it matters: {item['why_it_matters']}")
+
+    lines.append("")
+    lines.append("Recommended Actions")
+    for action in actions:
+        lines.append(f"- {action}")
+
+    lines.append("")
+    lines.append("Metric Definitions (Plain Language)")
+    for item in metric_definitions:
+        lines.append(f"- {item['name']}: {item['plain_language']}")
+
+    report['plain_text'] = "\n".join(lines)
+    return report
+
+
+def _extract_week_number(week_id):
+    """Extract numeric week value from an id like tc_week3_troops."""
+    try:
+        marker = "tc_week"
+        start = week_id.index(marker) + len(marker)
+        end = week_id.index("_troops")
+        return int(week_id[start:end])
+    except Exception:
+        return 9999
+
+
+def _build_tc_season_report(weekly_rows):
+    """Create a plain-language season report for TC weeks only."""
+    if not weekly_rows:
+        return {
+            'season_name': 'TC Season',
+            'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'error': 'No TC week data available for reporting.'
+        }
+
+    week_count = len(weekly_rows)
+    valid_count = sum(1 for w in weekly_rows if not w['schedule_invalid'])
+    invalid_count = week_count - valid_count
+
+    avg_score = sum(w['final_score'] for w in weekly_rows) / week_count
+    avg_top5 = sum(w['top5_pct'] for w in weekly_rows) / week_count
+    avg_top10 = sum(w['top10_pct'] for w in weekly_rows) / week_count
+
+    total_violations = sum(w['constraint_violations'] for w in weekly_rows)
+    total_exclusive_double_books = sum(w['exclusive_double_book'] for w in weekly_rows)
+    total_beach_slot_2 = sum(w['beach_slot_2_uses'] for w in weekly_rows)
+    total_missing_top5 = sum(w['missing_top5'] for w in weekly_rows)
+    total_excess_cluster_days = sum(w['excess_cluster_days'] for w in weekly_rows)
+    total_cluster_gaps = sum(w['cluster_gaps'] for w in weekly_rows)
+    avg_staff_variance = sum(w['staff_variance'] for w in weekly_rows) / week_count
+
+    avg_excess_cluster_days = total_excess_cluster_days / week_count
+    avg_cluster_gaps = total_cluster_gaps / week_count
+
+    season_health = "Excellent"
+    if invalid_count > 0:
+        season_health = "Needs Immediate Fix"
+    elif avg_top5 < 75 or total_violations > week_count * 2:
+        season_health = "Needs Improvement"
+    elif avg_top5 < 85 or total_violations > week_count:
+        season_health = "Good"
+
+    actions = []
+    if invalid_count > 0:
+        actions.append(f"Fix invalid weeks first ({invalid_count} of {week_count}).")
+    if total_exclusive_double_books > 0:
+        actions.append("Remove exclusive double-books (Tower/Delta/Super Troop/Rifle/etc.) where two troops share one-only slots.")
+    if total_excess_cluster_days > 0 or total_cluster_gaps > 0:
+        actions.append("Improve cluster flow: reduce excess cluster days and same-day cluster gaps.")
+    if total_beach_slot_2 > 0:
+        actions.append("Shift beach activities out of slot 2 when possible to improve quality.")
+    if total_missing_top5 > 0:
+        actions.append("Protect top-priority requests earlier in each week build to reduce Top 5 misses.")
+    if not actions:
+        actions.append("Season is stable with no major quality risks detected.")
+
+    metric_definitions = [
+        {'name': 'Excess Cluster Days', 'plain_language': 'Extra days used in clustered areas beyond what is needed. Lower is better for smoother flow.'},
+        {'name': 'Cluster Gaps', 'plain_language': 'When cluster activities are split with an unnecessary hole (for example slot 1 and 3 used, slot 2 empty).'},
+        {'name': 'Top 5 Success', 'plain_language': 'How often troops received one of their five most important requests.'},
+        {'name': 'Constraint Violations', 'plain_language': 'How many rules were broken. Hard-rule breaks can make a week invalid.'},
+        {'name': 'Staff Variance', 'plain_language': 'How uneven staff workload is across slots. Lower is better.'},
+    ]
+
+    generated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    report = {
+        'season_name': 'TC Season',
+        'generated_at': generated_at,
+        'weeks_included': [w['week_id'] for w in weekly_rows],
+        'executive_summary': {
+            'health': season_health,
+            'weeks_count': week_count,
+            'valid_weeks': valid_count,
+            'invalid_weeks': invalid_count,
+            'average_score': round(avg_score, 1),
+            'average_top5_success': round(avg_top5, 1),
+            'average_top10_success': round(avg_top10, 1),
+            'total_constraint_violations': total_violations,
+            'total_excess_cluster_days': total_excess_cluster_days,
+            'total_cluster_gaps': total_cluster_gaps,
+            'average_excess_cluster_days': round(avg_excess_cluster_days, 2),
+            'average_cluster_gaps': round(avg_cluster_gaps, 2),
+        },
+        'season_scorecard': [
+            {
+                'metric': 'Average Week Score',
+                'value': round(avg_score, 1),
+                'why_it_matters': 'Overall quality trend across all TC weeks.'
+            },
+            {
+                'metric': 'Average Top 5 Success',
+                'value': f"{avg_top5:.1f}%",
+                'why_it_matters': 'How well your highest-priority requests are met over the season.'
+            },
+            {
+                'metric': 'Total Constraint Violations',
+                'value': total_violations,
+                'why_it_matters': 'Total amount of rule pressure/failures across TC weeks.'
+            },
+            {
+                'metric': 'Excess Cluster Days (Total / Avg)',
+                'value': f"{total_excess_cluster_days} / {avg_excess_cluster_days:.2f}",
+                'why_it_matters': 'Too many cluster days can increase movement and reduce flow.'
+            },
+            {
+                'metric': 'Cluster Gaps (Total / Avg)',
+                'value': f"{total_cluster_gaps} / {avg_cluster_gaps:.2f}",
+                'why_it_matters': 'Cluster gaps indicate avoidable holes in clustered scheduling.'
+            },
+            {
+                'metric': 'Average Staff Variance',
+                'value': round(avg_staff_variance, 2),
+                'why_it_matters': 'Lower numbers mean more balanced staff demand.'
+            },
+        ],
+        'weeks': weekly_rows,
+        'recommended_actions': actions,
+        'metric_definitions': metric_definitions,
+    }
+
+    lines = [
+        "Camp Scheduler Success Report - TC Season",
+        f"Generated: {generated_at}",
+        "",
+        "Executive Summary (Simple Terms)",
+        f"- Season Health: {season_health}",
+        f"- Weeks Included: {week_count}",
+        f"- Valid Weeks: {valid_count}",
+        f"- Invalid Weeks: {invalid_count}",
+        f"- Average Week Score: {avg_score:.1f}",
+        f"- Average Top 5 Success: {avg_top5:.1f}%",
+        f"- Average Top 10 Success: {avg_top10:.1f}%",
+        f"- Total Constraint Violations: {total_violations}",
+        f"- Excess Cluster Days: total {total_excess_cluster_days}, average {avg_excess_cluster_days:.2f} per week",
+        f"- Cluster Gaps: total {total_cluster_gaps}, average {avg_cluster_gaps:.2f} per week",
+        "",
+        "Week-by-Week (TC Only)",
+    ]
+    for w in weekly_rows:
+        lines.append(
+            f"- {w['week_name']}: Score {w['final_score']}, Top5 {w['top5_pct']:.1f}%, "
+            f"Violations {w['constraint_violations']}, Excess Cluster Days {w['excess_cluster_days']}, "
+            f"Cluster Gaps {w['cluster_gaps']}, Valid {'Yes' if not w['schedule_invalid'] else 'No'}"
+        )
+
+    lines.append("")
+    lines.append("Recommended Actions")
+    for action in actions:
+        lines.append(f"- {action}")
+
+    lines.append("")
+    lines.append("Metric Definitions (Plain Language)")
+    for item in metric_definitions:
+        lines.append(f"- {item['name']}: {item['plain_language']}")
+
+    report['plain_text'] = "\n".join(lines)
+    return report
+
+
+@app.route('/api/report/<week_id>')
+def get_success_report(week_id):
+    """Return a plain-language success report for one week."""
+    if week_id not in WEEK_METADATA:
+        return jsonify({'error': 'Week not found'}), 404
+
+    try:
+        from utils.regression_checker import evaluate_week
+
+        meta = WEEK_METADATA[week_id]
+        week_file_path = str(meta['file'])
+        metrics = evaluate_week(week_file_path)
+        data = get_week_data(week_id)
+        report = _build_success_report(week_id, meta['week_number'], metrics, data)
+
+        if request.args.get('download') == '1':
+            filename = f"{week_id}_success_report.txt"
+            return Response(
+                report['plain_text'],
+                mimetype='text/plain',
+                headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+            )
+
+        return jsonify(report)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/report/season')
+def get_tc_season_report():
+    """Return a season-level report for TC weeks only."""
+    try:
+        from utils.regression_checker import evaluate_week
+
+        tc_week_ids = [week_id for week_id in WEEK_METADATA.keys() if week_id.startswith('tc_week') and week_id.endswith('_troops')]
+        tc_week_ids = sorted(tc_week_ids, key=_extract_week_number)
+
+        weekly_rows = []
+        skipped_weeks = []
+        for week_id in tc_week_ids:
+            try:
+                meta = WEEK_METADATA[week_id]
+                metrics = evaluate_week(str(meta['file']))
+                week_data = get_week_data(week_id)
+                troops = week_data.get('troops', []) if week_data else []
+
+                row = {
+                    'week_id': week_id,
+                    'week_name': meta['week_number'],
+                    'health': _determine_week_health(
+                        bool(metrics.get('schedule_invalid', False)),
+                        float(metrics.get('top5_pct', 0.0)),
+                        int(metrics.get('constraint_violations', 0))
+                    ),
+                    'final_score': int(metrics.get('final_score', 0)),
+                    'top5_pct': float(metrics.get('top5_pct', 0.0)),
+                    'top10_pct': float(metrics.get('top10_pct', 0.0)),
+                    'constraint_violations': int(metrics.get('constraint_violations', 0)),
+                    'schedule_invalid': bool(metrics.get('schedule_invalid', False)),
+                    'exclusive_double_book': int(metrics.get('exclusive_double_book', 0)),
+                    'beach_slot_2_uses': int(metrics.get('beach_slot_2_uses', 0)),
+                    'missing_top5': int(metrics.get('missing_top5', 0)),
+                    'excess_cluster_days': int(metrics.get('excess_cluster_days', 0)),
+                    'cluster_gaps': int(metrics.get('cluster_gaps', 0)),
+                    'staff_variance': float(metrics.get('staff_variance', 0.0)),
+                    'troop_count': len(troops),
+                }
+                weekly_rows.append(row)
+            except Exception:
+                skipped_weeks.append(week_id)
+
+        if not weekly_rows:
+            return jsonify({'error': 'Could not generate TC season report for any week.'}), 500
+
+        report = _build_tc_season_report(weekly_rows)
+        if skipped_weeks:
+            report['skipped_weeks'] = skipped_weeks
+
+        if request.args.get('download') == '1':
+            filename = "tc_season_success_report.txt"
+            return Response(
+                report['plain_text'],
+                mimetype='text/plain',
+                headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+            )
+
+        return jsonify(report)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

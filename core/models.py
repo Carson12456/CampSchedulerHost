@@ -36,6 +36,15 @@ class Activity(BaseModel):
 
     model_config = ConfigDict(frozen=True)  # Make it hashable
 
+    def __init__(self, *args, **kwargs):
+        # Legacy compatibility: allow positional construction
+        if args:
+            arg_keys = ("name", "slots", "zone", "staff", "conflicts_with")
+            for idx, value in enumerate(args):
+                if idx < len(arg_keys) and arg_keys[idx] not in kwargs:
+                    kwargs[arg_keys[idx]] = value
+        super().__init__(**kwargs)
+
     def __hash__(self):
         return hash(self.name)
     
@@ -51,6 +60,15 @@ class TimeSlot(BaseModel):
     slot_number: int
 
     model_config = ConfigDict(frozen=True)
+
+    def __init__(self, *args, **kwargs):
+        # Legacy compatibility: allow TimeSlot(day, slot_number)
+        if args:
+            if len(args) >= 1 and "day" not in kwargs:
+                kwargs["day"] = args[0]
+            if len(args) >= 2 and "slot_number" not in kwargs:
+                kwargs["slot_number"] = args[1]
+        super().__init__(**kwargs)
 
     def __hash__(self):
         return hash((self.day, self.slot_number))
@@ -78,6 +96,23 @@ class Troop(BaseModel):
     day_requests: Dict[str, List[str]] = Field(default_factory=dict)
     
     model_config = ConfigDict(arbitrary_types_allowed=True) # Allow flexible types if needed
+
+    def __init__(self, *args, **kwargs):
+        # Legacy compatibility: allow positional construction
+        if args:
+            arg_keys = (
+                "name",
+                "campsite",
+                "preferences",
+                "scouts",
+                "adults",
+                "commissioner",
+                "day_requests",
+            )
+            for idx, value in enumerate(args):
+                if idx < len(arg_keys) and arg_keys[idx] not in kwargs:
+                    kwargs[arg_keys[idx]] = value
+        super().__init__(**kwargs)
 
     @property
     def size(self) -> int:
@@ -115,6 +150,28 @@ class ScheduleEntry(BaseModel):
     troop: Troop
     
     model_config = ConfigDict(frozen=True)
+
+    def __init__(self, *args, **kwargs):
+        # Legacy compatibility:
+        # - ScheduleEntry(time_slot, activity, troop)
+        # - ScheduleEntry(troop, activity, time_slot) (mis-ordered usage in tests)
+        if args and not kwargs:
+            if len(args) >= 3:
+                first, second, third = args[0], args[1], args[2]
+                if isinstance(first, TimeSlot):
+                    kwargs = {"time_slot": first, "activity": second, "troop": third}
+                elif isinstance(third, TimeSlot):
+                    kwargs = {"time_slot": third, "activity": second, "troop": first}
+                else:
+                    kwargs = {"time_slot": first, "activity": second, "troop": third}
+        elif args:
+            if len(args) >= 1 and "time_slot" not in kwargs:
+                kwargs["time_slot"] = args[0]
+            if len(args) >= 2 and "activity" not in kwargs:
+                kwargs["activity"] = args[1]
+            if len(args) >= 3 and "troop" not in kwargs:
+                kwargs["troop"] = args[2]
+        super().__init__(**kwargs)
 
     def __hash__(self):
         return hash((self.time_slot, self.activity.name, self.troop.name))

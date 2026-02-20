@@ -297,12 +297,12 @@ def are_activities_not_back_to_back(act1: str, act2: str) -> bool:
 
 def get_concurrent_activities() -> List[str]:
     """Get list of activities that can schedule multiple troops simultaneously."""
-    return _load_skull().get("concurrent_activities", [])
+    return get_constraints().get("concurrent_activities", [])
 
 
 def get_non_consecutive_activities() -> List[str]:
     """Get list of activities that do not need to be consecutive slots."""
-    return _load_skull().get("non_consecutive", [])
+    return get_constraints().get("non_consecutive", [])
 
 
 def get_fill_priority() -> List[str]:
@@ -312,7 +312,7 @@ def get_fill_priority() -> List[str]:
 
 def get_area_pairs() -> Dict[str, str]:
     """Get area pairing configuration."""
-    return _load_skull().get("optimization", {}).get("area_pairs", {})
+    return get_constraints().get("optimization", {}).get("area_pairs", {})
 
 
 def get_canoe_activities() -> List[str]:
@@ -363,7 +363,7 @@ def get_zone_capacities() -> Dict[str, int]:
 
 def get_cluster_areas() -> List[str]:
     """Get cluster areas for optimization."""
-    return _load_skull().get("optimization", {}).get("cluster_areas", [])
+    return get_constraints().get("optimization", {}).get("cluster_areas", [])
 
 
 def get_capacity_check_activities() -> List[str]:

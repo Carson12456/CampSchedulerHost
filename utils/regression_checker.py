@@ -119,7 +119,8 @@ def evaluate_week(week_file, weights=None):
     
     # 1. Excess Days for Clustered Activities
     # ---------------------------------------
-    # Areas to check: Tower, Rifle, ODS, Handicrafts
+    # Definition: required_days = ceil(total_activities / 3).
+    # Excess days = max(0, days_used - required_days).
     cluster_areas = ["Tower", "Rifle Range", "Outdoor Skills", "Handicrafts"]
     total_excess_days = 0
     area_details = {}
@@ -132,18 +133,20 @@ def evaluate_week(week_file, weights=None):
             
         days_used = set(e.time_slot.day for e in area_entries)
         num_activities = len(area_entries)
+        required_days = math.ceil(num_activities / 3.0)
         
-        # Calculate ideal min days (assuming 3 slots/day capacity is roughly usable)
-        # Being generous: Min Days = ceil(Activities / 3)
-        min_days = math.ceil(num_activities / 3.0)
-        
-        excess = max(0, len(days_used) - min_days)
+        excess = max(0, len(days_used) - required_days)
         total_excess_days += excess
-        area_details[area] = {"days": len(days_used), "min": min_days, "excess": excess}
+        area_details[area] = {
+            "days_used": len(days_used),
+            "required_days": required_days,
+            "activity_count": num_activities,
+            "excess_days": excess,
+        }
 
     metrics["excess_cluster_days"] = total_excess_days
     
-    # 2. Unnecessary Gaps (Slot 1 & 3 full, Slot 2 empty)
+    # 2. Unnecessary Gaps and Cluster Gaps
     # ---------------------------------------------------
     gap_1_3_count = 0
     
@@ -165,32 +168,111 @@ def evaluate_week(week_file, weights=None):
     for acts in CLUSTER_AREAS.values():
         cluster_activity_names.update(acts)
     
-    # Cluster gaps: cluster area has slots 1&3 full but slot 2 empty (3-slot days only)
+    # Build slot lookup once for gap checks
+    all_time_slots = list(generate_time_slots())
+    slot_lookup = {(s.day, s.slot_number): s for s in all_time_slots}
+    
+    # Cluster gaps: area activity in slots 1 and 3, while slot 2 is EMPTY.
+    # This matches the clarified 1,-,3 definition.
     cluster_gap_count = 0
+    cluster_gap_details = []
     for troop in troops:
         troop_entries = [e for e in schedule.entries if e.troop == troop]
         for day in [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.FRIDAY]:
             day_slots = {e.time_slot.slot_number: e.activity.name for e in troop_entries if e.time_slot.day == day}
+            slot_2 = slot_lookup.get((day, 2))
+            slot_2_empty = bool(slot_2 and schedule.is_troop_free(slot_2, troop))
             for area_name, area_acts in CLUSTER_AREAS.items():
                 has_1 = any(day_slots.get(1) == a for a in area_acts)
-                has_2 = any(day_slots.get(2) == a for a in area_acts)
                 has_3 = any(day_slots.get(3) == a for a in area_acts)
-                if has_1 and has_3 and not has_2:
+                if has_1 and has_3 and slot_2_empty:
                     cluster_gap_count += 1
+                    cluster_gap_details.append(
+                        {
+                            "troop": troop.name,
+                            "day": day.value,
+                            "area": area_name,
+                            "pattern": "1,-,3",
+                        }
+                    )
     
     # CRITICAL: Any gaps completely invalidate the schedule
     # Use schedule.is_troop_free() - same logic as scheduler (handles multi-slot correctly)
-    all_time_slots = list(generate_time_slots())
     for troop in troops:
         for day in Day:
             max_slot = slots_per_day[day]
             for slot_num in range(1, max_slot + 1):
-                slot = next((s for s in all_time_slots if s.day == day and s.slot_number == slot_num), None)
+                slot = slot_lookup.get((day, slot_num))
                 if slot and schedule.is_troop_free(slot, troop):
                     gap_1_3_count += 1
                 
     metrics["unnecessary_gaps"] = gap_1_3_count
     metrics["cluster_gaps"] = cluster_gap_count
+    metrics["cluster_gap_details"] = cluster_gap_details
+    metrics["cluster_area_details"] = area_details
+    metrics["cluster_improvement_targets"] = {
+        "excess_day_reduction_opportunities": total_excess_days,
+        "cluster_gap_fill_opportunities": cluster_gap_count,
+        "areas_with_excess_days": [
+            area_name for area_name, detail in area_details.items()
+            if detail.get("excess_days", 0) > 0
+        ],
+    }
+
+    # 2b. Commissioner-Day Ownership (advisory metric)
+    # -------------------------------------------------
+    # Measures how often commissioner-managed activities are scheduled on the
+    # mapped commissioner day for each troop.
+    commissioner_by_troop = {}
+    for comm, troop_names in SchedulerConstants.COMMISSIONER_TROOPS.items():
+        for troop_name in troop_names:
+            commissioner_by_troop[troop_name] = comm
+    for troop in troops:
+        if getattr(troop, "commissioner", None):
+            commissioner_by_troop[troop.name] = troop.commissioner
+
+    comm_day_maps = {
+        "Delta": config_loader.get_commissioner_activity_days("Delta"),
+        "Super Troop": config_loader.get_commissioner_activity_days("Super Troop"),
+        "Troop Rifle": config_loader.get_commissioner_activity_days("Troop Rifle"),
+        "Troop Shotgun": config_loader.get_commissioner_activity_days("Troop Rifle"),
+        "Archery": config_loader.get_commissioner_activity_days("Archery"),
+        "Sailing": config_loader.get_commissioner_activity_days("Sailing"),
+        "Climbing Tower": config_loader.get_commissioner_activity_days("Climbing Tower"),
+    }
+    tower_ods_map = config_loader.get_commissioner_activity_days("Climbing Tower")
+    tower_ods_activities = set(EXCLUSIVE_AREAS.get("Tower", []) + EXCLUSIVE_AREAS.get("Outdoor Skills", []))
+    for act_name in tower_ods_activities:
+        comm_day_maps.setdefault(act_name, tower_ods_map)
+
+    commissioner_checks = 0
+    commissioner_misses = 0
+    commissioner_miss_details = []
+    for e in schedule.entries:
+        comm = commissioner_by_troop.get(e.troop.name)
+        if not comm:
+            continue
+        expected_map = comm_day_maps.get(e.activity.name)
+        if not expected_map:
+            continue
+
+        expected_day = expected_map.get(comm)
+        if not expected_day:
+            continue
+
+        commissioner_checks += 1
+        if e.time_slot.day != expected_day:
+            commissioner_misses += 1
+            commissioner_miss_details.append(
+                f"{e.troop.name}: {e.activity.name} on {e.time_slot.day.value} (expected {expected_day.value})"
+            )
+
+    metrics["commissioner_day_checks"] = commissioner_checks
+    metrics["commissioner_day_misses"] = commissioner_misses
+    metrics["commissioner_day_compliance_pct"] = (
+        100.0 * (commissioner_checks - commissioner_misses) / max(1, commissioner_checks)
+    )
+    metrics["commissioner_day_miss_details"] = commissioner_miss_details
 
     # 3. Staff Distribution (Variance)
     # --------------------------------
@@ -1016,6 +1098,9 @@ class EnhancedRegressionChecker:
                             "constraint_violations": week_result.get("constraint_violations", 0),
                             "staff_variance": week_result.get("staff_variance", 0),
                             "clustering_efficiency": week_result.get("excess_cluster_days", 0),
+                            "cluster_gaps": week_result.get("cluster_gaps", 0),
+                            "commissioner_day_compliance_pct": week_result.get("commissioner_day_compliance_pct", 0),
+                            "commissioner_day_misses": week_result.get("commissioner_day_misses", 0),
                             "beach_slot_2_violations": week_result.get("beach_slot_2_uses", 0),
                             "unnecessary_gaps": week_result.get("unnecessary_gaps", 0),
                             "grade": week_result.get("grade", "Unknown"),
@@ -1032,6 +1117,8 @@ class EnhancedRegressionChecker:
             avg_violations = sum(m["constraint_violations"] for m in quality_metrics) / len(quality_metrics)
             avg_staff_variance = sum(m["staff_variance"] for m in quality_metrics) / len(quality_metrics)
             avg_clustering = sum(m["clustering_efficiency"] for m in quality_metrics) / len(quality_metrics)
+            avg_cluster_gaps = sum(m["cluster_gaps"] for m in quality_metrics) / len(quality_metrics)
+            avg_commissioner_compliance = sum(m["commissioner_day_compliance_pct"] for m in quality_metrics) / len(quality_metrics)
             avg_beach_violations = sum(m["beach_slot_2_violations"] for m in quality_metrics) / len(quality_metrics)
             
             self.current_results.update({
@@ -1040,6 +1127,8 @@ class EnhancedRegressionChecker:
                     "average_constraint_violations": avg_violations,
                     "average_staff_variance": avg_staff_variance,
                     "average_clustering_efficiency": avg_clustering,
+                    "average_cluster_gaps": avg_cluster_gaps,
+                    "average_commissioner_day_compliance_pct": avg_commissioner_compliance,
                     "average_beach_slot_violations": avg_beach_violations,
                     "week_details": quality_metrics
                 }
@@ -1049,6 +1138,8 @@ class EnhancedRegressionChecker:
             print(f"  Average Constraint Violations: {avg_violations:.1f}")
             print(f"  Average Staff Variance: {avg_staff_variance:.2f}")
             print(f"  Average Clustering Efficiency: {avg_clustering:.2f}")
+            print(f"  Average Cluster Gaps: {avg_cluster_gaps:.2f}")
+            print(f"  Avg Commissioner Day Compliance: {avg_commissioner_compliance:.1f}%")
             print(f"  Average Beach Slot Violations: {avg_beach_violations:.1f}")
     
     def _check_quality_regressions(self):
@@ -1257,16 +1348,21 @@ class EnhancedRegressionChecker:
         if not week_details:
             return
         
-        print("\n" + "=" * 90)
+        print("\n" + "=" * 108)
         print("PER-WEEK EVALUATION SUMMARY")
-        print("=" * 90)
-        print(f"{'Week':<22} | {'Score':<6} | {'Top5%':<6} | {'Top10%':<6} | {'Viol':<5} | {'StVar':<5} | {'Clust':<5}")
-        print("-" * 90)
+        print("=" * 108)
+        print(f"{'Week':<22} | {'Score':<6} | {'Top5%':<6} | {'Top10%':<6} | {'Viol':<5} | {'StVar':<5} | {'Clust':<5} | {'Gap':<4} | {'Comm%':<6}")
+        print("-" * 108)
         
         for w in sorted(week_details, key=lambda x: x['week_name']):
-            print(f"{w['week_name']:<22} | {w.get('total_score',0):<6} | {w.get('top5_pct',0):<6.1f} | {w.get('top10_pct',0):<6.1f} | {w.get('constraint_violations',0):<5} | {w.get('staff_variance',0):<5.2f} | {w.get('clustering_efficiency',0):<5}")
+            print(
+                f"{w['week_name']:<22} | {w.get('total_score',0):<6} | {w.get('top5_pct',0):<6.1f} | "
+                f"{w.get('top10_pct',0):<6.1f} | {w.get('constraint_violations',0):<5} | "
+                f"{w.get('staff_variance',0):<5.2f} | {w.get('clustering_efficiency',0):<5} | "
+                f"{w.get('cluster_gaps',0):<4} | {w.get('commissioner_day_compliance_pct',0):<6.1f}"
+            )
         
-        print("=" * 90)
+        print("=" * 108)
     
     def print_violation_details(self, max_per_week: int = 10):
         """Print detailed violation messages for each week."""

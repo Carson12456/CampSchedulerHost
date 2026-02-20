@@ -8,10 +8,53 @@ Contains methods for validating schedule constraints:
 - Constraint checking before scheduling
 """
 
+import math
 from collections import defaultdict
 from ..models import Day
 from .constants import SchedulerConstants
 from . import config_loader
+
+
+CLUSTER_AREAS = {
+    "Tower": ["Climbing Tower"],
+    "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
+    "Outdoor Skills": [
+        "Knots and Lashings",
+        "Orienteering",
+        "GPS & Geocaching",
+        "Ultimate Survivor",
+        "What's Cooking",
+        "Chopped!",
+    ],
+    "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"],
+}
+
+
+def would_create_excess_day_for_entries(entries, activity_name: str, day: Day) -> bool:
+    """Single source-of-truth excess-day rule aligned with BRAIN/regression checker."""
+    activity_area = None
+    for area_name, activities in CLUSTER_AREAS.items():
+        if activity_name in activities:
+            activity_area = area_name
+            break
+
+    if not activity_area:
+        return False
+
+    area_activities = CLUSTER_AREAS[activity_area]
+    area_entries = [e for e in entries if e.activity.name in area_activities]
+    if not area_entries:
+        return False
+
+    current_days = set(e.time_slot.day for e in area_entries)
+    if day in current_days:
+        return False
+
+    total_activities = len(area_entries)
+    new_total = total_activities + 1
+    required_days = math.ceil(new_total / 3.0)
+    new_days_count = len(current_days) + 1
+    return new_days_count > required_days
 
 
 class ValidatorMixin:
@@ -235,63 +278,4 @@ class ValidatorMixin:
     # =========================================================================
     
     def _would_create_excess_day(self, activity_name: str, day: Day) -> bool:
-        """
-        Check if scheduling this activity on this day would create an excess cluster day.
-        
-        Returns True if:
-        - Activity is from a staff area (Tower, Rifle, ODS, Handicrafts)
-        - Day is NOT currently a primary day for that area
-        - Adding this activity would create a new day for the area (excess day)
-        
-        This helps prioritize preferences that don't hurt clustering.
-        """
-        import math
-        
-        # Check if activity is from a staff area
-        STAFF_AREAS = {
-            "Tower": ["Climbing Tower"],
-            "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-            "Outdoor Skills": ["Knots and Lashings", "Orienteering", "GPS & Geocaching",
-                              "Ultimate Survivor", "What's Cooking", "Chopped!"],
-            "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"],
-        }
-        
-        # Find which area this activity belongs to
-        activity_area = None
-        for area_name, activities in STAFF_AREAS.items():
-            if activity_name in activities:
-                activity_area = area_name
-                break
-        
-        if not activity_area:
-            return False  # Not a staff area, won't create excess day
-        
-        # Count current activities in this area
-        area_activities = STAFF_AREAS[activity_area]
-        area_entries = [e for e in self.schedule.entries 
-                       if e.activity.name in area_activities]
-        
-        if not area_entries:
-            return False  # No existing activities, can't be excess
-        
-        # Calculate current days used
-        current_days = set(e.time_slot.day for e in area_entries)
-        total_activities = len(area_entries)
-        
-        # Calculate minimum days needed
-        min_days = math.ceil(total_activities / 3.0)
-        
-        # Check if day is already used
-        if day in current_days:
-            return False  # Day already used, won't create excess
-        
-        # Check if adding this would exceed minimum
-        new_total = total_activities + 1
-        new_min_days = math.ceil(new_total / 3.0)
-        new_days_count = len(current_days) + 1
-        
-        # REFINED: More lenient - allow 1 excess day if area has few activities
-        if total_activities < 6:
-            return new_days_count > new_min_days + 1
-        else:
-            return new_days_count > new_min_days
+        return would_create_excess_day_for_entries(self.schedule.entries, activity_name, day)
