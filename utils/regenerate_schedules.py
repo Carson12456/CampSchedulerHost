@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.constrained_scheduler import ConstrainedScheduler
 from core.activities import get_all_activities
 from core.io_handler import load_troops_from_json, save_schedule_to_json
+from core.services.unscheduled_source import build_unscheduled_data
 
 def regenerate_all():
     root_dir = Path(__file__).parent.parent
@@ -32,8 +33,9 @@ def regenerate_all():
             # Construct output filename: {basename}_schedule.json
             output_file = schedules_dir / f"{troop_file.stem}_schedule.json"
             
-            # Save
-            save_schedule_to_json(schedule, troops, str(output_file))
+            # Save with authoritative unscheduled payload.
+            unscheduled_data = build_unscheduled_data(scheduler.troops, schedule)
+            save_schedule_to_json(schedule, scheduler.troops, str(output_file), unscheduled_data)
             print(f"  -> Generated {output_file.name}")
             
         except Exception as e:

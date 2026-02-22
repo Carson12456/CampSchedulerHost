@@ -1,8 +1,8 @@
 # 🧠 BRAIN: Central Source of Truth
 
-**Version:** 2.1.1 | **Last Updated:** 2026-02-18 | **Status:** BLUEPRINT
+**Version:** 2.2.0 | **Last Updated:** 2026-02-21 | **Status:** BLUEPRINT
 
-This document is the **System Blueprint** for the Summer Camp Scheduler. It defines the "Laws of Physics" for the scheduling engine—every constraint, rotation logic, scoring metric, and algorithmic phase is documented here.
+This document is the **System Blueprint** for the Summer Camp Scheduler. It defines the "Laws of Physics" for the scheduling engine: constraints, rotation logic, scoring, and phase behavior.
 
 ---
 
@@ -11,28 +11,59 @@ This document is the **System Blueprint** for the Summer Camp Scheduler. It defi
 ### Core Principles
 > [!IMPORTANT]
 > **Satisfaction First:** User preferences (Top 5) take precedence over administrative ease.
+> **Hard Contract:** Scheduler must produce **100% non-exempt Top 5 success**.
 
-1.  **Prevention Over Cure:** Constraints are validated *before* placement.
-2.  **Rocks, Pebbles, Sand:** Schedule large items (3-hour blocks, Sailing) first, then core requests, then fill.
-3.  **Fail-Fast:** Hard constraints trigger immediate rejection (-1000 score).
-4.  **No Empty Slots:** Every troop must have an activity in every available slot (14 slots/week).
+1. **Prevention Over Cure:** Validate constraints before placement.
+2. **Rocks, Pebbles, Sand:** Place large/rigid items first, then core requests, then fills.
+3. **Fail-Fast:** Hard-constraint violation invalidates schedule.
+4. **No Empty Slots:** Every troop has an activity in every available slot.
+5. **Zero Non-Exempt Top 5 Misses:** Non-exempt Top 5 misses are never acceptable.
+
+---
+
+## ✅ Top 5 Success Contract (Authoritative)
+
+### Definitions
+1. **Top 5 Requested Activity**
+   - A troop preference with rank 1-5.
+2. **Missed Activity**
+   - A Top 5 requested activity not present in that troop's final schedule.
+3. **Exempt Miss**
+   - A missed activity that meets a formal exemption rule:
+   - **3-hour duplication rule:** Troop requested multiple 3-hour activities and already received one.
+   - **Tuesday HC/DG saturation rule:** Only the highest three requested of both DG and HC can get one of teh three avalable slots.
+   - **Canoe-family duplication rule:** If a troop already has one canoe-family activity, another missed canoe-family request may be exempt.
+4. **Non-Exempt Miss**
+   - Any missed Top 5 request that does not meet an exemption rule.
+
+### Required Outcome
+- `non_exempt_top5_misses == 0`
+- Equivalent to `100%` non-exempt Top 5 success.
+- Any non-zero value is a failed run and must trigger repair logic.
+
+### Single Source of Truth Protocol (Mandatory)
+- All Top-5/Top-10 miss reporting MUST be read from `schedule_json.unscheduled`.
+- Authoritative path format:
+  - `unscheduled.<troop_name>.top5[]`
+  - `unscheduled.<troop_name>.top10[]`
+- Every miss item MUST include `name`, `rank`, and `is_exempt`.
+- Reconstructing misses directly from `troop.preferences` for reporting is forbidden.
+- If `unscheduled` is missing, analysis must fail fast instead of using fallback calculations.
 
 ---
 
 ## 💃 The Waltz: Commissioner Rotation
 
-The camp is geographically divided into three Commissioner Areas to ensure even coverage. Activities rotate through these areas on specific days.
+The camp is geographically divided into three commissioner areas for balanced coverage.
 
-### 1. Commissioner Areas (The "Dancers")
+### 1. Commissioner Areas
 | Group | Commissioner | Campsites (Geographic Cluster) |
 | :--- | :--- | :--- |
 | **North** | **Comm A** | Massasoit, Tecumseh, Samoset, Black Hawk, Taskalusa |
 | **Central** | **Comm B** | Powhatan, Red Cloud, Cochise, Joseph, Tamanend |
 | **South** | **Comm C** | Pontiac, Skenandoa, Sequoyah, Roman Nose |
 
-### 2. The Rotation Schedule (The "Steps")
-Commissioners manage specific high-demand areas on specific days.
-
+### 2. Rotation Schedule
 | Activity Group | **Comm A** (North) | **Comm B** (Central) | **Comm C** (South) |
 | :--- | :--- | :--- | :--- |
 | **Delta / Sailing** | Monday | Tuesday | Wednesday |
@@ -40,93 +71,99 @@ Commissioners manage specific high-demand areas on specific days.
 | **Rifle / Super Troop** | Monday* | Tuesday* | Wednesday* |
 | **Archery / Boats** | Wednesday | Friday | Monday |
 
-Note: It is more important to keep the pairs together than it is to keep the activities on their suggested day. This is just in place to help them fall adjacent to each otherIf the activities are not scheduled on their commissioner day, it is then most convienient to proritize pairing the activities than keeping both on their suggested day.
+Pairing integrity is more important than strict day ownership if both cannot be satisfied simultaneously.
 
 ## ⏳ Fill Priority Algorithm
 
-When a troop has empty slots (gaps) and no further preferences, the scheduler fills them using a tiered priority system defined in **SKULL.json** (`constraints.fill_priority`).
+When a troop has open slots and no remaining preferred requests, fills come from `SKULL.json` (`constraints.fill_priority`).
 
-**Objective:** Fill gaps with valuable, engaging activities rather than "dead time". The priority list is strictly ordered from high-value activities (like Super Troop, Aqua Trampoline) down to passive fillers (Free Time).
+**Objective:** Fill with high-value activities first; use passive fillers only as last resort.
 
 ## 📚 Constraint Dictionary
 
 ### 🔴 HARD Constraints (Invalidates Schedule)
-Violating any of these results in a **-1000 point penalty** and an invalid schedule.
+1. **Exclusive Double-Booking:** Only one troop per slot in configured exclusive activities.
+2. **Completeness:** Every troop must have all weekly slots filled.
+3. **Mandatory Anchors:**
+   - `Reflection` on Friday.
+   - `Super Troop` once weekly.
+   - `History Center` and `Disc Golf` constrained to Tuesday.
+4. **Capacity Safety:**
+   - Canoes max 26 people.
+   - Global staff max 16 per slot.
+   - Beach staff max 12 per slot.
+   - Beach saturation max 4 staffed beach activities per slot.
+5. **Top 5 Acceptance Gate:** Non-exempt Top 5 misses must be zero.
 
-1.  **Exclusive Double-Booking:** Only **ONE** troop per slot in `exclusive_areas` (defined in SKULL).
-2.  **Completeness:** Every troop must have exactly **14 slots** filled (Mon-Wed 3/day, Thu 2/day, Fri 3/day).
-3.  **Mandatory Anchors:**
-    *   **Friday Reflection:** Must be scheduled on Friday.
-    *   **Super Troop:** Must occur once per week.
-    *   **History Center** & **Disc Golf** on **Tuesday** (Exclusive Day).
-4.  **Capacity Safety:**
-    *   **Canoes:** Max **26** people (Scouts + Adults) per slot.
-    *   **Global Staff:** Max **16** staff used per slot.
-    *   **Beach Staff:** Max **12** beach staff used per slot.
-    *   **Beach Saturation:** Max **4** staffed beach activities per slot.
+### 🟡 Soft Constraints (Score Deductions)
+Violations reduce score but do not directly invalidate schedule.
 
-### 🟡 SOFT Constraints (Score Deductions)
-Violating these reduces the schedule score but does not invalidate it.
-
-#### 1. Prohibited Pairs (Avoidance)
-Troops should NOT do these pairs on the **same day**:
-*   **Accuracy:** `Troop Rifle` OR `Troop Shotgun` or `Troop Archery`
-*   **Boats:** Any pair of `Canoe`, `Snorkel`, `Nature Canoe`, `Floats for Floats`
-*   **Water Games:** `Aqua Trampoline` OR `Water Polo` OR `Greased Watermelon`
-*   **Infrastructure:** `Trading Post` OR `Shower House` OR `Campsite Free Time`
+#### 1. Prohibited Same-Day Pairs
+- Accuracy: `Troop Rifle` / `Troop Shotgun` / `Archery`
+- Boats: paired canoe-family activities
+- Water Games: `Aqua Trampoline` / `Water Polo` / `Greased Watermelon`
+- Free Time: `Trading Post` / `Shower House` / `Campsite Free Time`
+- Balls: 'Nine Square' / 'Gaga Ball'
 
 #### 2. Wet/Dry Patterns
-*   **Pattern:** Avoid **Wet → Dry → Wet** sandwiches.
-*   **Transition:** Avoid **Wet → Tower/ODS** (or vice versa) immediately back-to-back.
-*   **Slot Preference:** Beach activities prefer **Slot 1 or 3**.
-    *   **Prioritization Rule:** On non-Thursday days, scheduler must attempt Slot 1/3 first and use Slot 2 only as a true fallback when preferred slots are infeasible.
-    *   **2-Slot Beach Start Rule:** For `Canoe Snorkel` and `Float for Floats`, start in Slot 1 when feasible; allow Slot 2 start only when Slot 1 is not schedulable.
-    *   *Exception:* Thursday allows Slot 2 for Beach.
-    *   *Exception:* Sailing is always 1.5 slots (meaning it runs slot 1 and 2, then the second activity runs slot 2 and 3. This is because they only actually run for 1.5 hours but appear and are scheduled as 2 slots).
+- Avoid wet-dry-wet sandwiches.
+- Avoid direct Wet <-> Tower/ODS transitions.
+- Beach slot preference is 1 or 3 (Thursday has slot-2 exception).
 
 #### 3. Activity Consecutiveness
-*   `Tie Dye`, `Rifle`, `Shotgun` should run back-to-back in the area schedules to reduce setup/teardown.
-*   **Spacing:** Activities like `Back of the Moon`, `Itasca`, `Tamarac`, `Trading Post`, `Disc Golf` should NOT be scheduled in consecutive slots.    
+*   `Tie Dye`, `Rifle`, `Shotgun` escecially and specifically should seek to run back-to-back in the area schedules to reduce setup/teardown.
+History Center and Disc Golf must have a Balls activity either before or after it.
 
 ---
 
-## 📊 Scoring & Metrics (Target: 1000 pts)
-
-The scheduler aims for a perfect score of **1000**.
+## 📊 Scoring & Metrics (Target: 1000)
 
 | Category | Points | Logic |
 | :--- | :--- | :--- |
-| **1. Preferences** | **450** | **Base Score.** Deductions for misses, bonuses for deep hits.<br>• **Top 5 Miss:** -5.4 to -2.7 per miss (Weighted by rank).<br>• **Rank 6-14 Miss:** -2.6 to -1.2 per miss.<br>• **Rank 15-20 Hit:** +1.0 to +0.2 Bonus.<br>• **Multi-Slot Exemption:** If a troop has multi-slot activities (Sailing, 3-hr blocks), missed low-ranked items are **exempt** from penalties proportional to slots consumed. |
-| **2. Efficiency** | **250** | **Base Score.** Measures clustering and logistics.<br>• **Excess Day:** -25 pts. For each cluster area, compute `required_days = ceil(total_activities / 3)`. Any day count above `required_days` is excess (spread too thin).<br>• **Cluster Gap:** -15 pts. A gap is when the same cluster area is in Slots 1 and 3, but Slot 2 is empty for that troop/day (`1, -, 3`). |
-| **3. Soft Compl.** | **150** | **Base Score.** Adherence to Soft Constraints.<br>• **Violation:** -10 pts per prohibited pair/pattern.<br>• **Beach Slot 2:** -3 pts per non-Thursday use. |
-| **4. Staff Balance** | **100** | **Base Score.** Even distribution of staff load.<br>• **Variance:** -5 pts per variance unit.<br>• **Severe Underuse:** -3 pts per dead slot. |
-| **5. Bonuses** | **50** | **Add-ons.**<br>• **AT Sharing:** +50 pts (2 small troops share AT).<br>• **Early Week:** +10 pts (Front-loading Mon/Tue).<br>• **Sailing Pairs:** +10 pts (Same-day sailing). |
+| **1. Preferences** | **450** | Base score. Deductions for misses, bonuses for deep hits. Top 5 miss penalties apply to **non-exempt** misses. |
+| **2. Efficiency** | **250** | Clustering and logistics quality (`excess days`, `cluster gaps`). |
+| **3. Soft Compliance** | **150** | Penalties for soft-constraint violations. |
+| **4. Staff Balance** | **100** | Variance and underuse/excessive load penalties. |
+| **5. Bonuses** | **50** | AT sharing, early-week bias, sailing pairing bonuses. |
+
+> Preference scoring exists for optimization, but Top 5 non-exempt success is a hard acceptance contract.
 
 ---
 
-## 🏗️ System Architecture & Phasing
+## 🏗️ System Architecture & Phase Gates
 
-The `ConstrainedScheduler` executes in specific phases to ensure priorities are met.
+The `ConstrainedScheduler` runs A -> D. Each phase has Top 5 anti-miss safeguards.
 
 ### Phase A: Foundation (The Skeleton)
-1.  **Anchors:** Place `Reflection` (Friday) and `Super Troop` (Weekly).
-2.  **Spines:** Place `History Center` & `Disc Golf` on **Tuesday** (Exclusive Day).
-3.  **Rocks:** Place **3-Hour Activities** (`Tamarac`, `Itasca`, `Back of the Moon`).
-4.  **Sailing:** Place `Sailing` (High priority, 1.5 slot duration).
-    *   *Optimization:* Pair with `Delta` on the same day if possible.
+1. Place rigid anchors (`Reflection`, `Super Troop`, Tuesday-only mechanics).
+2. Reserve rigid multi-slot structures (3-hour, Sailing, Delta/Sailing shape).
+3. Front-load high-risk Top 5 resources (especially constrained beach windows).
+4. **Exit Gate A:** Emit Top 5-at-risk list (missing candidates + blocking reason).
 
 ### Phase B: Core Requests (The Meat)
-1.  **Top 1:** Forced placement of #1 choice.
-2.  **Top 5 Guarantee:**Iteratively place Ranks 2-5.
-    *   *Note:* Creates "Islands" around these fixed points.
+1. Force Top 1.
+2. Place Top 2-5.
+3. Run mandatory recovery in passes:
+   - strict placement
+   - relaxed placement
+   - displacement/cross-slot recovery
+4. Never displace an existing Top 5 to place Top 6+.
+5. **Exit Gate B:** Non-exempt Top 5 misses must be zero.
 
 ### Phase C: Optimization (The Polish)
-1.  **Staff Smoothing:** Move flexible items to balance staff counts across slots.
-2.  **Gap Filling:** Fill empty slots with `Gaga Ball`, `9 Square`, `Nature`, `Free Time`.
-3.  **Cleanup:**
-    *   Resolve Exclusive Conflicts.
-    *   Fix Beach Slot 2 violations.
-    *   Ensure HC/DG have transition pairings.
+1. Optimize staff/load/cluster quality.
+2. Fill remaining gaps.
+3. Preserve Top 5 integrity during all moves.
+4. **Continuous Gate C:** After each major optimizer, re-check non-exempt Top 5 misses; rollback/repair if miss count rises.
+
+### Phase D: Final Polish & Verification (The Shield)
+1. Apply final constraint sanitization and cleanup.
+2. Run targeted Top 5 recovery if any post-optimization drift occurred.
+3. **Final Acceptance Gate:** all must pass:
+   - no hard violations
+   - no empty troop slots
+   - `non_exempt_top5_misses == 0`
+4. If any gate fails, re-enter repair loop before schedule acceptance.
 
 ---
 
@@ -139,13 +176,11 @@ The `ConstrainedScheduler` executes in specific phases to ensure priorities are 
     *   **HC/DG Pairing:** Must be paired with `Gaga Ball` or `9 Square` for transition buffers.
 
 ### Smart Reflection
-*   **Trigger:** If a troop has only **1 Friday slot left** open.
-*   **Action:** Immediately schedules `Reflection` in that slot to prevent a lockout.
+- If exactly one Friday slot remains, lock in `Reflection` immediately.
 
 ### Activity Nuances
-*   **Sailing:** Counts as **1.5 slots**. On Thursday, it consumes the whole morning (2 slots).
-*   **Water Polo:** Can accommodate **2 small troops** (<8 people) simultaneously.
-*   **Aqua Trampoline:** Can accommodate **2 small troops** (<16 people) simultaneously (Bonus +50 pts).
+- `Sailing` consumes 1.5 slots (scheduled as 2).
+- `Water Polo` and `Aqua Trampoline` can support small-troop sharing.
 
 ### Clustering Metric Clarification
 *   **Excess Day Formula:** For each cluster area, `required_days = ceil(activity_count / 3)`. If an area uses more than `required_days`, each extra day counts as an excess day.
@@ -155,6 +190,7 @@ The `ConstrainedScheduler` executes in specific phases to ensure priorities are 
 
 ### Scoring Exemptions
 *   **Activity Duplication:** If a troop requests multiple 3-hour activities (e.g., Tamarac & Itasca), successfully scheduling ONE exempts the others from "Missed Preference" penalties.
+*   **Canoe-Family Duplication:** If a troop already receives one of `Troop Canoe`, `Troop Kayak`, `Canoe Snorkel`, `Nature Canoe`, or `Float for Floats`, a second missed canoe-family request is exempt.
 *   **Multi-Slot Consumption:** Scores are not penalized for missing lower-ranked activities (e.g. Rank 14) if higher-ranked multi-slot activities (Sailing, 3-hour blocks) physically consumed the available slots.
 *   **HC/DG Saturation:** If all Tuesday slots are filled with HC and DG, missing one of them is exempt.
 
@@ -162,6 +198,6 @@ The `ConstrainedScheduler` executes in specific phases to ensure priorities are 
 
 > [!NOTE]
 > **Data Sources:**
-> *   **Activities:** `core/activities.py`
-> *   **Configuration:** `config/SKULL.json`
-> *   **Scoring Weights:** `utils/regression_checker.py`
+> * **Activities:** `core/activities.py`
+> * **Configuration:** `config/SKULL.json`
+> * **Scoring Weights:** `utils/regression_checker.py`

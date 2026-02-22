@@ -817,12 +817,6 @@
     },
     {
       "troop_name": "Pontiac",
-      "activity_name": "Tie Dye",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Pontiac",
       "activity_name": "Super Troop",
       "day": "WEDNESDAY",
       "slot": 2
@@ -946,12 +940,6 @@
       "activity_name": "Ultimate Survivor",
       "day": "THURSDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Pontiac",
-      "activity_name": "Climbing Tower",
-      "day": "TUESDAY",
-      "slot": 3
     },
     {
       "troop_name": "Pontiac",
@@ -1164,12 +1152,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Powhatan",
-      "activity_name": "Hemp Craft",
-      "day": "WEDNESDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Massasoit",
       "activity_name": "Nature Canoe",
       "day": "TUESDAY",
@@ -1194,12 +1176,6 @@
       "slot": 1
     },
     {
-      "troop_name": "Powhatan",
-      "activity_name": "Loon Lore",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Taskalusa",
       "activity_name": "Climbing Tower",
       "day": "FRIDAY",
@@ -1216,7 +1192,158 @@
       "activity_name": "Climbing Tower",
       "day": "WEDNESDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Sailing",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Sailing",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Sailing",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Sailing",
+      "day": "TUESDAY",
+      "slot": 3
     }
   ],
-  "unscheduled": {}
+  "unscheduled": {
+    "Tecumseh": {
+      "top5": [
+        {
+          "name": "Canoe Snorkel",
+          "rank": 3,
+          "is_exempt": true
+        }
+      ],
+      "top10": []
+    },
+    "Taskalusa": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Float for Floats",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "Canoe Snorkel",
+          "rank": 9,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Tamanend": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Climbing Tower",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Sailing",
+          "rank": 9,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Skenandoa": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Troop Shotgun",
+          "rank": 9,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Samoset": {
+      "top5": [
+        {
+          "name": "Itasca State Park",
+          "rank": 5,
+          "is_exempt": true
+        }
+      ],
+      "top10": [
+        {
+          "name": "Climbing Tower",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Canoe Snorkel",
+          "rank": 10,
+          "is_exempt": true
+        }
+      ]
+    },
+    "Powhatan": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Climbing Tower",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Greased Watermelon",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Pontiac": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Climbing Tower",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
+          "name": "Tie Dye",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Massasoit": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Canoe Snorkel",
+          "rank": 6,
+          "is_exempt": true
+        },
+        {
+          "name": "Troop Swim",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Black Hawk": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Water Polo",
+          "rank": 7,
+          "is_exempt": false
+        }
+      ]
+    }
+  }
 }

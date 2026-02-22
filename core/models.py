@@ -302,10 +302,9 @@ class Schedule(BaseModel):
                      # If they share slot 2, then is_activity_available(Slot 2) should return TRUE if 1 exists.
                     sailing_count = entry_activity_names.count("Sailing")
                     if sailing_count < 2:
-                        # Verify start times are different?
-                        # This logic is tricky to migrate perfectly without test cases.
-                        # For AI Friendliness, we should mark this as "Requires Specific Logic"
-                        pass 
+                        # Allow the second serialized Sailing entry in this slot.
+                        # Staggered 1.5-slot sessions intentionally share slot 2.
+                        continue
                     else:
                         return False
                 else: 

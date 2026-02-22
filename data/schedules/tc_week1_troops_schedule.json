@@ -438,12 +438,6 @@
     },
     {
       "troop_name": "Red Cloud",
-      "activity_name": "Gaga Ball",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Red Cloud",
       "activity_name": "Campsite Free Time",
       "day": "FRIDAY",
       "slot": 3
@@ -453,6 +447,12 @@
       "activity_name": "Ultimate Survivor",
       "day": "MONDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Red Cloud",
@@ -483,6 +483,12 @@
       "activity_name": "Greased Watermelon",
       "day": "MONDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 2
     },
     {
       "troop_name": "Red Cloud",
@@ -558,6 +564,12 @@
     },
     {
       "troop_name": "Tamanend",
+      "activity_name": "Climbing Tower",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tamanend",
       "activity_name": "Aqua Trampoline",
       "day": "MONDAY",
       "slot": 3
@@ -606,6 +618,12 @@
     },
     {
       "troop_name": "Black Hawk",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
       "activity_name": "Shower House",
       "day": "WEDNESDAY",
       "slot": 2
@@ -629,12 +647,6 @@
       "slot": 1
     },
     {
-      "troop_name": "Red Cloud",
-      "activity_name": "Monkey's Fist",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Samoset",
       "activity_name": "Gaga Ball",
       "day": "TUESDAY",
@@ -647,29 +659,58 @@
       "slot": 2
     },
     {
-      "troop_name": "Tamanend",
-      "activity_name": "Climbing Tower",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Climbing Tower",
+      "troop_name": "Red Cloud",
+      "activity_name": "Canoe Snorkel",
       "day": "WEDNESDAY",
       "slot": 1
     },
     {
       "troop_name": "Red Cloud",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
+      "activity_name": "Canoe Snorkel",
+      "day": "WEDNESDAY",
       "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 1
     }
   ],
-  "unscheduled": {}
+  "unscheduled": {
+    "Sequoyah": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Troop Shotgun",
+          "rank": 9,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Samoset": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "GPS & Geocaching",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Red Cloud": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Gaga Ball",
+          "rank": 8,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Massasoit": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Troop Shotgun",
+          "rank": 6,
+          "is_exempt": false
+        }
+      ]
+    }
+  }
 }

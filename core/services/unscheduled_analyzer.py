@@ -192,6 +192,8 @@ class UnscheduledAnalyzer:
             return "2nd+ 3-hour activity (troop already has one)"
         elif activity_name in self.HC_DG_ACTIVITIES:
             return "HC/DG when all Tuesday slots allocated to higher-priority troops"
+        elif activity_name in {"Troop Canoe", "Troop Kayak", "Canoe Snorkel", "Nature Canoe", "Float for Floats"}:
+            return "Canoe-family duplicate request (troop already has another canoe-family activity)"
         elif "capacity" in activity_name.lower():
             return "Capacity-constrained activity"
         else:

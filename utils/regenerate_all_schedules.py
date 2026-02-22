@@ -16,7 +16,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.io_handler import load_troops_from_json, save_schedule_to_json
 from core.activities import get_all_activities
 from core.constrained_scheduler import ConstrainedScheduler
-from core.services.unscheduled_analyzer import UnscheduledAnalyzer
+from core.services.unscheduled_source import build_unscheduled_data
 
 def regenerate_all():
     print("Regenerating all schedules...")
@@ -31,8 +31,6 @@ def regenerate_all():
     print(f"Found {len(troop_files)} troop files.")
     
     success_count = 0
-    analyzer = UnscheduledAnalyzer()
-    
     for troop_file in troop_files:
         week_name = troop_file.stem
         print(f"\nProcessing {week_name}...")
@@ -46,16 +44,8 @@ def regenerate_all():
             scheduler = ConstrainedScheduler(troops, all_activities, voyageur_mode=voyageur_mode)
             schedule = scheduler.schedule_all()
             
-            # Calculate unscheduled (using logic similar to gui_web or regression_checker)
-            # For simplicity, we can use UnscheduledAnalyzer if we had the JSON, 
-            # but here we have the objects.
-            # Let's just pass empty unscheduled for now, or implement basic logic.
-            # Actually, gui_web.generate_schedule does logic to populate 'unscheduled'.
-            # We should probably replicate that or import it.
-            # But importing from web.gui_web might be tricky due to flask deps (but we have them).
-            # Let's just save valid schedule structure. The analyzer can run on it later.
-            
-            unscheduled_data = {} # TODO: Populate this if needed for analysis
+            # Authoritative unscheduled payload for all Top-5/Top-10 miss reporting.
+            unscheduled_data = build_unscheduled_data(scheduler.troops, schedule)
             
             # Save
             output_file = schedules_dir / f"{week_name}_schedule.json"

@@ -25,6 +25,7 @@ from core.io_handler import load_troops_from_json, load_schedule_from_json
 from core.models import Day, TimeSlot, generate_time_slots
 from core.scheduler.constants import SchedulerConstants
 from core.scheduler import config_loader
+from core.services.unscheduled_source import summarize_non_exempt_misses
 
 # Alias for backward compatibility if used in this file
 EXCLUSIVE_AREAS = SchedulerConstants.EXCLUSIVE_ACTIVITIES # Wait, EXCLUSIVE_AREAS was a dict in models.py?
@@ -86,6 +87,25 @@ STAFF_MAP = SchedulerConstants.STAFF_ROLE_MAP
 ALL_STAFF_ACTIVITIES = set()
 for acts in STAFF_MAP.values():
     ALL_STAFF_ACTIVITIES.update(acts)
+
+
+def _load_unscheduled_from_schedule_json(schedule_file: str) -> Dict[str, Any]:
+    """Load authoritative unscheduled payload from schedule JSON."""
+    if not os.path.exists(schedule_file):
+        raise FileNotFoundError(f"Schedule JSON not found for authoritative miss analysis: {schedule_file}")
+    with open(schedule_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if "unscheduled" not in data:
+        raise ValueError(
+            f"Schedule JSON missing 'unscheduled' section: {schedule_file}. "
+            "Top-5 analysis must come from unscheduled JSON, not reconstructed preferences."
+        )
+    unscheduled = data.get("unscheduled")
+    if unscheduled is None:
+        raise ValueError(f"Invalid unscheduled payload in {schedule_file}: expected object, got null")
+    if not isinstance(unscheduled, dict):
+        raise ValueError(f"Invalid unscheduled payload in {schedule_file}: expected object/dict")
+    return unscheduled
 
 
 def evaluate_week(week_file, weights=None):
@@ -599,34 +619,6 @@ def evaluate_week(week_file, weights=None):
         has_3hr_scheduled = any(e.activity.name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] 
                                for e in schedule.entries if e.troop == troop)
         
-        # --- NEW: Multi-slot slot consumption calculation ---
-        # Calculate how many EXTRA slots are consumed by scheduled activities
-        # Standard activity = 1 slot. 
-        # Sailing = 1.5 slots (consumes 2). Extra = 1.
-        # 3-hour = 3 slots. Extra = 2.
-        # Tower (Large) = 2 slots. Extra = 1.
-        extra_slots_consumed = 0
-        
-        # Get all unique particular activity occurrences for this troop 
-        # (to avoid counting multi-slot parts twice if schema differs)
-        scheduled_activity_names = set(e.activity.name for e in schedule.entries if e.troop == troop)
-        
-        for act_name in scheduled_activity_names:
-            activity = get_activity_by_name(act_name)
-            if not activity: continue
-            
-            # Check for specific multi-slot types
-            if activity.name == "Sailing":
-                extra_slots_consumed += 1 # 1.5 rounded to 2, so 1 extra
-            elif activity.slots == 3:
-                extra_slots_consumed += 2 # 3 slots = 2 extra
-            elif activity.name == "Climbing Tower" and troop.scouts > 15:
-                 # Large troops use 2 slots for Tower
-                 extra_slots_consumed += 1
-        
-        # Initialize exemption counter
-        multi_slot_exemptions = extra_slots_consumed
-
         # Iterate through preferences
         for i, pref_name in enumerate(troop.preferences):
             rank = i + 1
@@ -653,13 +645,16 @@ def evaluate_week(week_file, weights=None):
                     # 2. Tuesday HC/DG Saturation Exemption (Generalized to all ranks)
                     elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
                          is_exempt = True
-                    
-                    # 3. Multi-slot Consumption Exemption (NEW)
-                    # If not already exempt by specific rules, check if pushed out by multi-slot activities
-                    if not is_exempt and multi_slot_exemptions > 0:
-                        is_exempt = True
-                        multi_slot_exemptions -= 1
-                        # print(f"DEBUG: Exempting {pref_name} for {troop.name} due to multi-slot consumption. Remaining exemptions: {multi_slot_exemptions}")
+                    # 3. Canoe-family duplication exemption
+                    elif (
+                        pref_name in SchedulerConstants.CANOE_ACTIVITIES
+                        and any(
+                            e.activity.name in SchedulerConstants.CANOE_ACTIVITIES and e.activity.name != pref_name
+                            for e in schedule.entries
+                            if e.troop == troop
+                        )
+                    ):
+                         is_exempt = True
                     
                     if not is_exempt:
                         current_preference_deductions += weight
@@ -688,8 +683,21 @@ def evaluate_week(week_file, weights=None):
     metrics["preference_deductions"] = current_preference_deductions
     metrics["preference_bonuses"] = current_preference_bonuses
     
-    metrics["missing_top5"] = missing_top5_count
-    metrics["missing_top10"] = missing_top10_count
+    authoritative_unscheduled = _load_unscheduled_from_schedule_json(schedule_file)
+    authoritative_misses = summarize_non_exempt_misses(authoritative_unscheduled)
+    authoritative_top5 = authoritative_misses["missing_top5"]
+    authoritative_top10 = authoritative_misses["missing_top10"]
+
+    if missing_top5_count != authoritative_top5 or missing_top10_count != authoritative_top10:
+        raise RuntimeError(
+            "Top-5/Top-10 mismatch detected: computed from preferences does not match "
+            "authoritative schedule_json.unscheduled values. "
+            f"computed(top5={missing_top5_count}, top10={missing_top10_count}) vs "
+            f"authoritative(top5={authoritative_top5}, top10={authoritative_top10})."
+        )
+
+    metrics["missing_top5"] = authoritative_top5
+    metrics["missing_top10"] = authoritative_top10
     metrics["missing_top15"] = missing_top15_count
     
     # Success percentages (Calculated based on requested vs fulfilled)
@@ -698,8 +706,8 @@ def evaluate_week(week_file, weights=None):
     total_top10_requested = sum(min(10, len(t.preferences)) for t in troops)
     total_top15_requested = sum(min(15, len(t.preferences)) for t in troops)
     
-    metrics["top5_pct"] = 100.0 * (total_top5_requested - missing_top5_count) / max(1, total_top5_requested)
-    metrics["top10_pct"] = 100.0 * (total_top10_requested - missing_top10_count) / max(1, total_top10_requested)
+    metrics["top5_pct"] = 100.0 * (total_top5_requested - authoritative_top5) / max(1, total_top5_requested)
+    metrics["top10_pct"] = 100.0 * (total_top10_requested - authoritative_top10) / max(1, total_top10_requested)
     metrics["top15_pct"] = 100.0 * (total_top15_requested - missing_top15_count) / max(1, total_top15_requested)
 
 
@@ -1274,7 +1282,7 @@ class EnhancedRegressionChecker:
         
         # Validate unscheduled data against scheduled entries
         for week_name in self.analyzer.week_analyses.keys():
-            schedule_path = Path("schedules") / f"{week_name}_schedule.json"
+            schedule_path = Path("data/schedules") / f"{week_name}_schedule.json"
             if schedule_path.exists():
                 validation = self.analyzer.validate_against_schedule_entries(week_name, schedule_path)
                 discrepancies = validation.get("discrepancies", [])

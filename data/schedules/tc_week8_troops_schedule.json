@@ -122,18 +122,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Taskalusa",
-      "activity_name": "Super Troop",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Disc Golf",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Tecumseh",
       "activity_name": "Canoe Snorkel",
       "day": "WEDNESDAY",
@@ -156,12 +144,36 @@
       "activity_name": "Float for Floats",
       "day": "THURSDAY",
       "slot": 2
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "What's Cooking",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Knots and Lashings",
+      "day": "TUESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Taskalusa",
       "activity_name": "Archery",
       "day": "WEDNESDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Dr. DNA",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Greased Watermelon",
+      "day": "THURSDAY",
+      "slot": 1
     },
     {
       "troop_name": "Samoset",
@@ -200,6 +212,24 @@
       "slot": 3
     },
     {
+      "troop_name": "Black Hawk",
+      "activity_name": "Sailing",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Sailing",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Climbing Tower",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Samoset",
       "activity_name": "Super Troop",
       "day": "WEDNESDAY",
@@ -218,6 +248,12 @@
       "slot": 1
     },
     {
+      "troop_name": "Taskalusa",
+      "activity_name": "Water Polo",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Tecumseh",
       "activity_name": "Hemp Craft",
       "day": "MONDAY",
@@ -225,51 +261,27 @@
     },
     {
       "troop_name": "Samoset",
-      "activity_name": "Campsite Free Time",
+      "activity_name": "Gaga Ball",
       "day": "WEDNESDAY",
       "slot": 1
     },
     {
-      "troop_name": "Tecumseh",
-      "activity_name": "Dr. DNA",
-      "day": "THURSDAY",
+      "troop_name": "Black Hawk",
+      "activity_name": "Water Polo",
+      "day": "TUESDAY",
       "slot": 1
     },
     {
-      "troop_name": "Tecumseh",
-      "activity_name": "What's Cooking",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Black Hawk",
-      "activity_name": "Orienteering",
+      "activity_name": "Campsite Free Time",
       "day": "TUESDAY",
       "slot": 3
     },
     {
-      "troop_name": "Samoset",
-      "activity_name": "Knots and Lashings",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Water Polo",
-      "day": "THURSDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Greased Watermelon",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Black Hawk",
-      "activity_name": "9 Square",
-      "day": "TUESDAY",
-      "slot": 2
+      "activity_name": "Monkey's Fist",
+      "day": "FRIDAY",
+      "slot": 3
     },
     {
       "troop_name": "Tecumseh",
@@ -297,12 +309,6 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Gaga Ball",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "Aqua Trampoline",
       "day": "MONDAY",
       "slot": 3
@@ -317,7 +323,7 @@
       "troop_name": "Taskalusa",
       "activity_name": "Troop Shotgun",
       "day": "FRIDAY",
-      "slot": 1
+      "slot": 2
     },
     {
       "troop_name": "Samoset",
@@ -333,7 +339,7 @@
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Aqua Trampoline",
+      "activity_name": "Climbing Tower",
       "day": "MONDAY",
       "slot": 1
     },
@@ -345,15 +351,27 @@
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Monkey's Fist",
-      "day": "MONDAY",
-      "slot": 2
+      "activity_name": "Super Troop",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Aqua Trampoline",
+      "day": "WEDNESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Tecumseh",
       "activity_name": "History Center",
       "day": "TUESDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 2
     },
     {
       "troop_name": "Tecumseh",
@@ -383,7 +401,7 @@
       "troop_name": "Taskalusa",
       "activity_name": "Reflection",
       "day": "FRIDAY",
-      "slot": 2
+      "slot": 1
     },
     {
       "troop_name": "Samoset",
@@ -392,14 +410,14 @@
       "slot": 2
     },
     {
-      "troop_name": "Black Hawk",
-      "activity_name": "Campsite Free Time",
-      "day": "THURSDAY",
+      "troop_name": "Taskalusa",
+      "activity_name": "Monkey's Fist",
+      "day": "MONDAY",
       "slot": 2
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Troop Shotgun",
+      "activity_name": "Gaga Ball",
       "day": "MONDAY",
       "slot": 2
     },
@@ -417,34 +435,57 @@
     },
     {
       "troop_name": "Samoset",
-      "activity_name": "Gaga Ball",
+      "activity_name": "9 Square",
       "day": "TUESDAY",
       "slot": 3
     },
     {
-      "troop_name": "Taskalusa",
-      "activity_name": "9 Square",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Woggle Neckerchief Slide",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Black Hawk",
-      "activity_name": "Water Polo",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
+      "activity_name": "Troop Shotgun",
+      "day": "TUESDAY",
       "slot": 2
     }
   ],
-  "unscheduled": {}
+  "unscheduled": {
+    "Taskalusa": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "9 Square",
+          "rank": 7,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Samoset": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Orienteering",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Troop Shotgun",
+          "rank": 8,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Black Hawk": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Canoe Snorkel",
+          "rank": 7,
+          "is_exempt": false
+        },
+        {
+          "name": "Climbing Tower",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ]
+    }
+  }
 }

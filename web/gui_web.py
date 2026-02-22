@@ -16,6 +16,7 @@ from core.models import Day, TimeSlot, generate_time_slots, ScheduleEntry, Troop
 from core.activities import get_all_activities
 from core.io_handler import load_troops_from_json, save_schedule_to_json
 from core.constrained_scheduler import ConstrainedScheduler
+from core.services.unscheduled_source import build_unscheduled_data
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -117,47 +118,8 @@ def generate_schedule(troops_file):
     scheduler = ConstrainedScheduler(troops, activities, voyageur_mode=voyageur_mode)
     schedule = scheduler.schedule_all()
     
-    # Calculate unscheduled activities
-    unscheduled_data = {}
-    # HC/DG exemption: if all 3 Tuesday slots are HC or DG, troops who missed HC/DG get exempt
-    tuesday_hc_dg_slots = set()
-    for e in schedule.entries:
-        if e.time_slot.day == Day.TUESDAY and e.activity.name in ("History Center", "Disc Golf"):
-            tuesday_hc_dg_slots.add(e.time_slot.slot_number)
-    hc_dg_tuesday_full = tuesday_hc_dg_slots >= {1, 2, 3}
-
-    for troop in scheduler.troops:
-        troop_schedule = schedule.get_troop_schedule(troop)
-        scheduled_activity_names = {e.activity.name for e in troop_schedule}
-        
-        missing_top5 = []
-        # Check if troop has ANY 3-hour activity scheduled
-        has_3hr_scheduled = any(name in ConstrainedScheduler.THREE_HOUR_ACTIVITIES for name in scheduled_activity_names)
-        
-        for i, pref in enumerate(troop.preferences[:5]):
-            if pref not in scheduled_activity_names:
-                is_exempt = False
-                if pref in ConstrainedScheduler.THREE_HOUR_ACTIVITIES and has_3hr_scheduled:
-                    is_exempt = True
-                elif pref in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                    is_exempt = True  # All 3 Tuesday slots given to troops who wanted it more
-                missing_top5.append({'name': pref, 'rank': i+1, 'is_exempt': is_exempt})
-                
-        missing_top10 = []
-        for i, pref in enumerate(troop.preferences[5:10]):
-            if pref not in scheduled_activity_names:
-                is_exempt = False
-                if pref in ConstrainedScheduler.THREE_HOUR_ACTIVITIES and has_3hr_scheduled:
-                    is_exempt = True
-                elif pref in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                    is_exempt = True
-                missing_top10.append({'name': pref, 'rank': i+6, 'is_exempt': is_exempt})
-                
-        if missing_top5 or missing_top10:
-            unscheduled_data[troop.name] = {
-                'top5': missing_top5,
-                'top10': missing_top10
-            }
+    # Authoritative unscheduled payload for all Top-5/Top-10 miss reporting.
+    unscheduled_data = build_unscheduled_data(scheduler.troops, schedule)
             
     # vital: return scheduler.troops because they might have been split
     return scheduler.troops, schedule, unscheduled_data
@@ -475,7 +437,7 @@ def _build_success_report(week_id, week_name, metrics, data):
             'metric': 'Exempted Misses (Top 5 / Top 10)',
             'value': f"{exempt_top5} / {exempt_top10}",
             'status': 'Info',
-            'why_it_matters': 'Shows misses that are intentionally exempt due to multi-slot or special-rule exceptions.'
+            'why_it_matters': 'Shows misses that are intentionally exempt due to formal exemption rules (for example 3-hour duplication or Tuesday HC/DG saturation).'
         },
         {
             'metric': 'Top 15 Request Success',
@@ -1634,12 +1596,9 @@ def get_unscheduled_activities():
     if not data:
         return {"error": "Week data not available"}, 404
     
-    troops = data['troops']
-    schedule = data['schedule']
-    
     # ALWAYS use pre-calculated unscheduled data from scheduler
     # This ensures consistency with the scheduler's logic and prevents drift
-    if 'unscheduled' in data and data['unscheduled']:
+    if 'unscheduled' in data and data['unscheduled'] is not None:
         unscheduled_list = []
         for troop_name, info in data['unscheduled'].items():
             # Add Top 5
@@ -1670,38 +1629,12 @@ def get_unscheduled_activities():
             'source': 'scheduler_calculated'
         })
 
-    # ERROR: No unscheduled data available - this indicates a data consistency issue
-    print(f"WARNING: No unscheduled data found for {week} - data inconsistency detected")
-    
-    # Emergency fallback: calculate minimal unscheduled data
-    unscheduled_list = []
-    
-    for troop in troops:
-        # Get all activities this troop has scheduled
-        troop_schedule = schedule.get_troop_schedule(troop)
-        scheduled_activities = {e.activity.name for e in troop_schedule}
-        
-        # Find preferences that weren't scheduled
-        for idx, pref in enumerate(troop.preferences):
-            if pref not in scheduled_activities:
-                rank = idx + 1
-                unscheduled_list.append({
-                    'troop': troop.name,
-                    'activity': pref,
-                    'rank': rank,
-                    'priority': rank,
-                    'exempt': False  # Can't determine exemption status without scheduler logic
-                })
-    
-    # Sort by: 1) priority/rank (lower is better), 2) activity name, 3) troop name
-    unscheduled_list.sort(key=lambda x: (x['priority'], x['activity'], x['troop']))
-    
+    # No fallback by design: inaccurate reconstruction is forbidden.
     return jsonify({
-        'unscheduled': unscheduled_list,
-        'total_count': len(unscheduled_list),
-        'source': 'emergency_fallback',
-        'warning': 'Data inconsistency detected - results may be inaccurate'
-    })
+        'error': 'Authoritative unscheduled data missing from schedule JSON.',
+        'required_source': 'schedule_json.unscheduled.{troop}.top5/top10',
+        'week': week
+    }), 409
 
 @app.route('/api/staff-requirements')
 def get_staff_requirements():

@@ -9,10 +9,10 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from core.models import generate_time_slots, Day
 from core.activities import get_all_activities
 from core.io_handler import load_troops_from_json
 from core.constrained_scheduler import ConstrainedScheduler
+from core.services.unscheduled_source import build_unscheduled_data
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 SCHEDULES_DIR = Path(__file__).parent.parent / "data/schedules"
@@ -58,53 +58,8 @@ def generate_and_save_schedule(troops_file):
     scheduler = ConstrainedScheduler(troops, activities)
     schedule = scheduler.schedule_all()
     
-    # Calculate unscheduled activities
-    unscheduled_data = {}
-    # HC/DG exemption: if all 3 Tuesday slots are HC or DG, troops who missed HC/DG get exempt
-    tuesday_hc_dg_slots = set()
-    for e in schedule.entries:
-        # Safety check for entry structure
-        if (hasattr(e, 'time_slot') and 
-            hasattr(e.time_slot, 'day') and 
-            hasattr(e.time_slot, 'slot_number') and
-            hasattr(e, 'activity') and
-            hasattr(e.activity, 'name')):
-            if e.time_slot.day == Day.TUESDAY and e.activity.name in ("History Center", "Disc Golf"):
-                tuesday_hc_dg_slots.add(e.time_slot.slot_number)
-    hc_dg_tuesday_full = tuesday_hc_dg_slots >= {1, 2, 3}
-
-    for troop in scheduler.troops:
-        troop_schedule = schedule.get_troop_schedule(troop)
-        scheduled_activity_names = {e.activity.name for e in troop_schedule}
-        
-        # Check if troop has ANY 3-hour activity scheduled
-        has_3hr_scheduled = any(name in ConstrainedScheduler.THREE_HOUR_ACTIVITIES for name in scheduled_activity_names)
-        
-        missing_top5 = []
-        for i, pref in enumerate(troop.preferences[:5]):
-            if pref not in scheduled_activity_names:
-                is_exempt = False
-                if pref in ConstrainedScheduler.THREE_HOUR_ACTIVITIES and has_3hr_scheduled:
-                    is_exempt = True
-                elif pref in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                    is_exempt = True  # All 3 Tuesday slots given to troops who wanted it more
-                missing_top5.append({'name': pref, 'rank': i+1, 'is_exempt': is_exempt})
-                
-        missing_top10 = []
-        for i, pref in enumerate(troop.preferences[5:10]):
-            if pref not in scheduled_activity_names:
-                is_exempt = False
-                if pref in ConstrainedScheduler.THREE_HOUR_ACTIVITIES and has_3hr_scheduled:
-                    is_exempt = True
-                elif pref in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                    is_exempt = True
-                missing_top10.append({'name': pref, 'rank': i+6, 'is_exempt': is_exempt})
-                
-        if missing_top5 or missing_top10:
-            unscheduled_data[troop.name] = {
-                'top5': missing_top5,
-                'top10': missing_top10
-            }
+    # Authoritative unscheduled payload for all Top-5/Top-10 miss reporting.
+    unscheduled_data = build_unscheduled_data(scheduler.troops, schedule)
 
     # Serialize schedule and troops data
     schedule_data = {

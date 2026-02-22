@@ -180,12 +180,6 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Campsite Free Time",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "Gaga Ball",
       "day": "FRIDAY",
       "slot": 1
@@ -195,6 +189,12 @@
       "activity_name": "Greased Watermelon",
       "day": "FRIDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Climbing Tower",
+      "day": "THURSDAY",
+      "slot": 1
     },
     {
       "troop_name": "Black Hawk",
@@ -231,12 +231,6 @@
       "activity_name": "Troop Rifle",
       "day": "MONDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Troop Rifle",
-      "day": "MONDAY",
-      "slot": 3
     },
     {
       "troop_name": "Massasoit",
@@ -324,10 +318,32 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Loon Lore",
-      "day": "THURSDAY",
-      "slot": 1
+      "activity_name": "Float for Floats",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Float for Floats",
+      "day": "MONDAY",
+      "slot": 3
     }
   ],
-  "unscheduled": {}
+  "unscheduled": {
+    "Black Hawk": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Campsite Free Time",
+          "rank": 6,
+          "is_exempt": false
+        },
+        {
+          "name": "Troop Rifle",
+          "rank": 7,
+          "is_exempt": false
+        }
+      ]
+    }
+  }
 }
