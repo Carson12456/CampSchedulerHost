@@ -1,0 +1,24 @@
+﻿# Cursor: reduce indexing noise and token usage
+# These paths are excluded from AI context by default
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*.class
+.pytest_cache/
+.mypy_cache/
+
+# Coverage and build artifacts
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Experiment outputs and backups (large generated data)
+experiments/output/
+experiments/__pycache__/
+
+# Logs (high churn, low value)
+*.log
+logs/

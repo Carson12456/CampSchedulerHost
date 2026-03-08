@@ -1,0 +1,13 @@
+---
+description: Rules for editing scheduler modules
+globs: core/scheduler/**/*.py
+alwaysApply: false
+---
+
+# Scheduler Module Rules
+
+- Use `core/scheduler/legacy_parts/README.md` to pick the right split module before editing.
+- Preserve phase order in `pipeline.py`; do not reorder A→B→C→D phases without explicit design intent.
+- After edits, run `pytest -q tests/unit` and `python utils/regression_checker.py`.
+- Prefer focused edits in `legacy_parts/` over expanding `constrained_scheduler.py` or `pipeline.py`.
+- Preserve mandatory anchors (Reflection, Super Troop, HC/DG Tuesday) and hard constraints from BRAIN.

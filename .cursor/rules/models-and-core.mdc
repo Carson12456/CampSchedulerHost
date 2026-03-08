@@ -1,0 +1,12 @@
+---
+description: Rules for editing core models and primitives
+globs: core/models.py,core/constrained_scheduler.py
+alwaysApply: false
+---
+
+# Models and Core Rules
+
+- Preserve backward compatibility: `from constrained_scheduler import ConstrainedScheduler` and `from models import ...` must remain valid.
+- Changes to `core/models.py` affect schedule primitives, availability, and low-level constraints—verify `constrained_scheduler` imports still resolve.
+- When changing `Activity`, `Troop`, `ScheduleEntry`, `TimeSlot`, or `Schedule`, run full unit and regression checks.
+- Do not remove or rename symbols used by `core/scheduler/legacy_parts/` without updating those modules.
