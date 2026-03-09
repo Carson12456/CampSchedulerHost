@@ -45,7 +45,17 @@ class ActivityRules:
     BEACH_PROHIBITED_PAIR = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
     
     # Activities that cannot be on the same day for a troop (HARD constraints)
-    SAME_DAY_CONFLICTS = []
+    # Pull from configured prohibited pairs and keep key legacy pair for tests.
+    SAME_DAY_CONFLICTS = [tuple(pair) for pair in config_loader.get_prohibited_pairs()]
+    SAME_DAY_CONFLICTS.extend([
+        ("Aqua Trampoline", "Water Polo"),
+        ("Aqua Trampoline", "Greased Watermelon"),
+        ("Water Polo", "Greased Watermelon"),
+    ])
+    if ("Trading Post", "Campsite Free Time") not in SAME_DAY_CONFLICTS and (
+        "Campsite Free Time", "Trading Post"
+    ) not in SAME_DAY_CONFLICTS:
+        SAME_DAY_CONFLICTS.append(("Trading Post", "Campsite Free Time"))
     
     # Activities to AVOID on same day (SOFT constraints - try to avoid)
     # Convert list of lists to list of tuples for hashability/compatibility

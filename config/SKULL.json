@@ -791,6 +791,24 @@
             "Reflection",
             "Campsite Free Time"
         ],
+        "concurrent_exclusivity_exceptions": [
+            "Reflection",
+            "Campsite Free Time",
+            "Shower House",
+            "Itasca State Park",
+            "Tamarac Wildlife Refuge",
+            "Back of the Moon"
+        ],
+        "mandatory_anchors": [
+            "Reflection",
+            "Super Troop",
+            "History Center",
+            "Disc Golf"
+        ],
+        "tuesday_only_activities": [
+            "History Center",
+            "Disc Golf"
+        ],
         "non_consecutive": [
             "Trading Post",
             "Campsite Free Time",

@@ -33,11 +33,12 @@ from core.scheduler import config_loader
 
 # Compatibility constants used by older tests/helpers.
 EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
-BEACH_STAFF_ACTIVITIES = [
+BEACH_STAFF_ACTIVITIES = {
     name
     for name in config_loader.get_activities_with_tag("beach")
     if config_loader.get_staff_need(name) > 0
-]
+}
+BEACH_STAFF_ACTIVITIES.add("Sailing")
 
 __all__ = [
     "Activity",

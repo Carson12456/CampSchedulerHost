@@ -1,0 +1,170 @@
+{
+  "troops": [
+    {
+      "name": "Tamanend",
+      "campsite": "Tamanend",
+      "commissioner": "Commissioner A",
+      "preferences": [
+        "Aqua Trampoline",
+        "Fishing",
+        "Gaga Ball",
+        "Archery",
+        "Campsite Free Time",
+        "Greased Watermelon",
+        "9 Square",
+        "Troop Shotgun",
+        "Climbing Tower",
+        "Disc Golf",
+        "Troop Canoe",
+        "Tie Dye",
+        "GPS & Geocaching",
+        "Troop Swim",
+        "Back of the Moon",
+        "History Center",
+        "Hemp Craft",
+        "Sailing",
+        "Itasca State Park",
+        "Delta",
+        "Canoe Snorkel",
+        "Float for Floats",
+        "Chopped!",
+        "Ultimate Survivor",
+        "Water Polo",
+        "Monkey's Fist"
+      ],
+      "scouts": 8,
+      "adults": 1
+    },
+    {
+      "name": "Sequoyah",
+      "campsite": "Sequoyah",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Aqua Trampoline",
+        "Archery",
+        "Climbing Tower",
+        "Delta",
+        "GPS & Geocaching",
+        "Troop Canoe",
+        "History Center",
+        "Trading Post",
+        "Troop Shotgun",
+        "Float for Floats",
+        "What's Cooking",
+        "Chopped!",
+        "Nature Canoe",
+        "Knots and Lashings"
+      ],
+      "scouts": 13,
+      "adults": 2
+    },
+    {
+      "name": "Samoset",
+      "campsite": "Samoset",
+      "commissioner": "Commissioner C",
+      "preferences": [
+        "Greased Watermelon",
+        "Climbing Tower",
+        "Archery",
+        "Ultimate Survivor",
+        "Troop Rifle",
+        "Tie Dye",
+        "Troop Swim",
+        "Aqua Trampoline",
+        "Sailing",
+        "GPS & Geocaching",
+        "History Center",
+        "Troop Shotgun",
+        "Water Polo",
+        "Chopped!",
+        "Troop Canoe",
+        "Dr. DNA",
+        "Delta",
+        "What's Cooking",
+        "Loon Lore",
+        "Canoe Snorkel",
+        "Super Troop"
+      ],
+      "scouts": 12,
+      "adults": 2
+    },
+    {
+      "name": "Red Cloud",
+      "campsite": "Red Cloud",
+      "commissioner": "Commissioner A",
+      "preferences": [
+        "Campsite Free Time",
+        "Troop Shotgun",
+        "Ultimate Survivor",
+        "What's Cooking",
+        "Canoe Snorkel",
+        "Climbing Tower",
+        "Disc Golf",
+        "Gaga Ball",
+        "GPS & Geocaching",
+        "Greased Watermelon",
+        "Hemp Craft",
+        "Monkey's Fist",
+        "Orienteering",
+        "Sailing",
+        "9 Square",
+        "Aqua Trampoline",
+        "Archery",
+        "Back of the Moon"
+      ],
+      "scouts": 8,
+      "adults": 1
+    },
+    {
+      "name": "Massasoit",
+      "campsite": "Massasoit",
+      "commissioner": "Commissioner B",
+      "preferences": [
+        "Aqua Trampoline",
+        "Gaga Ball",
+        "Fishing",
+        "Tie Dye",
+        "Chopped!",
+        "Troop Shotgun",
+        "Trading Post",
+        "Itasca State Park",
+        "Archery",
+        "Greased Watermelon",
+        "9 Square",
+        "Troop Canoe",
+        "Float for Floats",
+        "Ultimate Survivor",
+        "What's Cooking"
+      ],
+      "commissioner_assigned": {
+        "MONDAY": {
+          "1": "Tie Dye"
+        },
+        "THURSDAY": {
+          "1": "Itasca State Park"
+        }
+      },
+      "scouts": 23,
+      "adults": 4
+    },
+    {
+      "name": "Black Hawk",
+      "campsite": "Black Hawk",
+      "commissioner": "Commissioner C",
+      "preferences": [
+        "Shower House",
+        "Climbing Tower",
+        "Delta",
+        "Archery",
+        "Aqua Trampoline",
+        "Ultimate Survivor",
+        "Disc Golf",
+        "Knots and Lashings",
+        "Dr. DNA",
+        "Fishing"
+      ],
+      "scouts": 6,
+      "adults": 1
+    }
+  ]
+}

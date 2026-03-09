@@ -1,0 +1,414 @@
+{
+  "timestamp": "C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampSchedulers\\CampSchedulerHost\\CampSchedulerHost-1",
+  "season_success_rate": 100.0,
+  "total_top5_slots": 415,
+  "total_exempt_misses": 3,
+  "total_counted_misses": 0,
+  "weeks_with_issues": 0,
+  "week_details": {
+    "tc_week1_troops": {
+      "total_troops": 6,
+      "total_top5_slots": 30,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week2_troops": {
+      "total_troops": 3,
+      "total_top5_slots": 15,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week3_troops": {
+      "total_troops": 9,
+      "total_top5_slots": 45,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week4_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 2,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week5_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week6_troops": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week7_troops": {
+      "total_troops": 11,
+      "total_top5_slots": 55,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "tc_week8_troops": {
+      "total_troops": 4,
+      "total_top5_slots": 20,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week1_troops": {
+      "total_troops": 10,
+      "total_top5_slots": 50,
+      "exempt_misses": 1,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    },
+    "voyageur_week3_troops": {
+      "total_troops": 8,
+      "total_top5_slots": 40,
+      "exempt_misses": 0,
+      "counted_misses": 0,
+      "success_rate": 100.0,
+      "non_exempt_misses": 0
+    }
+  },
+  "target_weeks": [
+    "tc_week1_troops",
+    "tc_week2_troops",
+    "tc_week3_troops",
+    "tc_week4_troops",
+    "tc_week5_troops",
+    "tc_week6_troops",
+    "tc_week7_troops",
+    "tc_week8_troops",
+    "voyageur_week1_troops",
+    "voyageur_week3_troops"
+  ],
+  "quality_metrics": {
+    "average_week_score": 839.6,
+    "average_core_goal_score": 756.3736734693878,
+    "average_raw_bonus_total": 71.84462677415465,
+    "average_effective_bonus_total": 38.74404761904762,
+    "average_constraint_violations": 2.2,
+    "average_staff_variance": 1.513265306122449,
+    "average_clustering_efficiency": 4.0,
+    "average_cluster_gaps": 1.1,
+    "average_commissioner_day_compliance_pct": 16.655084543939033,
+    "average_beach_slot_violations": 1.5,
+    "week_details": [
+      {
+        "week_name": "tc_week1_troops",
+        "total_score": 865,
+        "core_goal_score": 811.3938775510204,
+        "raw_bonus_total": 24.583333333333332,
+        "effective_bonus_total": 24.583333333333332,
+        "preference_score": 422.7,
+        "constraint_violations": 0,
+        "staff_variance": 1.0612244897959184,
+        "clustering_efficiency": 4,
+        "cluster_gaps": 0,
+        "commissioner_day_compliance_pct": 25.0,
+        "commissioner_day_misses": 24,
+        "beach_slot_2_violations": 1,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [],
+        "top5_pct": 100.0,
+        "top10_pct": 93.33333333333333
+      },
+      {
+        "week_name": "tc_week2_troops",
+        "total_score": 899,
+        "core_goal_score": 879.2112244897959,
+        "raw_bonus_total": 5.0,
+        "effective_bonus_total": 5.0,
+        "preference_score": 437.4,
+        "constraint_violations": 0,
+        "staff_variance": 0.6377551020408163,
+        "clustering_efficiency": 1,
+        "cluster_gaps": 1,
+        "commissioner_day_compliance_pct": 8.333333333333334,
+        "commissioner_day_misses": 11,
+        "beach_slot_2_violations": 1,
+        "unnecessary_gaps": 1,
+        "grade": "Unknown",
+        "violation_details": [],
+        "top5_pct": 100.0,
+        "top10_pct": 92.85714285714286
+      },
+      {
+        "week_name": "tc_week3_troops",
+        "total_score": 811,
+        "core_goal_score": 716.4897959183673,
+        "raw_bonus_total": 116.07142857142857,
+        "effective_bonus_total": 50.0,
+        "preference_score": 410.0,
+        "constraint_violations": 4,
+        "staff_variance": 1.1020408163265307,
+        "clustering_efficiency": 4,
+        "cluster_gaps": 3,
+        "commissioner_day_compliance_pct": 28.0,
+        "commissioner_day_misses": 36,
+        "beach_slot_2_violations": 1,
+        "unnecessary_gaps": 3,
+        "grade": "Unknown",
+        "violation_details": [
+          "Red Cloud: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday",
+          "Taskalusa: Wet-Dry-Wet pattern on Monday",
+          "Pontiac: Wet-Dry-Wet pattern on Friday",
+          "Black Hawk: Shower House before Super Troop on Wednesday"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 92.04545454545455
+      },
+      {
+        "week_name": "tc_week4_troops",
+        "total_score": 838,
+        "core_goal_score": 737.6438775510204,
+        "raw_bonus_total": 72.2192513368984,
+        "effective_bonus_total": 50.0,
+        "preference_score": 400.2,
+        "constraint_violations": 0,
+        "staff_variance": 2.3112244897959187,
+        "clustering_efficiency": 4,
+        "cluster_gaps": 3,
+        "commissioner_day_compliance_pct": 24.56140350877193,
+        "commissioner_day_misses": 43,
+        "beach_slot_2_violations": 2,
+        "unnecessary_gaps": 3,
+        "grade": "Unknown",
+        "violation_details": [],
+        "top5_pct": 100.0,
+        "top10_pct": 89.0909090909091
+      },
+      {
+        "week_name": "tc_week5_troops",
+        "total_score": 779,
+        "core_goal_score": 655.0285714285715,
+        "raw_bonus_total": 65.53030303030303,
+        "effective_bonus_total": 50.0,
+        "preference_score": 385.6,
+        "constraint_violations": 7,
+        "staff_variance": 1.7142857142857142,
+        "clustering_efficiency": 5,
+        "cluster_gaps": 1,
+        "commissioner_day_compliance_pct": 11.538461538461538,
+        "commissioner_day_misses": 46,
+        "beach_slot_2_violations": 4,
+        "unnecessary_gaps": 1,
+        "grade": "Unknown",
+        "violation_details": [
+          "Joseph: Beach activity 'Float for Floats' in Slot 2 (not Top 5) on Monday",
+          "Pontiac: Beach activity 'Troop Swim' in Slot 2 (not Top 5) on Monday",
+          "Pontiac: Trading Post + Shower House on same day (Wednesday)",
+          "Tamanend: Wet-Dry-Wet pattern on Wednesday",
+          "Tamanend: Shower House before Aqua Trampoline on Wednesday",
+          "Red Cloud: Shower House before Super Troop on Wednesday",
+          "Joseph: Shower House before Super Troop on Thursday"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 84.54545454545455
+      },
+      {
+        "week_name": "tc_week6_troops",
+        "total_score": 837,
+        "core_goal_score": 737.0153061224489,
+        "raw_bonus_total": 123.0,
+        "effective_bonus_total": 50.0,
+        "preference_score": 403.0,
+        "constraint_violations": 1,
+        "staff_variance": 2.5969387755102042,
+        "clustering_efficiency": 5,
+        "cluster_gaps": 1,
+        "commissioner_day_compliance_pct": 25.0,
+        "commissioner_day_misses": 39,
+        "beach_slot_2_violations": 0,
+        "unnecessary_gaps": 1,
+        "grade": "Unknown",
+        "violation_details": [
+          "Black Hawk: Shower House before Greased Watermelon on Tuesday"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 90.0
+      },
+      {
+        "week_name": "tc_week7_troops",
+        "total_score": 835,
+        "core_goal_score": 729.8397959183674,
+        "raw_bonus_total": 117.5598086124402,
+        "effective_bonus_total": 50.0,
+        "preference_score": 397.6,
+        "constraint_violations": 1,
+        "staff_variance": 2.352040816326531,
+        "clustering_efficiency": 5,
+        "cluster_gaps": 1,
+        "commissioner_day_compliance_pct": 27.45098039215686,
+        "commissioner_day_misses": 37,
+        "beach_slot_2_violations": 2,
+        "unnecessary_gaps": 1,
+        "grade": "Unknown",
+        "violation_details": [
+          "Red Cloud: Shower House before Troop Swim on Thursday"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 90.0
+      },
+      {
+        "week_name": "tc_week8_troops",
+        "total_score": 824,
+        "core_goal_score": 789.6510204081633,
+        "raw_bonus_total": 7.857142857142857,
+        "effective_bonus_total": 7.857142857142857,
+        "preference_score": 425.1,
+        "constraint_violations": 3,
+        "staff_variance": 0.489795918367347,
+        "clustering_efficiency": 4,
+        "cluster_gaps": 0,
+        "commissioner_day_compliance_pct": 16.666666666666668,
+        "commissioner_day_misses": 20,
+        "beach_slot_2_violations": 1,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Tecumseh: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday",
+          "Taskalusa: Same area 'Rifle Range' twice on Friday",
+          "Taskalusa: Multiple accuracy activities on Friday (Troop Rifle, Troop Shotgun)"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 87.5
+      },
+      {
+        "week_name": "voyageur_week1_troops",
+        "total_score": 822,
+        "core_goal_score": 727.0255102040817,
+        "raw_bonus_total": 120.375,
+        "effective_bonus_total": 50.0,
+        "preference_score": 405.5,
+        "constraint_violations": 5,
+        "staff_variance": 1.4948979591836733,
+        "clustering_efficiency": 4,
+        "cluster_gaps": 1,
+        "commissioner_day_compliance_pct": 0.0,
+        "commissioner_day_misses": 0,
+        "beach_slot_2_violations": 2,
+        "unnecessary_gaps": 1,
+        "grade": "Unknown",
+        "violation_details": [
+          "Fond Du Lac: Beach activity 'Canoe Snorkel' in Slot 2 (not Top 5) on Wednesday",
+          "Ely: Shower House before Troop Canoe on Wednesday",
+          "Ft. William: Multiple accuracy activities on Monday (Archery, Troop Shotgun)",
+          "Two Harbors 2: Multiple accuracy activities on Monday (Archery, Troop Rifle)",
+          "Quetico: Multiple accuracy activities on Wednesday (Archery, Troop Rifle)"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 87.62886597938144
+      },
+      {
+        "week_name": "voyageur_week3_troops",
+        "total_score": 886,
+        "core_goal_score": 780.4377551020408,
+        "raw_bonus_total": 66.25,
+        "effective_bonus_total": 50.0,
+        "preference_score": 400.3,
+        "constraint_violations": 1,
+        "staff_variance": 1.3724489795918369,
+        "clustering_efficiency": 4,
+        "cluster_gaps": 0,
+        "commissioner_day_compliance_pct": 0.0,
+        "commissioner_day_misses": 0,
+        "beach_slot_2_violations": 1,
+        "unnecessary_gaps": 0,
+        "grade": "Unknown",
+        "violation_details": [
+          "Hibbing 1: Shower House before Aqua Trampoline on Wednesday"
+        ],
+        "top5_pct": 100.0,
+        "top10_pct": 85.0
+      }
+    ]
+  },
+  "input_fingerprint": {
+    "aggregate_sha256": "1c48012539934570470053462246a64df283b7b5049909466e42b056c9bf1965",
+    "total_troops": 83,
+    "total_top5_slots": 415,
+    "weeks": {
+      "tc_week1_troops": {
+        "exists": true,
+        "sha256": "8ff9807c6218542b2c88bb4fcfcb9f897619ff468a80e3531947b526a3dd2f5f",
+        "troops": 6,
+        "top5_slots": 30
+      },
+      "tc_week2_troops": {
+        "exists": true,
+        "sha256": "9359b14bf116dbcec70496f034a0133304317f8974308f36a8dd9c52e2dab5fe",
+        "troops": 3,
+        "top5_slots": 15
+      },
+      "tc_week3_troops": {
+        "exists": true,
+        "sha256": "631d26381a5bee7efeafa4581719ad3a915da16ef7499b5f217c88e88d206088",
+        "troops": 9,
+        "top5_slots": 45
+      },
+      "tc_week4_troops": {
+        "exists": true,
+        "sha256": "aceda158f5a406490471eb7cc47de35359a442c651a3e8791ade6273652f0f14",
+        "troops": 11,
+        "top5_slots": 55
+      },
+      "tc_week5_troops": {
+        "exists": true,
+        "sha256": "438bbaa57740e308ab853f5ad1a3df767a13864eef8005a2ce38f4b60d5674e5",
+        "troops": 11,
+        "top5_slots": 55
+      },
+      "tc_week6_troops": {
+        "exists": true,
+        "sha256": "350996c091f176c7fd6a9495d498429d0f43a00c53128c082832f256e743a30c",
+        "troops": 10,
+        "top5_slots": 50
+      },
+      "tc_week7_troops": {
+        "exists": true,
+        "sha256": "d89d34a5bcf3353b035439e795c0bedcecee85924896e3a92f9b6fbe450763b8",
+        "troops": 11,
+        "top5_slots": 55
+      },
+      "tc_week8_troops": {
+        "exists": true,
+        "sha256": "a2ee0f615f9a1fbc777d1920dddc9fb4bcb0a0466feeb95efbaa93528ca091c6",
+        "troops": 4,
+        "top5_slots": 20
+      },
+      "voyageur_week1_troops": {
+        "exists": true,
+        "sha256": "bf30c8032240bd477f6f5c0de79d3383ec5fd22aaf3fce6f629779b95c00c034",
+        "troops": 10,
+        "top5_slots": 50
+      },
+      "voyageur_week3_troops": {
+        "exists": true,
+        "sha256": "9fd19c357328a30bd59d5eb22b350bb02f6ebe9365a53621e8fbb20a819911e4",
+        "troops": 8,
+        "top5_slots": 40
+      }
+    }
+  },
+  "baseline_role": "reference_prime",
+  "description": "Reference Baseline (Prime): Original scheduler output before improvement work. Historical record."
+}

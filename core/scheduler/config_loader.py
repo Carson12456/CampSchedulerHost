@@ -300,6 +300,74 @@ def get_concurrent_activities() -> List[str]:
     return get_constraints().get("concurrent_activities", [])
 
 
+def get_concurrent_exclusivity_exceptions() -> List[str]:
+    """
+    Activities that should be ignored by exclusivity conflict cleanup.
+
+    This is intentionally separate from `concurrent_activities` because some
+    activities (e.g. 3-hour off-camp) are treated as exclusivity exceptions
+    without being globally concurrent in every scheduling rule.
+    """
+    constraints = get_constraints()
+    configured = constraints.get("concurrent_exclusivity_exceptions", [])
+    if configured:
+        return configured
+    # Backward-compatible fallback aligned with prior behavior.
+    return list(dict.fromkeys(get_concurrent_activities() + get_three_hour_activities() + ["Shower House"]))
+
+
+def get_mandatory_anchors() -> List[str]:
+    """
+    Get mandatory anchor activities used for hard acceptance checks.
+
+    Preferred source: constraints.mandatory_anchors.
+    Backward-compatible fallback includes activity_tags.mandatory plus BRAIN
+    Tuesday-only anchors.
+    """
+    constraints = get_constraints()
+    configured = constraints.get("mandatory_anchors", [])
+    if configured:
+        return configured
+
+    tags = get_activities_with_tag("mandatory")
+    fallback = list(dict.fromkeys(tags + ["History Center", "Disc Golf"]))
+    return fallback
+
+
+def get_tuesday_only_activities() -> List[str]:
+    """Get activities constrained to Tuesday-only placement."""
+    constraints = get_constraints()
+    configured = constraints.get("tuesday_only_activities", [])
+    if configured:
+        return configured
+    return ["History Center", "Disc Golf"]
+
+
+def validate_brain_skull_alignment() -> None:
+    """
+    Fail fast when SKULL hard-policy lists diverge from BRAIN-required anchors.
+    """
+    brain_required_anchors = {"Reflection", "Super Troop", "History Center", "Disc Golf"}
+    brain_tuesday_only = {"History Center", "Disc Golf"}
+
+    mandatory = set(get_mandatory_anchors())
+    tuesday_only = set(get_tuesday_only_activities())
+
+    missing_mandatory = brain_required_anchors - mandatory
+    if missing_mandatory:
+        raise ValueError(
+            "BRAIN/SKULL mismatch: mandatory anchors missing from SKULL "
+            f"mandatory_anchors: {sorted(missing_mandatory)}"
+        )
+
+    missing_tuesday = brain_tuesday_only - tuesday_only
+    if missing_tuesday:
+        raise ValueError(
+            "BRAIN/SKULL mismatch: Tuesday-only anchors missing from SKULL "
+            f"tuesday_only_activities: {sorted(missing_tuesday)}"
+        )
+
+
 def get_non_consecutive_activities() -> List[str]:
     """Get list of activities that do not need to be consecutive slots."""
     return get_constraints().get("non_consecutive", [])

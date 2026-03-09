@@ -43,6 +43,9 @@ class SchedulerConstants:
     
     # From SKULL.json 'concurrent_activities'
     CONCURRENT_ACTIVITIES = config_loader.get_concurrent_activities()
+    CONCURRENT_EXCLUSIVITY_EXCEPTIONS = config_loader.get_concurrent_exclusivity_exceptions()
+    MANDATORY_ANCHORS = set(config_loader.get_mandatory_anchors())
+    TUESDAY_ONLY_ACTIVITIES = set(config_loader.get_tuesday_only_activities())
     
     # From SKULL.json 'non_consecutive'
     NON_CONSECUTIVE_ACTIVITIES = config_loader.get_non_consecutive_activities()
@@ -105,9 +108,16 @@ class SchedulerConstants:
     # Area Pairs
     AREA_PAIRS = config_loader.get_area_pairs()
     
-    # Spine Beach Prohibited Pair (Set of activities that shouldn't mix)
-    # Derived from logic or explicit config. Using hardcoded set for now as it matches 'soft_prohibited_pairs' clique.
-    SPINE_BEACH_PROHIBITED_PAIR = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
+    # Spine Beach Prohibited Pair (set of beach activities that should not mix).
+    # Derived from SKULL soft_prohibited_pairs + special_activities instead of hardcoding.
+    _special_activities = set(config_loader._load_skull().get("special_activities", {}).keys())
+    SPINE_BEACH_PROHIBITED_PAIR = set()
+    for pair in config_loader.get_soft_prohibited_pairs():
+        if len(pair) != 2:
+            continue
+        a, b = pair
+        if a in BEACH_ACTIVITIES and b in BEACH_ACTIVITIES and (a in _special_activities or b in _special_activities):
+            SPINE_BEACH_PROHIBITED_PAIR.update([a, b])
     
     # Beach Staffed Activities (Staff needed > 0 AND in Beach zone)
     BEACH_STAFFED_ACTIVITIES = [

@@ -4,17 +4,82 @@ Scheduling phase pipeline orchestration mixin.
 This module contains the high-level A->D phase flow used by the scheduler.
 """
 
-from ..models import Schedule
+from ..models import Day, Schedule
 
 
 class SchedulingPipelineMixin:
     """Coordinates the full scheduling lifecycle across all phases."""
 
+    def _enforce_sailing_slot_exclusivity(self) -> None:
+        """
+        Normalize final Sailing occupancy to the BRAIN 90-minute capacity model.
+
+        Final schedules allow the formal slot-2 overlap exception:
+        - slot 1 max 1 Sailing occupancy
+        - slot 2 max 2 Sailing occupancies
+        - slot 3 max 1 Sailing occupancy
+        """
+        sailing_starts = []
+        for entry in self.schedule.entries:
+            if entry.activity.name != "Sailing":
+                continue
+            prev_slot_num = entry.time_slot.slot_number - 1
+            has_prev = any(
+                e.activity.name == "Sailing"
+                and e.troop == entry.troop
+                and e.time_slot.day == entry.time_slot.day
+                and e.time_slot.slot_number == prev_slot_num
+                for e in self.schedule.entries
+            )
+            if not has_prev:
+                sailing_starts.append(entry)
+
+        overlap_by_slot = {}
+        for start in sailing_starts:
+            occupied = [start.time_slot.slot_number]
+            if start.time_slot.slot_number < 3:
+                occupied.append(start.time_slot.slot_number + 1)
+            for slot_num in occupied:
+                key = (start.time_slot.day, slot_num)
+                overlap_by_slot.setdefault(key, []).append(start)
+
+        for (day, slot_num), starts in overlap_by_slot.items():
+            if len(starts) <= 1:
+                continue
+
+            allowed = 2 if day != Day.THURSDAY and slot_num == 2 else 1
+            if len(starts) <= allowed:
+                continue
+
+            ranked = sorted(
+                starts,
+                key=lambda e: e.troop.get_priority(e.activity.name),
+            )
+            keep = ranked[:allowed]
+            for conflict_start in ranked[allowed:]:
+                if conflict_start not in self.schedule.entries:
+                    continue
+                moved = False
+                candidates = self._find_valid_slots_for_activity(conflict_start.activity, conflict_start.troop)
+                for candidate in candidates:
+                    if candidate == conflict_start.time_slot:
+                        continue
+                    if self._remove_from_schedule(conflict_start):
+                        if self._add_to_schedule(candidate, conflict_start.activity, conflict_start.troop):
+                            moved = True
+                            break
+                        # rollback to original placement when candidate fails
+                        self._add_to_schedule(conflict_start.time_slot, conflict_start.activity, conflict_start.troop)
+                if not moved:
+                    # Keep the best allowed Sailing placements if no legal move exists.
+                    if keep:
+                        self._remove_from_schedule(conflict_start)
+
     def _immediate_gap_fix_if_needed(self, phase_name: str) -> None:
-        """Immediately fix gaps if any are detected after a phase."""
-        gaps = self._comprehensive_gap_check(phase_name)
-        if gaps > 0:
-            print(f"  [IMMEDIATE FIX] Running emergency gap fill after {phase_name}")
+        """Immediately fix gaps if any troop-level empty slots are detected after a phase."""
+        troop_gaps = self._count_troop_empty_slots()
+        if troop_gaps > 0:
+            print(f"  [IMMEDIATE FIX] Running emergency gap fill after {phase_name} ({troop_gaps} empty slots)")
             self._guarantee_no_gaps()
 
     def schedule_all(self) -> Schedule:
@@ -22,6 +87,7 @@ class SchedulingPipelineMixin:
 
         Aligned with SCHEDULING_PROCESS.md Phase Groups A-D.
         """
+        self.current_pipeline_phase = "foundation"
         self.logger.section("CONSTRAINED SCHEDULER - PHASE A: FOUNDATION")
 
         # =================================================================
@@ -90,6 +156,7 @@ class SchedulingPipelineMixin:
         # =================================================================
         # PHASE B: CORE REQUESTS
         # =================================================================
+        self.current_pipeline_phase = "core"
         self.logger.section("PHASE B: CORE REQUESTS")
 
         # Phase B.1: Preference Rank 1-5 (Top 5 Guarantee)
@@ -143,6 +210,7 @@ class SchedulingPipelineMixin:
         # =================================================================
         # PHASE C: REMAINING & OPTIMIZATION
         # =================================================================
+        self.current_pipeline_phase = "remaining"
         self.logger.section("PHASE C: REMAINING & OPTIMIZATION")
 
         # Phase C.1: Day Specific requests
@@ -191,6 +259,7 @@ class SchedulingPipelineMixin:
         # =================================================================
         # PHASE D: FINAL POLISH
         # =================================================================
+        self.current_pipeline_phase = "polish"
         self.logger.section("PHASE D: FINAL POLISH & VERIFICATION")
 
         # Phase D.1: Optimizations (Consolidated)
@@ -208,6 +277,12 @@ class SchedulingPipelineMixin:
 
         # GAP CHECK: After D.3 - Forced Clustering
         self._immediate_gap_fix_if_needed("Phase D.3 (Forced Clustering)")
+
+        self.logger.subsection("D.3b Ultra-aggressive excess day reduction")
+        self._ultra_aggressive_clustering()
+
+        # GAP CHECK: After D.3b - Ultra Clustering
+        self._immediate_gap_fix_if_needed("Phase D.3b (Ultra Clustering)")
 
         self.logger.subsection("D.4 Friday Super Troop optimization")
         self._optimize_friday_super_troop()
@@ -247,16 +322,15 @@ class SchedulingPipelineMixin:
         # =================================================================
         # FINAL VERIFICATION
         # =================================================================
+        self.current_pipeline_phase = "final"
         self.logger.section("FINAL VERIFICATION")
 
         # Multi-slot Integrity Fix - Ensure all multi-slot activities have correct slots
         self.logger.subsection("Multi-Slot Integrity Check")
         self._fix_multislot_integrity()
 
-        # Final comprehensive validation
+        # Final comprehensive validation is the last mutating step.
+        # Do not mutate the schedule after this call, or we can invalidate a "validated" output.
         self._final_comprehensive_validation()
-
-        # Final exclusivity sanitization after all post-processing
-        self._sanitize_exclusivity()
 
         return self.schedule

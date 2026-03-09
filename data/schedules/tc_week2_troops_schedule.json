@@ -97,25 +97,31 @@
     {
       "troop_name": "Taskalusa",
       "activity_name": "Super Troop",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Super Troop",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Super Troop",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Aqua Trampoline",
       "day": "MONDAY",
       "slot": 1
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Itasca State Park",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Itasca State Park",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Itasca State Park",
-      "day": "WEDNESDAY",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
       "slot": 3
     },
     {
@@ -131,129 +137,33 @@
       "slot": 2
     },
     {
-      "troop_name": "Black Hawk",
-      "activity_name": "Archery",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Archery",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Taskalusa",
-      "activity_name": "Sauna",
-      "day": "FRIDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Sauna",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Delta",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Campsite Free Time",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Gaga Ball",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Dr. DNA",
-      "day": "WEDNESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Gaga Ball",
-      "day": "FRIDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Greased Watermelon",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Climbing Tower",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Shower House",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Monkey's Fist",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Massasoit",
       "activity_name": "What's Cooking",
       "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Archery",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Campsite Free Time",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Sauna",
+      "day": "WEDNESDAY",
       "slot": 2
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Aqua Trampoline",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Hemp Craft",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Troop Rifle",
-      "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Super Troop",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Monkey's Fist",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Super Troop",
-      "day": "WEDNESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Aqua Trampoline",
-      "day": "MONDAY",
+      "activity_name": "Sauna",
+      "day": "FRIDAY",
       "slot": 1
     },
     {
@@ -264,83 +174,168 @@
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Archery",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Gaga Ball",
-      "day": "TUESDAY",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
       "slot": 3
     },
     {
-      "troop_name": "Taskalusa",
-      "activity_name": "What's Cooking",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Campsite Free Time",
+      "troop_name": "Black Hawk",
+      "activity_name": "Shower House",
       "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Climbing Tower",
-      "day": "THURSDAY",
       "slot": 2
     },
     {
       "troop_name": "Black Hawk",
       "activity_name": "Tie Dye",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Dr. DNA",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Troop Canoe",
-      "day": "WEDNESDAY",
+      "day": "FRIDAY",
       "slot": 1
     },
     {
       "troop_name": "Black Hawk",
+      "activity_name": "Greased Watermelon",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "What's Cooking",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Archery",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Massasoit",
       "activity_name": "9 Square",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Fishing",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Hemp Craft",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Monkey's Fist",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Troop Rifle",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Gaga Ball",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Troop Rifle",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "GPS & Geocaching",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Gaga Ball",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Archery",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Monkey's Fist",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Delta",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Gaga Ball",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "9 Square",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Troop Canoe",
       "day": "THURSDAY",
       "slot": 2
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Float for Floats",
-      "day": "MONDAY",
+      "activity_name": "Campsite Free Time",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
       "slot": 2
     },
     {
       "troop_name": "Black Hawk",
       "activity_name": "Float for Floats",
-      "day": "MONDAY",
-      "slot": 3
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Float for Floats",
+      "day": "THURSDAY",
+      "slot": 2
     }
   ],
   "unscheduled": {
-    "Black Hawk": {
+    "Taskalusa": {
       "top5": [],
       "top10": [
         {
-          "name": "Campsite Free Time",
+          "name": "Itasca State Park",
           "rank": 6,
-          "is_exempt": false
-        },
-        {
-          "name": "Troop Rifle",
-          "rank": 7,
           "is_exempt": false
         }
       ]

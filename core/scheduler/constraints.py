@@ -12,26 +12,18 @@ from core.scheduler.config_loader import (
     get_exclusive_areas,
     get_prohibited_pairs,
     are_activities_prohibited_together,
+    get_activities_with_tag,
 )
 
 if TYPE_CHECKING:
     from core.models import Schedule, Troop, Day, TimeSlot
 
 
-# === Activity Categories (to be migrated to SKULL.json in Phase 2.4) ===
+# === Activity Categories (SKULL-driven) ===
 
-BEACH_SLOT_ACTIVITIES = {
-    "Water Polo", "Greased Watermelon", "Aqua Trampoline", "Troop Swim",
-    "Underwater Obstacle Course", "Troop Canoe", "Troop Kayak", "Canoe Snorkel",
-    "Nature Canoe", "Float for Floats"
-}
+BEACH_SLOT_ACTIVITIES = set(get_activities_with_tag("beach_slot_restricted"))
 
-WET_ACTIVITIES = {
-    "Swimming", "Canoeing", "Kayaking", "Sailing", "Aqua Trampoline",
-    "Canoe Snorkel", "Water Polo", "Troop Canoe", "Troop Swim",
-    "Troop Kayak", "Nature Canoe", "Float for Floats", "Greased Watermelon",
-    "Underwater Obstacle Course"
-}
+WET_ACTIVITIES = set(get_activities_with_tag("wet"))
 
 ACCURACY_ACTIVITIES = {"Archery", "Troop Rifle", "Troop Shotgun"}
 

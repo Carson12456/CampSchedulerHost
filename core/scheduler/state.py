@@ -24,6 +24,9 @@ class SchedulerState:
         self.logger = get_logger()
         self.cache = SchedulerCache()
 
+        # Fail fast if SKULL hard-policy lists drift from BRAIN-required anchors.
+        config_loader.validate_brain_skull_alignment()
+
         self.troops = troops
         self.activities = activities or get_all_activities()
         self.voyageur_mode = voyageur_mode
@@ -70,6 +73,26 @@ class SchedulerState:
                 if not is_known_tc_troop or self.voyageur_mode:
                     self.troop_commissioner[troop.name] = troop.commissioner
 
+        # Normalize commissioner ids to the keys used by commissioner day maps.
+        # Some constants use regional labels (e.g., North/Central/South) while
+        # day maps are keyed by Commissioner A/B/C. Prefer explicit troop-provided
+        # commissioner ids when they match configured day-map keys.
+        day_map_keys = set()
+        for cfg in [
+            self.COMMISSIONER_DELTA_DAYS,
+            self.COMMISSIONER_SUPER_TROOP_DAYS,
+            self.COMMISSIONER_RIFLE_DAYS,
+            self.COMMISSIONER_ARCHERY_DAYS,
+            self.COMMISSIONER_SAILING_DAYS,
+            self.COMMISSIONER_TOWER_ODS_DAYS,
+        ]:
+            day_map_keys.update(cfg.keys())
+
+        for troop in self.troops:
+            troop_comm = getattr(troop, "commissioner", None)
+            if troop_comm and troop_comm in day_map_keys:
+                self.troop_commissioner[troop.name] = troop_comm
+
         self.cache.initialize_troops(self.troops, self.troop_commissioner)
 
         self.troop_top5_scheduled = {t.name: 0 for t in troops}
@@ -111,6 +134,7 @@ class SchedulerState:
         self.total_staff_by_slot = defaultdict(int)
         self.prioritize_staff_balance = False
         self.commissioner_activity_day_assignments = {}
+        self.current_pipeline_phase = "init"
         mode = os.getenv("COMM_CLUSTER_MODE", "mixed").strip().lower()
         if mode not in {"strong", "ownership", "mixed"}:
             mode = "mixed"
@@ -118,3 +142,4 @@ class SchedulerState:
         self.ODS_ACTIVITIES = SchedulerConstants.ODS_ACTIVITIES
         self.FILL_ACTIVITIES = SchedulerConstants.FILL_ACTIVITIES
         self.CONCURRENT_ACTIVITIES = SchedulerConstants.CONCURRENT_ACTIVITIES
+        self.CONCURRENT_EXCLUSIVITY_EXCEPTIONS = SchedulerConstants.CONCURRENT_EXCLUSIVITY_EXCEPTIONS

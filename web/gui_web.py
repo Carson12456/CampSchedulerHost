@@ -359,6 +359,9 @@ def _build_success_report(week_id, week_name, metrics, data):
     """Create a plain-English success report suitable for non-programmers."""
     troops = data.get('troops', []) or []
     unscheduled = data.get('unscheduled', {}) or {}
+    cluster_area_details = metrics.get('cluster_area_details', {}) or {}
+    cluster_gap_details = metrics.get('cluster_gap_details', []) or []
+    cluster_targets = metrics.get('cluster_improvement_targets', {}) or {}
     total_scouts = sum(getattr(t, 'scouts', 0) for t in troops)
     total_adults = sum(getattr(t, 'adults', 0) for t in troops)
 
@@ -460,6 +463,24 @@ def _build_success_report(week_id, week_name, metrics, data):
     for key, value in metrics.items():
         if isinstance(value, (int, float, bool, str)):
             raw_metrics[key] = value
+    for key in ('cluster_area_details', 'cluster_gap_details', 'cluster_improvement_targets'):
+        if key in metrics:
+            raw_metrics[key] = metrics.get(key)
+
+    top_excess_areas = sorted(
+        [
+            (area_name, details.get('excess_days', 0))
+            for area_name, details in cluster_area_details.items()
+            if details.get('excess_days', 0) > 0
+        ],
+        key=lambda item: item[1],
+        reverse=True,
+    )
+    cluster_diagnostics = {
+        'areas_with_excess_days': top_excess_areas,
+        'gap_patterns': cluster_gap_details,
+        'improvement_targets': cluster_targets,
+    }
 
     generated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     report = {
@@ -482,6 +503,7 @@ def _build_success_report(week_id, week_name, metrics, data):
         'recommended_actions': actions,
         'metric_definitions': metric_definitions,
         'raw_metrics': raw_metrics,
+        'cluster_diagnostics': cluster_diagnostics,
     }
 
     lines = [
@@ -513,6 +535,16 @@ def _build_success_report(week_id, week_name, metrics, data):
     lines.append("Metric Definitions (Plain Language)")
     for item in metric_definitions:
         lines.append(f"- {item['name']}: {item['plain_language']}")
+
+    if top_excess_areas or cluster_gap_details:
+        lines.append("")
+        lines.append("Cluster Diagnostics")
+        if top_excess_areas:
+            for area_name, excess_days in top_excess_areas[:4]:
+                lines.append(f"- Excess days: {area_name} -> {excess_days}")
+        if cluster_gap_details:
+            for detail in cluster_gap_details[:5]:
+                lines.append(f"- Gap pattern: {detail.get('day')} {detail.get('area')} {detail.get('pattern')}")
 
     report['plain_text'] = "\n".join(lines)
     return report

@@ -3,6 +3,7 @@
 ## BRAIN Is Authoritative
 
 - `config/BRAIN.md` is the source of truth for scheduling behavior.
+- All hardcoded list should refer to SKULL.md, if any are found they should be removed and sourced from there
 - Hard contract: `non_exempt_top5_misses == 0` is mandatory for acceptance.
 - Do not trade hard constraints for soft-score improvements.
 - Use the BRAIN priority ladder when conflicts appear:
@@ -101,6 +102,20 @@ Gap checks run after each major phase. The composition uses mixins in `core/cons
 - Preserve mandatory anchors: Friday `Reflection`, weekly `Super Troop`, Tuesday-only `History Center` + `Disc Golf`.
 - Preserve hard completeness: no empty troop slots.
 - Respect Sailing slot-2 overlap exception exactly as documented in BRAIN.
+
+---
+
+## Baseline Terminology
+
+| File | Role | Purpose |
+|------|------|---------|
+| `baseline_prime_10weeks.json` | **Reference Baseline (Prime)** | Original scheduler output before improvement work. Historical record. Not used for regression detection. |
+| `baseline_metrics_10weeks.json` | **Comparison Baseline** | Regression comparison point. New changes are compared against this to detect regressions. |
+
+- To update the Comparison Baseline after scheduler changes:  
+  `python utils/regression_checker.py --fresh-eval --set-baseline --force-baseline`  
+  (Preserves existing Comparison as Reference Prime if Prime does not exist.)
+- Regressions are detected when current run is worse than the **Comparison Baseline**.
 
 ---
 

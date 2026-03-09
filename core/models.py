@@ -198,6 +198,10 @@ class Schedule(BaseModel):
     """Complete schedule for all troops."""
     entries: List[ScheduleEntry] = Field(default_factory=list)
 
+    def get_all_time_slots(self) -> List[TimeSlot]:
+        """Legacy helper used by tests and analyzers."""
+        return generate_time_slots()
+
     def _get_effective_slots(self, activity: Activity, troop: Troop) -> float:
         """Get effective slot duration for activity based on troop size."""
         if activity.name == "Climbing Tower" and hasattr(troop, 'scouts'):
@@ -267,6 +271,8 @@ class Schedule(BaseModel):
         activity_area = config_loader.get_area_for_activity(activity.name)
         exclusive_areas = config_loader.get_exclusive_areas()
 
+        concurrent_activities = set(config_loader.get_concurrent_activities())
+
         for entry in slot_entries:
             # Shared Aqua Trampoline logic
             if activity.name == "Aqua Trampoline" and entry.activity.name == "Aqua Trampoline":
@@ -284,31 +290,36 @@ class Schedule(BaseModel):
             
             # Name conflict
             if entry.activity.name == activity.name:
+                # Concurrent activities like Reflection and Campsite Free Time
+                # may share a slot across different troops.
+                if activity.name in concurrent_activities:
+                    continue
+
                 # Water Polo Exception (2 allowed)
                 if activity.name == "Water Polo":
                     if entry_activity_names.count("Water Polo") < 2:
                         continue
-                
-                # Sailing Exception (Shared Slot 2)
+
+                # Sailing Exception (shared middle slot for staggered starts)
                 if activity.name == "Sailing":
-                     # Complex sailing logic - simplified: if exactly matching slot, fail
-                     # If different start slot but overlapping, usage check needed? 
-                     # The original logic was complex. Let's trust the slot_entries check handles pure overlap.
-                     # Actually, the original logic allowed sharing slot 2 if start slots differed.
-                     # But here we are checking specific time_slot.
-                     # If both occupy this slot, it's a conflict, unless 2 sailings allowed per day?
-                     # Models.py original said: "Sailing IS exclusive - only 1 troop per slot".
-                     # Then logic says: "Sailing allows 2 per day... they share Slot 2".
-                     # If they share slot 2, then is_activity_available(Slot 2) should return TRUE if 1 exists.
-                    sailing_count = entry_activity_names.count("Sailing")
-                    if sailing_count < 2:
-                        # Allow the second serialized Sailing entry in this slot.
-                        # Staggered 1.5-slot sessions intentionally share slot 2.
-                        continue
-                    else:
+                    # Same-slot Sailing starts are exclusive.
+                    prev_slot_num = entry.time_slot.slot_number - 1
+                    is_continuation = prev_slot_num >= 1 and any(
+                        e.activity.name == "Sailing"
+                        and e.troop.name == entry.troop.name
+                        and e.time_slot.day == entry.time_slot.day
+                        and e.time_slot.slot_number == prev_slot_num
+                        for e in self.entries
+                    )
+                    if not is_continuation:
                         return False
-                else: 
+
+                    # Shared middle slot can hold at most two Sailing occupancies.
+                    if entry_activity_names.count("Sailing") < 2:
+                        continue
                     return False
+
+                return False
             
             # Area Conflict
             if activity_area:
@@ -357,29 +368,27 @@ class Schedule(BaseModel):
             if entry.troop.name == troop.name and entry.time_slot == time_slot:
                 return False
         
-        # Check multi-slot overlap
+        # Check multi-slot overlap: only consider START entries (skip continuations)
         troop_entries = self.get_troop_schedule(troop)
         for entry in troop_entries:
-            # Only care about same day
             if entry.time_slot.day != time_slot.day:
                 continue
-            
-            # If this is a start of a multi-slot activity
             effective_slots = self._get_effective_slots(entry.activity, entry.troop)
-            if effective_slots > 1.0:
-                 # Check if this entry is the START (we need to be careful about not double counting continuations)
-                 # Note: In self.entries, we explicitly stored continuations in add_entry!
-                 # So if we stored continuations, `entry.time_slot == time_slot` check above SHOULD catch it.
-                 # The original add_entry implementation ADDED continuation entries.
-                 # "for offset... self.entries.append(...)"
-                 # SO: simple exact match check is sufficient IF add_entry works correctly.
-                 # The original `is_troop_free` logic had complex "check original entries" logic. 
-                 # Why? Maybe because it didn't trust the continuation entries? 
-                 # OR: Maybe `add_entry` didn't add continuations for everything?
-                 # Original `add_entry`: "For 1.5+ slot activities, add continuation entries" -> YES IT DID.
-                 # So looking for direct conflict should be enough.
-                 pass
-        
+            if effective_slots <= 1.0:
+                continue
+            # Skip if this is a continuation (earlier slot exists for same troop/activity/day)
+            is_start = not any(
+                e.activity.name == entry.activity.name and e.time_slot.slot_number < entry.time_slot.slot_number
+                for e in troop_entries if e.time_slot.day == entry.time_slot.day
+            )
+            if not is_start:
+                continue
+            start_slot = entry.time_slot.slot_number
+            slots_occupied = int(effective_slots + 0.5)
+            max_slot = 2 if time_slot.day == Day.THURSDAY else 3
+            end_slot = min(start_slot + slots_occupied - 1, max_slot)
+            if start_slot <= time_slot.slot_number <= end_slot:
+                return False
         return True
 
     # Delegates

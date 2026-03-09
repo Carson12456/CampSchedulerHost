@@ -91,7 +91,16 @@ class UnscheduledAnalyzer:
             schedule_data = json.load(f)
         
         week_name = schedule_path.stem.replace("_schedule", "")
-        unscheduled = schedule_data.get('unscheduled', {})
+        if "unscheduled" not in schedule_data:
+            raise ValueError(
+                f"Schedule JSON missing 'unscheduled' section: {schedule_path}. "
+                "Authoritative Top-5 analysis requires schedule_json.unscheduled."
+            )
+        unscheduled = schedule_data.get("unscheduled")
+        if unscheduled is None or not isinstance(unscheduled, dict):
+            raise ValueError(
+                f"Invalid 'unscheduled' payload in {schedule_path}: expected object/dict."
+            )
         
         return self._analyze_week_unscheduled(week_name, unscheduled)
     

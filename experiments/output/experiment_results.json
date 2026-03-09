@@ -1,0 +1,46 @@
+[
+  {
+    "avg_score": -46.5,
+    "avg_core_goal": 412.0,
+    "avg_clustering_efficiency": 3.5,
+    "avg_cluster_gaps": 1.0,
+    "weeks_with_hard_violations": 1,
+    "min_score": -1000,
+    "max_score": 907,
+    "exp_id": "baseline",
+    "exp_name": "Baseline (no changes)"
+  },
+  {
+    "avg_score": 882.5,
+    "avg_core_goal": 793.2,
+    "avg_clustering_efficiency": 3.5,
+    "avg_cluster_gaps": 1.0,
+    "weeks_with_hard_violations": 0,
+    "min_score": 858,
+    "max_score": 907,
+    "exp_id": "exp_gap_fill",
+    "exp_name": "Gap fill after multislot"
+  },
+  {
+    "avg_score": -62.0,
+    "avg_core_goal": 398.6,
+    "avg_clustering_efficiency": 4.0,
+    "avg_cluster_gaps": 1.0,
+    "weeks_with_hard_violations": 1,
+    "min_score": -1000,
+    "max_score": 876,
+    "exp_id": "exp_multislot_displace",
+    "exp_name": "Multislot displace blocker"
+  },
+  {
+    "avg_score": 867.5,
+    "avg_core_goal": 779.1,
+    "avg_clustering_efficiency": 4.0,
+    "avg_cluster_gaps": 1.0,
+    "weeks_with_hard_violations": 0,
+    "min_score": 859,
+    "max_score": 876,
+    "exp_id": "exp_both",
+    "exp_name": "Both combined"
+  }
+]

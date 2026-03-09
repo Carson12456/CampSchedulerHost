@@ -108,7 +108,8 @@ class TestRegressionDetection:
             f"REGRESSION: Schedule validity dropped to {100 if is_valid else 0}% " \
             f"(target: {target}%), violations: {violations}"
         
-        print(f"Schedule Validity: {target}% (violations: {len(violations)})")
+        violation_count = len(violations) if isinstance(violations, list) else int(violations)
+        print(f"Schedule Validity: {target}% (violations: {violation_count})")
     
     def test_regression_multislot_success(self, schedule, sample_troops):
         """REGRESSION TEST: Multi-slot activity success should remain at 100%"""
@@ -326,9 +327,10 @@ class TestRegressionDetection:
     def _validate_schedule_validity(self, schedule: Schedule, troops: List[Troop]) -> Dict[str, Any]:
         """Validate schedule has no hard constraint violations"""
         violations = self._count_constraint_violations(schedule, troops)
+        violation_count = len(violations) if isinstance(violations, list) else int(violations)
         
         return {
-            'is_valid': len(violations) == 0,
+            'is_valid': violation_count == 0,
             'violations': violations
         }
     
@@ -449,6 +451,10 @@ class TestRegressionDetection:
                     slot_troops[slot_key].add(entry.troop.name)
             
             for slot, troops in slot_troops.items():
+                # BRAIN exception: Sailing is modeled as a 90-minute overlap activity.
+                # Final schedules may legitimately have two Sailing troops in slot 2.
+                if area_name == "Sailing" and slot[1] == 2 and len(troops) <= 2:
+                    continue
                 if len(troops) > 1:
                     violations.append(f"{area_name} {slot}: {len(troops)} troops")
         

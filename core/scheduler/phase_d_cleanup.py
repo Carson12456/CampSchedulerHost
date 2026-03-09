@@ -109,20 +109,37 @@ class PhaseDCleanupMixin:
         return score
     
     def _swap_reflection_slots(self, troop1, troop2, slot1, slot2):
-        """Swap Reflection entries between two troops."""
+        """Swap Reflection entries between two troops. Uses add_entry for validation."""
         reflection = get_activity_by_name("Reflection")
-        
-        # Remove old entries
-        self.schedule.entries = [
+        if not reflection:
+            return
+
+        # Remove old entries (caller has already verified both troops are free in target slots)
+        old_entries = [
             e for e in self.schedule.entries
-            if not (e.activity.name == "Reflection" and
-                   e.troop in [troop1, troop2] and
-                   e.time_slot.day == Day.FRIDAY)
+            if e.activity.name == "Reflection" and
+            e.troop in (troop1, troop2) and
+            e.time_slot.day == Day.FRIDAY
         ]
-        
-        # Add swapped entries
-        self.schedule.entries.append(ScheduleEntry(time_slot=slot2, activity=reflection, troop=troop1))
-        self.schedule.entries.append(ScheduleEntry(time_slot=slot1, activity=reflection, troop=troop2))
+        for e in old_entries:
+            self.schedule.entries.remove(e)
+
+        # Add swapped entries via add_entry for validation
+        if not self.schedule.add_entry(slot2, reflection, troop1):
+            # Rollback: restore originals
+            for e in old_entries:
+                self.schedule.entries.append(e)
+            return
+        if not self.schedule.add_entry(slot1, reflection, troop2):
+            # Rollback: remove troop1's new entry, restore originals
+            to_remove = next((e for e in self.schedule.entries
+                             if e.troop == troop1 and e.activity.name == "Reflection"
+                             and e.time_slot == slot2), None)
+            if to_remove:
+                self.schedule.entries.remove(to_remove)
+            for e in old_entries:
+                self.schedule.entries.append(e)
+            return
     
     # =========================================================================
     # D.2: COMPREHENSIVE CLUSTERING OPTIMIZATION

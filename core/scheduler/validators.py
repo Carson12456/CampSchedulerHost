@@ -194,6 +194,26 @@ class ValidatorMixin:
     # COMPREHENSIVE GAP CHECK
     # =========================================================================
     
+    def _count_troop_empty_slots(self) -> int:
+        """
+        Count troop-level empty slots (gaps). Used by pipeline for immediate gap fix.
+        PlacementAndState/Top5AndSwaps override _comprehensive_gap_check with cluster-gap
+        semantics; this method is never overridden and detects actual empty troop slots.
+        """
+        slots_per_day = {
+            Day.MONDAY: 3, Day.TUESDAY: 3, Day.WEDNESDAY: 3,
+            Day.THURSDAY: 2, Day.FRIDAY: 3
+        }
+        total = 0
+        for troop in self.troops:
+            for day in Day:
+                for slot_num in range(1, slots_per_day[day] + 1):
+                    slot = next((s for s in self.time_slots
+                                if s.day == day and s.slot_number == slot_num), None)
+                    if slot and self.schedule.is_troop_free(slot, troop):
+                        total += 1
+        return total
+
     def _comprehensive_gap_check(self, phase_name: str) -> int:
         """Comprehensive gap check to detect gaps early and prevent accumulation.
         
