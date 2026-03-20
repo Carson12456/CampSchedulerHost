@@ -184,6 +184,494 @@ class TestSchedulingPhases:
         
         assert hasattr(scheduler, '_comprehensive_clustering_optimization'), \
             "Scheduler should perform comprehensive clustering optimization"
+
+    def test_cleanup_preserves_valid_sailing_overlap(self, scheduler):
+        """Test: cleanup keeps the legal slot-1/slot-2 Sailing overlap."""
+        sailing = next((a for a in scheduler.activities if a.name == "Sailing"), None)
+        assert sailing is not None
+
+        troop_a = scheduler.troops[0]
+        troop_b = scheduler.troops[1]
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 1), sailing, troop_a) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 2), sailing, troop_b) is True
+
+        scheduler._cleanup_exclusive_activities()
+
+        troop_a_sailing = [
+            e for e in scheduler.schedule.entries
+            if e.troop == troop_a and e.activity.name == "Sailing"
+        ]
+        troop_b_sailing = [
+            e for e in scheduler.schedule.entries
+            if e.troop == troop_b and e.activity.name == "Sailing"
+        ]
+
+        assert len(troop_a_sailing) == 2
+        assert len(troop_b_sailing) == 2
+
+    def test_comprehensive_cleanup_uses_conservative_final_refill(self, scheduler, monkeypatch):
+        """Test: iterative cleanup defers aggressive refill until after conflicts converge."""
+        fill_calls = []
+
+        monkeypatch.setattr(scheduler, "_remove_activity_conflicts", lambda: None)
+        monkeypatch.setattr(scheduler, "_cleanup_exclusive_activities", lambda: None)
+        monkeypatch.setattr(scheduler, "_remove_overlaps", lambda: None)
+        monkeypatch.setattr(scheduler, "_deduplicate_entries", lambda: None)
+        monkeypatch.setattr(scheduler, "_guarantee_mandatory_activities", lambda: None)
+        monkeypatch.setattr(scheduler, "_fix_beach_slot_violations", lambda: None)
+        monkeypatch.setattr(scheduler, "_ensure_hc_dg_pairing", lambda: None)
+        monkeypatch.setattr(scheduler, "_guarantee_no_gaps", lambda: None)
+        monkeypatch.setattr(scheduler, "_sanitize_exclusivity", lambda: None)
+        monkeypatch.setattr(
+            scheduler,
+            "_fill_empty_slots_final",
+            lambda **kwargs: fill_calls.append(kwargs.copy()),
+        )
+
+        scheduler._comprehensive_final_cleanup()
+
+        assert fill_calls == [
+            {
+                "allow_duplicates": False,
+                "allow_last_resort": False,
+                "allow_relaxed": False,
+            }
+        ]
+
+    def test_final_fill_can_run_in_conservative_mode(self, scheduler, monkeypatch):
+        """Test: conservative final fill does not fall back to duplicate-only placements."""
+        fishing = next((a for a in scheduler.activities if a.name == "Fishing"), None)
+        assert fishing is not None
+
+        troop = scheduler.troops[0]
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 1), fishing, troop) is True
+
+        def fishing_only(troop_arg, activity, slot, day, relax_constraints=False, **kwargs):
+            return activity.name == "Fishing"
+
+        monkeypatch.setattr(scheduler, "_can_schedule", fishing_only)
+
+        scheduler._fill_empty_slots_final(
+            allow_duplicates=False,
+            allow_last_resort=False,
+            allow_relaxed=False,
+        )
+        conservative_count = sum(
+            1 for e in scheduler.schedule.entries if e.troop == troop and e.activity.name == "Fishing"
+        )
+
+        scheduler._fill_empty_slots_final(
+            allow_duplicates=True,
+            allow_last_resort=False,
+            allow_relaxed=False,
+        )
+        aggressive_count = sum(
+            1 for e in scheduler.schedule.entries if e.troop == troop and e.activity.name == "Fishing"
+        )
+
+        assert conservative_count == 1
+        assert aggressive_count > conservative_count
+
+    def test_move_activity_instance_moves_entire_multislot_block(self, scheduler):
+        """Test: moving a multi-slot instance relocates the full block, not one entry."""
+        canoe_snorkel = next((a for a in scheduler.activities if a.name == "Canoe Snorkel"), None)
+        assert canoe_snorkel is not None
+
+        troop = scheduler.troops[0]
+        start_slot = TimeSlot(Day.TUESDAY, 2)
+        target_slot = TimeSlot(Day.MONDAY, 1)
+
+        assert scheduler.schedule.add_entry(start_slot, canoe_snorkel, troop) is True
+
+        continuation = next(
+            e for e in scheduler.schedule.entries
+            if e.troop == troop and e.activity.name == "Canoe Snorkel" and e.time_slot.slot_number == 3
+        )
+
+        assert scheduler._move_activity_instance(continuation, target_slot) is True
+
+        moved_slots = sorted(
+            e.time_slot.slot_number for e in scheduler.schedule.entries
+            if e.troop == troop and e.activity.name == "Canoe Snorkel" and e.time_slot.day == Day.MONDAY
+        )
+        original_slots = [
+            e.time_slot.slot_number for e in scheduler.schedule.entries
+            if e.troop == troop and e.activity.name == "Canoe Snorkel" and e.time_slot.day == Day.TUESDAY
+        ]
+
+        assert moved_slots == [1, 2]
+        assert original_slots == []
+
+    def test_top5_recovery_displaces_entire_block(self, scheduler, monkeypatch):
+        """Test: Top-5 recovery clears a blocking multi-slot activity as a whole block."""
+        canoe_snorkel = next((a for a in scheduler.activities if a.name == "Canoe Snorkel"), None)
+        fishing = next((a for a in scheduler.activities if a.name == "Fishing"), None)
+        assert canoe_snorkel is not None
+        assert fishing is not None
+
+        troop = scheduler.troops[0]
+        troop.preferences = ["Fishing", *[p for p in troop.preferences if p != "Fishing"]]
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 2), canoe_snorkel, troop) is True
+
+        def controlled_can_schedule(troop_arg, activity, slot, day, **kwargs):
+            return (
+                troop_arg == troop
+                and activity.name == "Fishing"
+                and day == Day.TUESDAY
+                and slot.slot_number == 3
+                and scheduler.schedule.is_troop_free(slot, troop_arg)
+            )
+
+        monkeypatch.setattr(scheduler, "_can_schedule", controlled_can_schedule)
+        scheduler._top5_to_recover = [(troop, fishing, 0)]
+
+        scheduler._remove_overlaps()
+
+        fishing_slots = sorted(
+            e.time_slot.slot_number for e in scheduler.schedule.entries
+            if e.troop == troop and e.activity.name == "Fishing" and e.time_slot.day == Day.TUESDAY
+        )
+        canoe_slots = [
+            e.time_slot.slot_number for e in scheduler.schedule.entries
+            if e.troop == troop and e.activity.name == "Canoe Snorkel" and e.time_slot.day == Day.TUESDAY
+        ]
+
+        assert fishing_slots == [3]
+        assert canoe_slots == []
+
+    def test_hc_dg_pairing_requires_adjacent_tuesday_neighbor(self, scheduler):
+        """Test: HC/DG needs Tuesday adjacency, not just a balls activity elsewhere in the week."""
+        history_center = next((a for a in scheduler.activities if a.name == "History Center"), None)
+        gaga_ball = next((a for a in scheduler.activities if a.name == "Gaga Ball"), None)
+        assert history_center is not None
+        assert gaga_ball is not None
+
+        troop = scheduler.troops[0]
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 1), history_center, troop) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.WEDNESDAY, 1), gaga_ball, troop) is True
+
+        scheduler._ensure_hc_dg_pairing()
+
+        tuesday_adjacent = [
+            e.activity.name for e in scheduler.schedule.entries
+            if e.troop == troop
+            and e.time_slot.day == Day.TUESDAY
+            and e.time_slot.slot_number == 2
+        ]
+
+        assert tuesday_adjacent
+        assert tuesday_adjacent[0] in {"Gaga Ball", "9 Square", "Campsite Free Time"}
+
+    def test_hc_dg_pairing_never_replaces_hc_dg_activity(self, scheduler):
+        """Test: HC/DG pairing replaces adjacent filler, not the HC/DG activity itself."""
+        disc_golf = next((a for a in scheduler.activities if a.name == "Disc Golf"), None)
+        fishing = next((a for a in scheduler.activities if a.name == "Fishing"), None)
+        trading_post = next((a for a in scheduler.activities if a.name == "Trading Post"), None)
+        assert disc_golf is not None
+        assert fishing is not None
+        assert trading_post is not None
+
+        troop = scheduler.troops[0]
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 1), fishing, troop) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 2), disc_golf, troop) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 3), trading_post, troop) is True
+
+        scheduler._ensure_hc_dg_pairing()
+
+        tuesday_entries = {
+            e.time_slot.slot_number: e.activity.name
+            for e in scheduler.schedule.entries
+            if e.troop == troop and e.time_slot.day == Day.TUESDAY
+        }
+
+        assert tuesday_entries[2] == "Disc Golf"
+        assert any(
+            tuesday_entries.get(slot_num) in {"Gaga Ball", "9 Square", "Campsite Free Time"}
+            for slot_num in (1, 3)
+        )
+
+    def test_initial_placement_seeds_commissioner_day_before_cluster_is_established(self):
+        """Test: commissioner day still seeds a managed activity before clustering is established."""
+        troops = [
+            Troop("Troop A", "Site A", ["Troop Rifle"], 12, 2, "Commissioner A"),
+        ]
+        scheduler = ConstrainedScheduler(troops, get_all_activities())
+        scheduler.current_pipeline_phase = "foundation"
+
+        rifle = next(a for a in scheduler.activities if a.name == "Troop Rifle")
+        expected_day = scheduler.COMMISSIONER_RIFLE_DAYS[troops[0].commissioner]
+
+        ordered_slots = scheduler._get_cluster_ordered_slots(troops[0], rifle)
+
+        assert ordered_slots
+        assert ordered_slots[0].day == expected_day
+
+    def test_initial_placement_prefers_established_adjacent_cluster_over_commissioner_day(self):
+        """Test: once the area is seeded, adjacency beats reopening a commissioner day."""
+        troops = [
+            Troop("Troop A", "Site A", ["Troop Rifle"], 12, 2, "Commissioner A"),
+            Troop("Troop B", "Site B", ["Troop Rifle"], 12, 2, "Commissioner B"),
+            Troop("Troop C", "Site C", ["Troop Shotgun"], 12, 2, "Commissioner C"),
+        ]
+        scheduler = ConstrainedScheduler(troops, get_all_activities())
+        scheduler.current_pipeline_phase = "core"
+
+        rifle = next(a for a in scheduler.activities if a.name == "Troop Rifle")
+        shotgun = next(a for a in scheduler.activities if a.name == "Troop Shotgun")
+        fixed_day = scheduler.COMMISSIONER_RIFLE_DAYS[troops[0].commissioner]
+        cluster_day = next(
+            day for day in (Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY)
+            if day != fixed_day
+        )
+
+        assert scheduler.schedule.add_entry(TimeSlot(cluster_day, 1), rifle, troops[1]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(cluster_day, 3), shotgun, troops[2]) is True
+
+        ordered_slots = scheduler._get_cluster_ordered_slots(troops[0], rifle)
+
+        assert ordered_slots
+        assert ordered_slots[0] == TimeSlot(cluster_day, 2)
+        assert ordered_slots[0].day != fixed_day
+
+    def test_excess_day_reduction_can_use_same_troop_switch(self):
+        """Test: a single excess-day entry can move via a same-troop cross-area switch."""
+        troops = [
+            Troop("Troop A", "Site A", ["Archery"], 12, 2),
+            Troop("Troop B", "Site B", ["Archery"], 12, 2),
+            Troop("Troop C", "Site C", ["Aqua Trampoline"], 12, 2),
+        ]
+        scheduler = ConstrainedScheduler(troops, get_all_activities())
+
+        tower = next(a for a in scheduler.activities if a.name == "Climbing Tower")
+        fishing = next(a for a in scheduler.activities if a.name == "Fishing")
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 1), tower, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 2), fishing, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 1), tower, troops[1]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 3), tower, troops[2]) is True
+
+        baseline_excess = scheduler._count_excess_cluster_days()
+        assert baseline_excess == 1
+
+        moves = scheduler._aggressive_excess_day_reduction_swaps()
+
+        assert moves >= 1
+        assert scheduler._count_excess_cluster_days() < baseline_excess
+        assert any(
+            e.troop == troops[0]
+            and e.activity.name == "Climbing Tower"
+            and e.time_slot == TimeSlot(Day.TUESDAY, 2)
+            for e in scheduler.schedule.entries
+        )
+        assert any(
+            e.troop == troops[0]
+            and e.activity.name == "Fishing"
+            and e.time_slot == TimeSlot(Day.MONDAY, 1)
+            for e in scheduler.schedule.entries
+        )
+
+    def test_excess_day_reduction_prefers_same_activity_consecutive_target(self):
+        """Test: Tie Dye prefers a same-activity back-to-back target when clearing an excess day."""
+        troops = [
+            Troop("Troop A", "Site A", ["Tie Dye"], 12, 2),
+            Troop("Troop B", "Site B", ["Tie Dye"], 12, 2),
+            Troop("Troop C", "Site C", ["Hemp Craft"], 12, 2),
+            Troop("Troop D", "Site D", ["Monkey's Fist"], 12, 2),
+            Troop("Troop E", "Site E", ["Woggle Neckerchief Slide"], 12, 2),
+        ]
+        scheduler = ConstrainedScheduler(troops, get_all_activities())
+
+        tie_dye = next(a for a in scheduler.activities if a.name == "Tie Dye")
+        hemp_craft = next(a for a in scheduler.activities if a.name == "Hemp Craft")
+        monkeys_fist = next(a for a in scheduler.activities if a.name == "Monkey's Fist")
+        woggle = next(a for a in scheduler.activities if a.name == "Woggle Neckerchief Slide")
+        fishing = next(a for a in scheduler.activities if a.name == "Fishing")
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 1), tie_dye, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 2), fishing, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 1), tie_dye, troops[1]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 3), hemp_craft, troops[2]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.WEDNESDAY, 1), monkeys_fist, troops[3]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.WEDNESDAY, 3), woggle, troops[4]) is True
+
+        baseline_excess = scheduler._count_excess_cluster_days()
+        assert baseline_excess == 1
+
+        moves = scheduler._aggressive_excess_day_reduction_swaps()
+
+        assert moves >= 1
+        assert scheduler._count_excess_cluster_days() == 0
+        assert any(
+            e.troop == troops[0]
+            and e.activity.name == "Tie Dye"
+            and e.time_slot == TimeSlot(Day.TUESDAY, 2)
+            for e in scheduler.schedule.entries
+        )
+        assert any(
+            e.activity.name == "Tie Dye"
+            and e.time_slot.day == Day.TUESDAY
+            and e.time_slot.slot_number in {1, 2}
+            for e in scheduler.schedule.entries
+        )
+
+    def test_excess_day_reduction_can_use_thursday_two_of_two_target(self):
+        """Test: a Thursday standalone can be grouped into a full 2-of-2 target day."""
+        troops = [
+            Troop("Troop A", "Site A", ["Climbing Tower"], 12, 2),
+            Troop("Troop B", "Site B", ["Climbing Tower"], 12, 2),
+        ]
+        scheduler = ConstrainedScheduler(troops, get_all_activities())
+
+        tower = next(a for a in scheduler.activities if a.name == "Climbing Tower")
+        fishing = next(a for a in scheduler.activities if a.name == "Fishing")
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 1), tower, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.THURSDAY, 2), fishing, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.THURSDAY, 1), tower, troops[1]) is True
+
+        baseline_excess = scheduler._count_excess_cluster_days()
+        assert baseline_excess == 1
+
+        moves = scheduler._aggressive_excess_day_reduction_swaps()
+
+        assert moves >= 1
+        assert scheduler._count_excess_cluster_days() == 0
+        assert any(
+            e.troop == troops[0]
+            and e.activity.name == "Climbing Tower"
+            and e.time_slot == TimeSlot(Day.THURSDAY, 2)
+            for e in scheduler.schedule.entries
+        )
+
+    def test_cluster_gap_post_fill_can_pull_same_area_activity_from_another_day(self):
+        """Test: official gap repair can import a same-area activity into slot 2 from another day."""
+        troops = [
+            Troop("Troop A", "Site A", ["Monkey's Fist"], 12, 2),
+            Troop("Troop B", "Site B", ["Tie Dye"], 12, 2),
+            Troop("Troop C", "Site C", ["Troop Rifle", "Hemp Craft"], 12, 2),
+        ]
+        scheduler = ConstrainedScheduler(troops, get_all_activities())
+
+        monkeys_fist = next(a for a in scheduler.activities if a.name == "Monkey's Fist")
+        tie_dye = next(a for a in scheduler.activities if a.name == "Tie Dye")
+        hemp_craft = next(a for a in scheduler.activities if a.name == "Hemp Craft")
+        rifle = next(a for a in scheduler.activities if a.name == "Troop Rifle")
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.WEDNESDAY, 1), monkeys_fist, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 1), tie_dye, troops[1]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 2), rifle, troops[2]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 3), hemp_craft, troops[2]) is True
+
+        assert scheduler._count_area_cluster_gaps() == 1
+
+        fixes = scheduler._optimize_cluster_gaps_post_fill()
+
+        assert fixes >= 1
+        assert scheduler._count_area_cluster_gaps() == 0
+        assert any(
+            e.troop == troops[0]
+            and e.activity.name == "Monkey's Fist"
+            and e.time_slot == TimeSlot(Day.TUESDAY, 2)
+            for e in scheduler.schedule.entries
+        )
+        assert not scheduler.schedule.is_troop_free(TimeSlot(Day.WEDNESDAY, 1), troops[0])
+
+    def test_excess_day_reduction_can_clear_two_entry_source_day(self):
+        """Test: coordinated switching can clear an excess day that has two area entries."""
+        troops = [
+            Troop("Troop A", "Site A", ["Fishing"], 12, 2),
+            Troop("Troop B", "Site B", ["Loon Lore"], 12, 2),
+            Troop("Troop C", "Site C", ["Archery"], 12, 2),
+            Troop("Troop D", "Site D", ["Aqua Trampoline"], 12, 2),
+            Troop("Troop E", "Site E", ["Water Polo"], 12, 2),
+            Troop("Troop F", "Site F", ["Delta"], 12, 2),
+        ]
+        scheduler = ConstrainedScheduler(troops, get_all_activities())
+
+        tower = next(a for a in scheduler.activities if a.name == "Climbing Tower")
+        fishing = next(a for a in scheduler.activities if a.name == "Fishing")
+        loon_lore = next(a for a in scheduler.activities if a.name == "Loon Lore")
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.WEDNESDAY, 1), tower, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 2), fishing, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.WEDNESDAY, 2), tower, troops[1]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 2), loon_lore, troops[1]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 1), tower, troops[2]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 3), tower, troops[4]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 1), tower, troops[3]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 3), tower, troops[5]) is True
+
+        baseline_excess = scheduler._count_excess_cluster_days()
+        assert baseline_excess == 1
+
+        moves = scheduler._aggressive_excess_day_reduction_swaps()
+
+        assert moves >= 1
+        assert scheduler._count_excess_cluster_days() == 0
+        assert not any(
+            e.activity.name == "Climbing Tower" and e.time_slot.day == Day.WEDNESDAY
+            for e in scheduler.schedule.entries
+        )
+        assert any(
+            e.troop == troops[0]
+            and e.activity.name == "Climbing Tower"
+            and e.time_slot == TimeSlot(Day.MONDAY, 2)
+            for e in scheduler.schedule.entries
+        )
+        assert any(
+            e.troop == troops[1]
+            and e.activity.name == "Climbing Tower"
+            and e.time_slot == TimeSlot(Day.TUESDAY, 2)
+            for e in scheduler.schedule.entries
+        )
+
+    def test_excess_day_reduction_can_fall_back_to_cross_troop_switch(self):
+        """Test: cross-troop switching is used when same-troop target slots are protected."""
+        troops = [
+            Troop("Troop A", "Site A", ["Archery"], 12, 2),
+            Troop("Troop B", "Site B", ["Climbing Tower"], 12, 2),
+            Troop("Troop C", "Site C", ["Water Polo"], 12, 2),
+            Troop("Troop D", "Site D", ["Delta"], 12, 2),
+        ]
+        scheduler = ConstrainedScheduler(troops, get_all_activities())
+
+        tower = next(a for a in scheduler.activities if a.name == "Climbing Tower")
+        fishing = next(a for a in scheduler.activities if a.name == "Fishing")
+        history_center = next(a for a in scheduler.activities if a.name == "History Center")
+        disc_golf = next(a for a in scheduler.activities if a.name == "Disc Golf")
+        super_troop = next(a for a in scheduler.activities if a.name == "Super Troop")
+
+        assert scheduler.schedule.add_entry(TimeSlot(Day.MONDAY, 1), tower, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 1), history_center, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 2), disc_golf, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 3), super_troop, troops[0]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 1), fishing, troops[1]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 2), tower, troops[2]) is True
+        assert scheduler.schedule.add_entry(TimeSlot(Day.TUESDAY, 3), tower, troops[3]) is True
+
+        baseline_excess = scheduler._count_excess_cluster_days()
+        assert baseline_excess == 1
+
+        moves = scheduler._aggressive_excess_day_reduction_swaps()
+
+        assert moves >= 1
+        assert scheduler._count_excess_cluster_days() == 0
+        assert any(
+            e.troop == troops[1]
+            and e.activity.name == "Climbing Tower"
+            and e.time_slot == TimeSlot(Day.TUESDAY, 1)
+            for e in scheduler.schedule.entries
+        )
+        assert any(
+            e.troop == troops[0]
+            and e.activity.name == "Fishing"
+            and e.time_slot == TimeSlot(Day.MONDAY, 1)
+            for e in scheduler.schedule.entries
+        )
     
     def test_final_validation(self, scheduler):
         """Test: Final validation ensures schedule validity"""

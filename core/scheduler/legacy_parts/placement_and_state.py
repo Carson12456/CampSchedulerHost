@@ -210,6 +210,17 @@ class LegacyPart01Mixin:
         return removed_any
 
 
+    def _move_activity_instance(self, entry: ScheduleEntry, target_slot: TimeSlot) -> bool:
+        """Move a full activity instance atomically to a new start slot."""
+        snapshot = self._snapshot_scheduler_state()
+        if not self._remove_from_schedule(entry):
+            return False
+        if self._add_to_schedule(target_slot, entry.activity, entry.troop):
+            return True
+        self._restore_scheduler_state(snapshot)
+        return False
+
+
     def _beach_slot_preference_rank(
         self,
         troop: Troop,
@@ -1064,47 +1075,51 @@ class LegacyPart01Mixin:
         print("  [Comprehensive Final Cleanup - Max 3 iterations]")
         max_iterations = 3  # Prevent infinite loops
 
+        def run_cleanup_step(step, *args, **kwargs) -> bool:
+            before = self._schedule_state_fingerprint()
+            step(*args, **kwargs)
+            return before != self._schedule_state_fingerprint()
+
         for iteration in range(1, max_iterations + 1):
             print(f"    Iteration {iteration}...")
             changes_made = False
             entries_before = len(self.schedule.entries)
 
             # 1. Remove conflicts (exclusive activities, activity conflicts)
-            self._remove_activity_conflicts()
-            self._cleanup_exclusive_activities()
+            changes_made |= run_cleanup_step(self._remove_activity_conflicts)
+            changes_made |= run_cleanup_step(self._cleanup_exclusive_activities)
             if len(self.schedule.entries) != entries_before:
-                changes_made = True
                 print(f"      Removed conflicts: {entries_before - len(self.schedule.entries)} entries")
 
             # 2. Remove overlaps
             entries_before = len(self.schedule.entries)
-            self._remove_overlaps()
+            changes_made |= run_cleanup_step(self._remove_overlaps)
             if len(self.schedule.entries) != entries_before:
-                changes_made = True
                 print(f"      Removed overlaps: {entries_before - len(self.schedule.entries)} entries")
 
             # 3. Deduplicate
-            self._deduplicate_entries()
+            changes_made |= run_cleanup_step(self._deduplicate_entries)
 
             # 4. Guarantee mandatory activities (Reflection, Super Troop)
-            self._guarantee_mandatory_activities()
-
-            # 4.5 PROACTIVE GAP-FILLING: Move valuable activities into gaps
-            # self._fill_gaps_with_valuable_moves() # DISABLED: Corrupts multi-slot activities
-
-            # 5. Fill empty slots
-            self._fill_empty_slots_final()
+            changes_made |= run_cleanup_step(self._guarantee_mandatory_activities)
 
             # 6. Fix beach slot violations (move slot 2 -> slot 1/3)
-            self._fix_beach_slot_violations()
+            changes_made |= run_cleanup_step(self._fix_beach_slot_violations)
 
             # 7. Ensure HC/DG pairing (must have Gaga Ball or 9 Square)
-            self._ensure_hc_dg_pairing()
+            changes_made |= run_cleanup_step(self._ensure_hc_dg_pairing)
 
             # If no changes, we're stable - break early
             if not changes_made:
                 print(f"      No changes detected - cleanup stable after {iteration} iteration(s)")
                 break
+
+        # Do one conservative refill after conflicts have converged.
+        self._fill_empty_slots_final(
+            allow_duplicates=False,
+            allow_last_resort=False,
+            allow_relaxed=False,
+        )
 
         # Final gap guarantee (force-fill if needed)
         print("    Final gap guarantee...")
@@ -1113,6 +1128,21 @@ class LegacyPart01Mixin:
         # Final safety check for exclusivity violations
         self._sanitize_exclusivity()
         print("  [Cleanup Complete]")
+
+
+    def _schedule_state_fingerprint(self):
+        """Return a stable snapshot of the current schedule contents."""
+        return tuple(
+            sorted(
+                (
+                    entry.troop.name,
+                    entry.activity.name,
+                    entry.time_slot.day.name,
+                    entry.time_slot.slot_number,
+                )
+                for entry in self.schedule.entries
+            )
+        )
 
 
     def _comprehensive_gap_check(self, phase_name: str) -> int:
@@ -1238,8 +1268,7 @@ class LegacyPart01Mixin:
                     if not time_slot:
                         print(f"    [REMOVE] {troop_name} {activity_name} @ {day_name} - slot {slot_num} is not a valid timeslot")
                         for e in entries:
-                            if e in self.schedule.entries:
-                                self.schedule.entries.remove(e)
+                            if e in self.schedule.entries and self._remove_from_schedule(e):
                                 removed_count += 1
                         break
 
@@ -1250,8 +1279,7 @@ class LegacyPart01Mixin:
                         # Remove the incomplete activity instead
                         print(f"    [REMOVE] {troop_name} {activity_name} @ {day_name} - slot {slot_num} exceeds day bounds")
                         for e in entries:
-                            if e in self.schedule.entries:
-                                self.schedule.entries.remove(e)
+                            if e in self.schedule.entries and self._remove_from_schedule(e):
                                 removed_count += 1
                         break
 
@@ -1265,7 +1293,7 @@ class LegacyPart01Mixin:
 
                     if not troop_busy:
                         # Add the missing slot via add_entry for validation and multi-slot consistency
-                        if self.schedule.add_entry(time_slot, activity, troop):
+                        if self._add_to_schedule(time_slot, activity, troop):
                             fixed_count += 1
                             print(f"    [FIXED] {troop_name} {activity_name} @ {day_name} - added slot {slot_num}")
                     else:
@@ -1288,28 +1316,31 @@ class LegacyPart01Mixin:
                                     continue
                                 if not self.schedule.is_activity_available(alt, blocker.activity, troop):
                                     continue
-                                self.schedule.entries.remove(blocker)
-                                if self.schedule.add_entry(alt, blocker.activity, troop):
+                                if self._move_activity_instance(blocker, alt):
                                     moved_blocker = True
                                     if self.schedule.add_entry(time_slot, activity, troop):
                                         fixed_count += 1
                                         print(f"    [FIXED] {troop_name} {activity_name} @ {day_name} (moved blocker {blocker.activity.name})")
                                     else:
-                                        # Rollback blocker move
-                                        new_entry = next((e for e in self.schedule.entries
-                                                         if e.troop == troop and e.activity == blocker.activity
-                                                         and e.time_slot == alt), None)
-                                        if new_entry:
-                                            self.schedule.entries.remove(new_entry)
-                                        self.schedule.entries.append(blocker)
+                                        # Rollback blocker move if we couldn't finish the repair.
+                                        self._move_activity_instance(
+                                            next(
+                                                (
+                                                    e for e in self.schedule.entries
+                                                    if e.troop == troop
+                                                    and e.activity.name == blocker.activity.name
+                                                    and e.time_slot == alt
+                                                ),
+                                                blocker,
+                                            ),
+                                            blocker.time_slot,
+                                        )
                                     break
-                                self.schedule.entries.append(blocker)
                             if not moved_blocker:
                                 # Last resort: remove incomplete activity (gap fill will replace)
                                 print(f"    [CONFLICT] {troop_name} {activity_name} @ {day_name} slot {slot_num} blocked by {blocker.activity.name} (could not move)")
                                 for e in entries:
-                                    if e in self.schedule.entries:
-                                        self.schedule.entries.remove(e)
+                                    if e in self.schedule.entries and self._remove_from_schedule(e):
                                         removed_count += 1
                         break
 

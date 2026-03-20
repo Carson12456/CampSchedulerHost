@@ -170,12 +170,6 @@
       "slot": 3
     },
     {
-      "troop_name": "Tecumseh",
-      "activity_name": "Hemp Craft",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Black Hawk",
       "activity_name": "Gaga Ball",
       "day": "FRIDAY",
@@ -222,6 +216,12 @@
       "activity_name": "Disc Golf",
       "day": "TUESDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Hemp Craft",
+      "day": "MONDAY",
+      "slot": 2
     },
     {
       "troop_name": "Black Hawk",
@@ -297,6 +297,12 @@
     },
     {
       "troop_name": "Tecumseh",
+      "activity_name": "Greased Watermelon",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
       "activity_name": "Dr. DNA",
       "day": "TUESDAY",
       "slot": 3
@@ -322,8 +328,8 @@
     {
       "troop_name": "Tecumseh",
       "activity_name": "Tie Dye",
-      "day": "MONDAY",
-      "slot": 2
+      "day": "WEDNESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Black Hawk",
@@ -392,18 +398,6 @@
       "slot": 1
     },
     {
-      "troop_name": "Tecumseh",
-      "activity_name": "Climbing Tower",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "Greased Watermelon",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Taskalusa",
       "activity_name": "Archery",
       "day": "MONDAY",
@@ -416,16 +410,22 @@
       "slot": 1
     },
     {
-      "troop_name": "Samoset",
-      "activity_name": "Hemp Craft",
-      "day": "WEDNESDAY",
+      "troop_name": "Tecumseh",
+      "activity_name": "Campsite Free Time",
+      "day": "TUESDAY",
       "slot": 2
     },
     {
       "troop_name": "Samoset",
-      "activity_name": "GPS & Geocaching",
+      "activity_name": "Float for Floats",
       "day": "WEDNESDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Float for Floats",
+      "day": "WEDNESDAY",
+      "slot": 2
     },
     {
       "troop_name": "Black Hawk",
@@ -451,6 +451,11 @@
       "top5": [],
       "top10": [
         {
+          "name": "Climbing Tower",
+          "rank": 8,
+          "is_exempt": false
+        },
+        {
           "name": "Canoe Snorkel",
           "rank": 9,
           "is_exempt": false
@@ -461,13 +466,13 @@
       "top5": [],
       "top10": [
         {
-          "name": "Float for Floats",
-          "rank": 6,
+          "name": "Troop Shotgun",
+          "rank": 8,
           "is_exempt": false
         },
         {
-          "name": "Troop Shotgun",
-          "rank": 8,
+          "name": "GPS & Geocaching",
+          "rank": 9,
           "is_exempt": false
         },
         {

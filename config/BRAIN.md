@@ -3,8 +3,8 @@
 
 | Metadata | Details |
 | :--- | :--- |
-| **Version** | 2.4.1 |
-| **Last Updated** | 2026-03-04 |
+| **Version** | 2.4.3 |
+| **Last Updated** | 2026-03-20 |
 
 This document defines the overarching "Laws of Physics" for the scheduling engine, dictating constraints, rotation logic, scoring systems, and phase behavior.
 
@@ -125,7 +125,8 @@ Violating these will lower the schedule's quality score, but will not break the 
 * Beach activities should preferably land in Slot 1 or Slot 3 (Slot 2 is acceptable on Thursdays only).
 
 #### 3. Activity Consecutiveness
-* `Tie Dye`, `Rifle`, and `Shotgun` should actively seek to run back-to-back within area schedules to minimize setup/teardown time.
+* `Tie Dye`, `Troop Rifle`, and `Troop Shotgun` should actively seek to run back-to-back within area schedules to minimize setup/teardown time.
+* When evaluating clustering or excess-day repair candidates, a legal move that places `Tie Dye`, `Troop Rifle`, or `Troop Shotgun` immediately before or after the same activity is preferred over a generic standalone move when Hard Constraints and the Top-5 contract remain protected.
 * `History Center` and `Disc Golf` should have compatible adjacency (Balls/reserve-adjacent behavior). Current implementation allows a broader compatibility set than strict "Balls-only".
 
 ---
@@ -145,6 +146,13 @@ The `ConstrainedScheduler` executes from Phase A to Phase D. Every phase include
 3.  **Mandatory Recovery Loops:** Run placement passes (Strict -> Relaxed -> Displacement/Cross-slot recovery).
 4.  **The Golden Rule:** Never displace an existing Top 5 request just to accommodate a Top 6+ request.
 * **Exit Gate B (Operational):** Top-5 recovery loops are required in Phase B; strict zero non-exempt Top-5 misses is hard-enforced at final acceptance gate.
+
+### Initial Placement Day Selection (Authoritative)
+* **Seed First, Then Consolidate:** Commissioner-managed activities may use their configured initial or ownership day to seed a cluster when that activity or area has not yet established meaningful placement.
+* **Adjacency Takes Over After Seeding:** Once an activity or area has progressed past its first few placements, new placements should prefer landing adjacent to existing same-area activity or alongside the troop's existing same-day activity block instead of reopening or defending commissioner-day spread.
+* **Do Not Create a New Excess Day for Ownership Alone:** Commissioner-day preference becomes a tie-breaker, not a spread-creating rule, whenever following it would open a new area day while a legal adjacent or grouping-friendly placement already exists.
+* **Fill Partial Days Before Opening Fresh Days:** During initial placement, prefer completing existing `2-of-3` area days first, and treat Thursday `1-of-2 -> 2-of-2` completion as a valid consolidation target when it reduces real day spread.
+* **Thursday Softening:** Because Thursday only exposes two slots, a late Thursday commissioner-day placement should not be favored when it would create or preserve an otherwise avoidable excess day.
 
 ### Phase C: Optimization (The Polish)
 1.  **Optimize:** Balance staff loads and improve cluster quality.
@@ -183,6 +191,16 @@ While optimization scoring is important, the **Top 5 non-exempt success rule rem
   * Slot 3 has at least one activity from that area, and
   * Slot 2 has no activity from that same area.
   This is the canonical `1,-,3` cluster fragmentation pattern used by quality evaluation.
+
+### Excess-Day Reduction Search Order (Authoritative)
+* **Standalone Definition:** A `standalone` is an activity that is the **only** activity from its cluster area scheduled on that day.
+* **Search Scope:** For every cluster area currently above its `required_days`, each scheduled activity in that area is a candidate for day-consolidation analysis.
+* **Preferred Consecutive Targets:** For `Tie Dye`, `Troop Rifle`, and `Troop Shotgun`, a legal move that creates same-activity back-to-back adjacency on the target day is the best form of consolidation and should be evaluated before generic standalone moves at the same priority tier.
+* **Tier 1 - Fill a 2-of-3 Day First:** The first priority is to identify days where an area already has **exactly two** scheduled activities and is missing the third slot. Standalones on excess days should first try to move into that missing third slot when Hard Constraints and the Top-5 contract remain protected.
+* **Tier 2 - Merge Standalones Together:** If no valid `2-of-3 -> 3-of-3` completion exists, each standalone should next try to move alongside another standalone from the same area on a different day when doing so would remove an excess day or otherwise tighten grouping.
+* **Thursday Handling:** A Thursday standalone may move alongside another Thursday standalone to create a locally full `2-of-2` Thursday block, but this only counts as a true excess-day improvement if the source day is cleared to zero area activities or the total unique day count for that area actually decreases.
+* **Tier 3 - Broader Consolidation Only After Standalone Search:** Coordinated multi-switch or wider day-clearing logic may run only after the standalone-first search has been exhausted for that area.
+* **Acceptance Rule:** Prefer moves that fully clear the source day, avoid creating new excess days or new cluster gaps when a cleaner option exists, and never violate Hard Constraints or the non-exempt Top-5 contract. A target day becoming "full" is not sufficient by itself if the source day remains active and the area's unique day count does not improve.
 
 | Category | Points | Logic |
 | :--- | :--- | :--- |

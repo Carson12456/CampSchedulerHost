@@ -1,8 +1,5 @@
 """
-Scheduler Constants Module.
-
-Recreated from core/scheduler/config/SKULL.json and codebase analysis.
-Provides static configuration for the ConstrainedScheduler.
+Scheduler constants sourced from BRAIN/SKULL-backed config helpers.
 """
 from core.scheduler import config_loader
 
@@ -17,7 +14,7 @@ class SchedulerConstants:
     
     # Derived from SKULL.json 'commissioner_groups'
     # North + Central + South
-    CAMPSITE_ORDER = config_loader._load_skull().get("camp_map", {}).get("campsite_order", [])
+    CAMPSITE_ORDER = config_loader.get_campsite_order()
     
     # Map Commissioner to Troops (North->A, Central->B, South->C)
     COMMISSIONER_TROOPS = config_loader.get_commissioner_groups()
@@ -57,7 +54,7 @@ class SchedulerConstants:
     SOFT_SAME_DAY_CONFLICTS = config_loader.get_soft_prohibited_pairs()
     
     # From SKULL.json 'preferences.slot_specific'
-    SLOT_PREFERENCES = config_loader._load_skull().get("preferences", {}).get("slot_specific", {})
+    SLOT_PREFERENCES = config_loader.get_slot_preferences()
 
     
     # =========================================================================
@@ -110,20 +107,10 @@ class SchedulerConstants:
     
     # Spine Beach Prohibited Pair (set of beach activities that should not mix).
     # Derived from SKULL soft_prohibited_pairs + special_activities instead of hardcoding.
-    _special_activities = set(config_loader._load_skull().get("special_activities", {}).keys())
-    SPINE_BEACH_PROHIBITED_PAIR = set()
-    for pair in config_loader.get_soft_prohibited_pairs():
-        if len(pair) != 2:
-            continue
-        a, b = pair
-        if a in BEACH_ACTIVITIES and b in BEACH_ACTIVITIES and (a in _special_activities or b in _special_activities):
-            SPINE_BEACH_PROHIBITED_PAIR.update([a, b])
-    
-    # Beach Staffed Activities (Staff needed > 0 AND in Beach zone)
-    BEACH_STAFFED_ACTIVITIES = [
-        act for act in BEACH_ACTIVITIES 
-        if config_loader.get_staff_need(act) > 0
-    ]
+    SPINE_BEACH_PROHIBITED_PAIR = set(config_loader.get_spine_beach_prohibited_pair())
+
+    # Beach Staffed Activities use the shared SKULL-derived capacity list.
+    BEACH_STAFFED_ACTIVITIES = set(config_loader.get_beach_staff_activities())
     
     # Staff Role Logic (Role -> List of Activities)
     # Replaces hardcoded STAFF_MAP in regression checker

@@ -232,6 +232,18 @@
       "slot": 3
     },
     {
+      "troop_name": "Hibbing 1",
+      "activity_name": "Super Troop",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Fond Du Lac",
+      "activity_name": "Super Troop",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
       "troop_name": "Ft. William",
       "activity_name": "History Center",
       "day": "TUESDAY",
@@ -262,6 +274,18 @@
       "slot": 2
     },
     {
+      "troop_name": "Hibbing 2",
+      "activity_name": "Sailing",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Hibbing 2",
+      "activity_name": "Sailing",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
       "troop_name": "Ft. Francis",
       "activity_name": "Aqua Trampoline",
       "day": "MONDAY",
@@ -328,10 +352,28 @@
       "slot": 2
     },
     {
-      "troop_name": "Ft. Francis",
+      "troop_name": "Ft. William",
+      "activity_name": "Troop Canoe",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Ft. William",
       "activity_name": "Water Polo",
-      "day": "WEDNESDAY",
+      "day": "MONDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Ft. William",
+      "activity_name": "9 Square",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Ft. William",
+      "activity_name": "Campsite Free Time",
+      "day": "TUESDAY",
+      "slot": 2
     },
     {
       "troop_name": "Ft. Francis",
@@ -356,18 +398,6 @@
       "activity_name": "Chopped!",
       "day": "FRIDAY",
       "slot": 2
-    },
-    {
-      "troop_name": "Two Harbors",
-      "activity_name": "Archery",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Ft. Francis",
-      "activity_name": "Campsite Free Time",
-      "day": "FRIDAY",
-      "slot": 3
     },
     {
       "troop_name": "Ft. Francis",
@@ -388,40 +418,46 @@
       "slot": 2
     },
     {
-      "troop_name": "Fond Du Lac",
+      "troop_name": "Hibbing 2",
       "activity_name": "Super Troop",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Duluth",
-      "activity_name": "Super Troop",
-      "day": "FRIDAY",
+      "day": "TUESDAY",
       "slot": 2
     },
     {
-      "troop_name": "Ft. Francis",
+      "troop_name": "Duluth",
       "activity_name": "Super Troop",
       "day": "THURSDAY",
       "slot": 1
     },
     {
-      "troop_name": "Two Harbors",
-      "activity_name": "Delta",
+      "troop_name": "Ft. Francis",
+      "activity_name": "Super Troop",
       "day": "WEDNESDAY",
-      "slot": 3
+      "slot": 1
+    },
+    {
+      "troop_name": "Ft. William",
+      "activity_name": "Super Troop",
+      "day": "WEDNESDAY",
+      "slot": 2
     },
     {
       "troop_name": "Two Harbors",
       "activity_name": "9 Square",
-      "day": "THURSDAY",
-      "slot": 2
+      "day": "WEDNESDAY",
+      "slot": 3
     },
     {
       "troop_name": "Ft. William",
       "activity_name": "Greased Watermelon",
       "day": "THURSDAY",
       "slot": 2
+    },
+    {
+      "troop_name": "Two Harbors",
+      "activity_name": "Troop Shotgun",
+      "day": "FRIDAY",
+      "slot": 3
     },
     {
       "troop_name": "Fond Du Lac",
@@ -430,16 +466,22 @@
       "slot": 3
     },
     {
-      "troop_name": "Duluth",
-      "activity_name": "Gaga Ball",
-      "day": "THURSDAY",
-      "slot": 1
+      "troop_name": "Quetico",
+      "activity_name": "9 Square",
+      "day": "MONDAY",
+      "slot": 2
     },
     {
-      "troop_name": "Duluth",
-      "activity_name": "Archery",
-      "day": "TUESDAY",
+      "troop_name": "Quetico",
+      "activity_name": "Sauna",
+      "day": "FRIDAY",
       "slot": 2
+    },
+    {
+      "troop_name": "Quetico",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 3
     },
     {
       "troop_name": "Duluth",
@@ -448,16 +490,10 @@
       "slot": 1
     },
     {
-      "troop_name": "Duluth",
-      "activity_name": "Shower House",
-      "day": "THURSDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Fond Du Lac",
       "activity_name": "Greased Watermelon",
-      "day": "THURSDAY",
-      "slot": 1
+      "day": "WEDNESDAY",
+      "slot": 3
     },
     {
       "troop_name": "Fond Du Lac",
@@ -467,27 +503,45 @@
     },
     {
       "troop_name": "Fond Du Lac",
-      "activity_name": "Campsite Free Time",
-      "day": "THURSDAY",
+      "activity_name": "Gaga Ball",
+      "day": "FRIDAY",
       "slot": 2
     },
     {
       "troop_name": "Fond Du Lac",
       "activity_name": "9 Square",
       "day": "WEDNESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Fond Du Lac",
-      "activity_name": "Water Polo",
-      "day": "WEDNESDAY",
       "slot": 1
     },
     {
       "troop_name": "Fond Du Lac",
-      "activity_name": "Archery",
-      "day": "FRIDAY",
+      "activity_name": "Water Polo",
+      "day": "THURSDAY",
       "slot": 2
+    },
+    {
+      "troop_name": "Fond Du Lac",
+      "activity_name": "Archery",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Ft. Francis",
+      "activity_name": "Gaga Ball",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Ft. Francis",
+      "activity_name": "Shower House",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Ft. Francis",
+      "activity_name": "Water Polo",
+      "day": "WEDNESDAY",
+      "slot": 3
     },
     {
       "troop_name": "Ft. Francis",
@@ -496,33 +550,27 @@
       "slot": 3
     },
     {
-      "troop_name": "Ft. William",
-      "activity_name": "Gaga Ball",
-      "day": "WEDNESDAY",
+      "troop_name": "Ft. Francis",
+      "activity_name": "Archery",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Ft. Francis",
+      "activity_name": "Campsite Free Time",
+      "day": "FRIDAY",
       "slot": 3
     },
     {
-      "troop_name": "Ft. William",
-      "activity_name": "Troop Canoe",
-      "day": "FRIDAY",
+      "troop_name": "Ft. Francis",
+      "activity_name": "9 Square",
+      "day": "TUESDAY",
       "slot": 1
     },
     {
       "troop_name": "Ft. William",
-      "activity_name": "Campsite Free Time",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Ft. William",
-      "activity_name": "Archery",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Ft. William",
-      "activity_name": "Water Polo",
-      "day": "MONDAY",
+      "activity_name": "Fishing",
+      "day": "WEDNESDAY",
       "slot": 3
     },
     {
@@ -541,13 +589,25 @@
       "troop_name": "Hibbing 2",
       "activity_name": "Chopped!",
       "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Hibbing 2",
+      "activity_name": "9 Square",
+      "day": "TUESDAY",
       "slot": 3
     },
     {
       "troop_name": "Quetico",
-      "activity_name": "Campsite Free Time",
-      "day": "WEDNESDAY",
-      "slot": 2
+      "activity_name": "Archery",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Quetico",
+      "activity_name": "Shower House",
+      "day": "TUESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Quetico",
@@ -556,52 +616,40 @@
       "slot": 1
     },
     {
-      "troop_name": "Quetico",
-      "activity_name": "Sauna",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Ft. William",
-      "activity_name": "Fishing",
-      "day": "THURSDAY",
-      "slot": 1
+      "troop_name": "Duluth",
+      "activity_name": "Gaga Ball",
+      "day": "TUESDAY",
+      "slot": 2
     },
     {
       "troop_name": "Duluth",
-      "activity_name": "9 Square",
+      "activity_name": "Shower House",
       "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Hibbing 1",
-      "activity_name": "Super Troop",
-      "day": "TUESDAY",
       "slot": 1
     },
     {
       "troop_name": "Hibbing 2",
       "activity_name": "Archery",
-      "day": "THURSDAY",
-      "slot": 2
+      "day": "FRIDAY",
+      "slot": 3
     },
     {
       "troop_name": "Hibbing 2",
       "activity_name": "Shower House",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Ft. William",
+      "activity_name": "Archery",
       "day": "TUESDAY",
       "slot": 3
     },
     {
-      "troop_name": "Ft. Francis",
-      "activity_name": "9 Square",
-      "day": "TUESDAY",
+      "troop_name": "Ft. William",
+      "activity_name": "Gaga Ball",
+      "day": "THURSDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Ft. Francis",
-      "activity_name": "Shower House",
-      "day": "TUESDAY",
-      "slot": 2
     },
     {
       "troop_name": "Two Harbors",
@@ -629,91 +677,79 @@
     },
     {
       "troop_name": "Two Harbors",
-      "activity_name": "Sauna",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Two Harbors",
       "activity_name": "Troop Rifle",
       "day": "MONDAY",
       "slot": 1
     },
     {
       "troop_name": "Two Harbors",
-      "activity_name": "Gaga Ball",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Hibbing 2",
-      "activity_name": "Super Troop",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Hibbing 2",
-      "activity_name": "9 Square",
-      "day": "FRIDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Ft. William",
-      "activity_name": "Super Troop",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Ft. William",
-      "activity_name": "9 Square",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Ft. Francis",
       "activity_name": "Archery",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Ft. Francis",
-      "activity_name": "Gaga Ball",
       "day": "WEDNESDAY",
       "slot": 2
     },
     {
-      "troop_name": "Quetico",
+      "troop_name": "Duluth",
+      "activity_name": "Archery",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Duluth",
+      "activity_name": "9 Square",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Two Harbors",
+      "activity_name": "Delta",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Two Harbors",
+      "activity_name": "Gaga Ball",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Two Harbors",
+      "activity_name": "Water Polo",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Hibbing 2",
       "activity_name": "Hemp Craft",
       "day": "WEDNESDAY",
       "slot": 3
     },
     {
       "troop_name": "Ft. Francis",
-      "activity_name": "Trading Post",
-      "day": "WEDNESDAY",
+      "activity_name": "Climbing Tower",
+      "day": "THURSDAY",
       "slot": 1
     },
     {
       "troop_name": "Ft. Francis",
-      "activity_name": "What's Cooking",
+      "activity_name": "Climbing Tower",
       "day": "THURSDAY",
       "slot": 2
     },
     {
       "troop_name": "Ft. William",
-      "activity_name": "Sauna",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Ft. William",
-      "activity_name": "Loon Lore",
+      "activity_name": "Canoe Snorkel",
       "day": "MONDAY",
       "slot": 1
     },
     {
+      "troop_name": "Ft. William",
+      "activity_name": "Canoe Snorkel",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Fond Du Lac",
-      "activity_name": "Gaga Ball",
+      "activity_name": "Campsite Free Time",
       "day": "TUESDAY",
       "slot": 2
     },
@@ -725,38 +761,20 @@
     },
     {
       "troop_name": "Duluth",
-      "activity_name": "Hemp Craft",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Hibbing 2",
-      "activity_name": "Sailing",
+      "activity_name": "Greased Watermelon",
       "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Hibbing 2",
-      "activity_name": "Sailing",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Two Harbors",
-      "activity_name": "Water Polo",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Hibbing 2",
-      "activity_name": "Fishing",
-      "day": "WEDNESDAY",
       "slot": 3
     },
     {
       "troop_name": "Duluth",
-      "activity_name": "Greased Watermelon",
-      "day": "MONDAY",
+      "activity_name": "Troop Rifle",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Quetico",
+      "activity_name": "Gaga Ball",
+      "day": "WEDNESDAY",
       "slot": 3
     },
     {
@@ -802,58 +820,40 @@
       "slot": 3
     },
     {
-      "troop_name": "Quetico",
-      "activity_name": "Aqua Trampoline",
-      "day": "MONDAY",
+      "troop_name": "Hibbing 1",
+      "activity_name": "Climbing Tower",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Hibbing 1",
+      "activity_name": "Climbing Tower",
+      "day": "FRIDAY",
       "slot": 3
     },
     {
-      "troop_name": "Quetico",
-      "activity_name": "9 Square",
-      "day": "MONDAY",
+      "troop_name": "Duluth",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
       "slot": 2
+    },
+    {
+      "troop_name": "Duluth",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
+      "slot": 3
     },
     {
       "troop_name": "Quetico",
       "activity_name": "Monkey's Fist",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Quetico",
-      "activity_name": "Shower House",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Quetico",
-      "activity_name": "Archery",
-      "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Hibbing 1",
-      "activity_name": "Climbing Tower",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Hibbing 1",
-      "activity_name": "Climbing Tower",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Duluth",
-      "activity_name": "Climbing Tower",
       "day": "WEDNESDAY",
       "slot": 2
     },
     {
-      "troop_name": "Duluth",
-      "activity_name": "Climbing Tower",
+      "troop_name": "Quetico",
+      "activity_name": "Campsite Free Time",
       "day": "WEDNESDAY",
-      "slot": 3
+      "slot": 1
     }
   ],
   "unscheduled": {
@@ -899,11 +899,6 @@
           "name": "Float for Floats",
           "rank": 8,
           "is_exempt": true
-        },
-        {
-          "name": "Hemp Craft",
-          "rank": 10,
-          "is_exempt": false
         }
       ]
     },
@@ -914,21 +909,6 @@
           "name": "Float for Floats",
           "rank": 6,
           "is_exempt": false
-        },
-        {
-          "name": "Climbing Tower",
-          "rank": 9,
-          "is_exempt": false
-        }
-      ]
-    },
-    "Ft. William": {
-      "top5": [],
-      "top10": [
-        {
-          "name": "Canoe Snorkel",
-          "rank": 9,
-          "is_exempt": true
         }
       ]
     },
@@ -943,16 +923,6 @@
         {
           "name": "Troop Shotgun",
           "rank": 9,
-          "is_exempt": false
-        }
-      ]
-    },
-    "Duluth": {
-      "top5": [],
-      "top10": [
-        {
-          "name": "Troop Rifle",
-          "rank": 8,
           "is_exempt": false
         }
       ]

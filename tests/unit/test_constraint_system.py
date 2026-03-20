@@ -133,6 +133,18 @@ class TestConstraintValidation:
         
         result2 = sample_schedule.add_entry(timeslot2, beach_activity, sample_troops[1])
         assert result2 == True  # Slot 2 should be allowed on Thursday
+
+    def test_hc_dg_tuesday_only_enforced(self, sample_schedule, sample_troops, all_activities):
+        """Test: History Center and Disc Golf can only be placed on Tuesday."""
+        history_center = next((a for a in all_activities if a.name == "History Center"), None)
+        disc_golf = next((a for a in all_activities if a.name == "Disc Golf"), None)
+
+        if history_center is None or disc_golf is None:
+            pytest.skip("History Center or Disc Golf not found")
+
+        assert sample_schedule.add_entry(TimeSlot(Day.MONDAY, 1), history_center, sample_troops[0]) == False
+        assert sample_schedule.add_entry(TimeSlot(Day.WEDNESDAY, 1), disc_golf, sample_troops[0]) == False
+        assert sample_schedule.add_entry(TimeSlot(Day.TUESDAY, 1), history_center, sample_troops[0]) == True
     
     # ========== ACTIVITY CONFLICT CONSTRAINTS ==========
     

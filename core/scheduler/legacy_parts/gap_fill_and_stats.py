@@ -153,6 +153,70 @@ class LegacyPart05Mixin:
         }
         return order.get(day, 99)
 
+    def _get_cluster_day_capacity(self, day: Day) -> int:
+        """Return how many visible slots a day can contribute to clustering."""
+        return 2 if day == Day.THURSDAY else 3
+
+    def _is_consecutive_priority_activity(self, activity_name: str) -> bool:
+        """Activities whose setup cost makes same-activity adjacency especially valuable."""
+        return activity_name in {"Tie Dye", "Troop Rifle", "Troop Shotgun"}
+
+    def _get_cluster_counts_for_activity(
+        self,
+        activity_name: str,
+        *,
+        include_commissioner: bool = False,
+    ) -> tuple[Optional[str], set[str], Counter, Counter]:
+        """Return area/day counts used by clustering-aware day ordering."""
+        area_name = self._get_cluster_area_name_for_activity(
+            activity_name,
+            include_commissioner=include_commissioner,
+        )
+        if not area_name:
+            return None, set(), Counter(), Counter()
+
+        area_activities = set(
+            self._get_cluster_areas_map(include_commissioner=include_commissioner).get(area_name, set())
+        )
+        area_day_counts = Counter(
+            entry.time_slot.day
+            for entry in self.schedule.entries
+            if entry.activity.name in area_activities
+        )
+        same_activity_day_counts = Counter(
+            entry.time_slot.day
+            for entry in self.schedule.entries
+            if entry.activity.name == activity_name
+        )
+        return area_name, area_activities, area_day_counts, same_activity_day_counts
+
+    def _should_prefer_established_cluster_days(self, activity_name: str) -> bool:
+        """
+        Decide when clustering should outrank commissioner-day ownership.
+
+        BRAIN: commissioner day seeds the pattern, but once the area has real
+        placement momentum, new entries should tighten the cluster instead of
+        reopening ownership days.
+        """
+        if self._phase_prefers_existing_cluster_days():
+            return True
+
+        area_name, _, area_day_counts, same_activity_day_counts = self._get_cluster_counts_for_activity(
+            activity_name,
+            include_commissioner=False,
+        )
+        if self._is_consecutive_priority_activity(activity_name) and sum(same_activity_day_counts.values()) >= 1:
+            return True
+        if not area_name:
+            return False
+
+        total_area_entries = sum(area_day_counts.values())
+        if total_area_entries >= 2:
+            return True
+        if any(count >= 2 for count in area_day_counts.values()):
+            return True
+        return False
+
 
     def _get_activity_commissioner_group(self, activity_name: str):
         """Return commissioner-managed activity group key and member activities."""
@@ -281,22 +345,16 @@ class LegacyPart05Mixin:
                 candidates.append(d)
                 seen.add(d)
 
-        if self._phase_prefers_existing_cluster_days():
+        if self._should_prefer_established_cluster_days(activity_name):
             day_counts = defaultdict(int)
             for e in self.schedule.entries:
                 if e.troop == troop:
                     day_counts[e.time_slot.day] += 1
 
-            area_day_counts = defaultdict(int)
-            area_name = self._get_cluster_area_name_for_activity(
+            _, _, area_day_counts, same_activity_day_counts = self._get_cluster_counts_for_activity(
                 activity_name,
                 include_commissioner=False,
             )
-            if area_name:
-                area_activities = self._get_cluster_areas_map(include_commissioner=False).get(area_name, set())
-                for e in self.schedule.entries:
-                    if e.activity.name in area_activities:
-                        area_day_counts[e.time_slot.day] += 1
 
             assigned_day, fill_days, other_comm_days = self._get_commissioner_day_tiers(troop, activity_name)
 
@@ -309,9 +367,22 @@ class LegacyPart05Mixin:
                     return 2
                 return 3
 
+            def day_cluster_tier(day: Day) -> int:
+                area_count = area_day_counts.get(day, 0)
+                if area_count == self._get_cluster_day_capacity(day) - 1:
+                    return 0
+                if area_count > 0:
+                    return 1
+                if day_counts.get(day, 0) > 0:
+                    return 2
+                return 3
+
             candidates.sort(
                 key=lambda d: (
-                    -area_day_counts[d],
+                    day_cluster_tier(d),
+                    0 if self._is_consecutive_priority_activity(activity_name) and same_activity_day_counts.get(d, 0) > 0 else 1,
+                    -same_activity_day_counts.get(d, 0),
+                    -area_day_counts.get(d, 0),
                     -day_counts[d],
                     commissioner_tie_break(d),
                     self._day_clustering_sort_key(d),
@@ -496,6 +567,8 @@ class LegacyPart05Mixin:
                 activity_staff_area = area_name
                 break
 
+        prefer_established_cluster_days = self._should_prefer_established_cluster_days(activity.name)
+
         # Calculate TOTAL DEMAND for this area across ALL troops (not just current)
         area_primary_days = None
 
@@ -512,7 +585,7 @@ class LegacyPart05Mixin:
         # Commissioner-day assignment is mode-aware (strong / ownership / mixed).
         forced_day = self._get_activity_commissioner_day(troop, activity.name)
 
-        if forced_day:
+        if forced_day and not prefer_established_cluster_days:
             # STRICT ENFORCEMENT: The primary day is THE day.
             area_primary_days = {forced_day}
             # For Rifle/Shotgun, if we have both, we need a second day.
@@ -572,6 +645,20 @@ class LegacyPart05Mixin:
         if activity.name == 'Climbing Tower':
              print(f"DEBUG_TOWER: {troop.name} ({comm}) -> Forced Day: {forced_day}")
              print(f"DEBUG_TOWER: Primary Days: {area_primary_days}")
+
+        activity_area_day_counts = Counter()
+        activity_area_slots_by_day = defaultdict(set)
+        same_activity_day_counts = Counter()
+        same_activity_slots_by_day = defaultdict(set)
+        if activity_staff_area:
+            area_activities_set = STAFF_AREAS.get(activity_staff_area, set())
+            for entry in self.schedule.entries:
+                if entry.activity.name in area_activities_set:
+                    activity_area_day_counts[entry.time_slot.day] += 1
+                    activity_area_slots_by_day[entry.time_slot.day].add(entry.time_slot.slot_number)
+                if entry.activity.name == activity.name:
+                    same_activity_day_counts[entry.time_slot.day] += 1
+                    same_activity_slots_by_day[entry.time_slot.day].add(entry.time_slot.slot_number)
 
         # Calculate clustering score for each slot
         # Key improvements:
@@ -659,16 +746,19 @@ class LegacyPart05Mixin:
                 score += day_count * 75  # Strong bonus for non-Top 5 clustering
 
             # AREA CLUSTERING BONUS: Extra bonus if this activity is from a staff area and day already has activities from same area
+            area_count_on_day = 0
+            area_slots_on_day = set()
             if activity_staff_area:
-                area_activities_set = STAFF_AREAS.get(activity_staff_area, set())
-                area_count_on_day = sum(1 for e in self.schedule.entries 
-                                       if e.activity.name in area_activities_set 
-                                       and e.time_slot.day == day)
+                area_count_on_day = activity_area_day_counts.get(day, 0)
+                area_slots_on_day = activity_area_slots_by_day.get(day, set())
                 if area_count_on_day > 0:
                     if is_top5:
                         score += area_count_on_day * 50  # Moderate bonus for Top 5 area clustering
                     else:
                         score += area_count_on_day * 100  # Strong bonus for non-Top 5 area clustering
+
+                    if prefer_established_cluster_days:
+                        score += 35 if is_top5 else 75
 
                 # Excess-day avoidance: penalize placements that spread an area beyond ceil(n/3).
                 if self._would_create_excess_day(activity.name, day):
@@ -677,18 +767,32 @@ class LegacyPart05Mixin:
                     else:
                         score -= 260
 
+                area_capacity = self._get_cluster_day_capacity(day)
+                if area_count_on_day == area_capacity - 1 and slot_num not in area_slots_on_day:
+                    # Fill partial area days before opening fresh days, including Thursday 2-of-2.
+                    score += 180 if is_top5 else 360
+
             # Adjacency bonus
             if day in day_slots:
                 existing_slots = day_slots[day]
                 if (slot_num - 1) in existing_slots or (slot_num + 1) in existing_slots:
-                    score += 30
+                    score += 60 if prefer_established_cluster_days else 30
 
-            # 3RD SLOT BONUS: If day already has 2 activities, prefer filling the 3rd
-            if day_count == 2 and day != Day.THURSDAY:  # Thu only has 2 slots
+            # Fill a troop's partial day before starting a fresh day, including Thursday 2-of-2.
+            if day_count == self._get_cluster_day_capacity(day) - 1:
                 if day in day_slots:
                     used_slots = day_slots[day]
                     if slot_num not in used_slots:
-                        score += 40  # Strong bonus to fill the gap
+                        score += 60  # Strong bonus to fill the gap
+
+            if self._is_consecutive_priority_activity(activity.name):
+                same_activity_count_on_day = same_activity_day_counts.get(day, 0)
+                same_activity_slots = same_activity_slots_by_day.get(day, set())
+                if same_activity_count_on_day > 0:
+                    if (slot_num - 1) in same_activity_slots or (slot_num + 1) in same_activity_slots:
+                        score += 240 if is_top5 else 420
+                    else:
+                        score += 90 if is_top5 else 180
 
             # Staff load penalty - HARD MAX of 14 staff per slot
             # Staff load penalty - HARD MAX of 16 staff per slot
@@ -862,7 +966,6 @@ class LegacyPart05Mixin:
             # Uses pre-calculated primary days and STRONGLY PREFERS primary days
             # ============================================================
             if activity_staff_area and area_primary_days:
-                area_activities_set = STAFF_AREAS[activity_staff_area]
                 assigned_day, fill_days, other_comm_days = self._get_commissioner_day_tiers(troop, activity.name)
                 # BALANCED bonus for primary days - less aggressive for Top 5
                 if day in area_primary_days:
@@ -876,17 +979,14 @@ class LegacyPart05Mixin:
                     else:
                         score -= 50   # Penalty for non-Top 5 on non-primary days
 
-                # Count current distribution on each day for this area
-                area_day_counts = {}
-                for e in self.schedule.entries:
-                    if e.activity.name in area_activities_set:
-                        if e.time_slot.day not in area_day_counts:
-                            area_day_counts[e.time_slot.day] = 0
-                        area_day_counts[e.time_slot.day] += 1
-
                 # Is this a primary day?
                 is_primary_day = day in area_primary_days
-                existing_area_count = area_day_counts.get(day, 0)
+                existing_area_count = activity_area_day_counts.get(day, 0)
+                existing_area_slots = activity_area_slots_by_day.get(day, set())
+                primary_days_have_capacity = any(
+                    activity_area_day_counts.get(primary_day, 0) < self._get_cluster_day_capacity(primary_day)
+                    for primary_day in area_primary_days
+                )
 
                 if is_primary_day:
                     # BALANCED bonus for primary days - less aggressive for Top 5
@@ -899,21 +999,18 @@ class LegacyPart05Mixin:
                         if existing_area_count > 0:
                             score += 200 + (existing_area_count * 100)  # Full bonus for non-Top 5
 
-                        # FULL DAY BONUS: If this would complete a 3-slot day (only for non-Top 5)
-                        # IMPROVEMENT 5: Enhanced cluster gap prevention
-                        if day != Day.THURSDAY:  # Thu only has 2 slots
-                            area_slots_on_day = set()
-                            for e in self.schedule.entries:
-                                if e.activity.name in area_activities_set and e.time_slot.day == day:
-                                    area_slots_on_day.add(e.time_slot.slot_number)
+                    if existing_area_count == self._get_cluster_day_capacity(day) - 1 and slot_num not in existing_area_slots:
+                        score += 180 if is_top5 else 500
+                        if not is_top5 and 1 in existing_area_slots and 3 in existing_area_slots and slot_num == 2:
+                            score += 50
 
-                            if len(area_slots_on_day) == 2 and slot_num not in area_slots_on_day:
-                                score += 500  # MASSIVE bonus to complete the day
-                                # IMPROVEMENT 5: Extra bonus if this prevents a cluster gap (slots 1&3 exist, filling slot 2)
-                                # FURTHER REDUCED: Only apply if not Top 5, very conservative
-                                if not is_top5 and 1 in area_slots_on_day and 3 in area_slots_on_day and slot_num == 2:
-                                    score += 50  # Further reduced: was +100, now +50 (very conservative, only for non-Top 5)
-
+                elif prefer_established_cluster_days and primary_days_have_capacity:
+                    # Once the area is seeded, don't reopen ownership/new days while
+                    # a cleaner cluster day still has room.
+                    if is_top5:
+                        score -= 180
+                    else:
+                        score -= 950
                 elif assigned_day and day in fill_days:
                     # Second tier: use fill/overflow days before borrowing another
                     # commissioner's ownership day.
@@ -923,28 +1020,10 @@ class LegacyPart05Mixin:
                         score += 180
                 elif assigned_day and day in other_comm_days:
                     score -= 120
-                elif area_primary_days:
-                     score -= 100  # General penalty for non-primary days
+                elif existing_area_count > 0:
+                    score -= 100  # General penalty for using a non-primary area day
                 else:
-                    # NOT a primary day
-                    # Check if primary days still have capacity
-                    primary_days_full = True
-                    for pd in area_primary_days:
-                        pd_count = area_day_counts.get(pd, 0)
-                        max_per_day = 2 if pd == Day.THURSDAY else 3
-                        if pd_count < max_per_day:
-                            primary_days_full = False
-                            break
-
-                    if not primary_days_full:
-                        # Primary days have capacity - HARD BLOCK this non-primary day
-                        score -= 1000  # Effectively impossible
-                    elif existing_area_count > 0:
-                        # Primary days full, but this day already has entries - moderate penalty
-                        score -= 100
-                    else:
-                        # Primary days full and this is a new day - severe penalty
-                        score -= 400
+                    score -= 400 if primary_days_have_capacity else 100
 
             return score
 
@@ -956,104 +1035,123 @@ class LegacyPart05Mixin:
 
     def _ensure_hc_dg_pairing(self):
         """
-        Ensure any troop with HC/DG also has Gaga Ball or 9 Square.
+        Ensure Tuesday HC/DG activities have a compatible adjacent activity.
 
-        HC and DG are half-slot activities that require a balls activity
-        (Gaga Ball or 9 Square) to fill the other half of the slot.
+        BRAIN requires Tuesday-only HC/DG to be paired by compatible adjacency,
+        not merely by having a balls activity elsewhere in the week.
         """
-        balls_activity = get_activity_by_name('Gaga Ball')
-        nine_square = get_activity_by_name('9 Square')
-
-        if not balls_activity:
-            return
-
-        # Low-priority fill activities that can be displaced
-        # DISPLACEABLE = {'Shower House', 'Trading Post', 'Campsite Free Time', 'Dr. DNA', 'Fishing'}
-        # MODIFIED: Logic now allows displacing ANY non-Top 5 activity (checked below)
+        pair_map = config_loader.get_area_pairs()
+        compatible_neighbors = {"Gaga Ball", "9 Square", "Campsite Free Time"} | set(self.TUESDAY_ONLY_ACTIVITIES)
 
         paired_count = 0
 
         for troop in self.troops:
-            entries = [e for e in self.schedule.entries if e.troop == troop]
-            activity_names = {e.activity.name for e in entries}
+            tuesday_entries = [
+                e for e in self.schedule.entries
+                if e.troop == troop and e.time_slot.day == Day.TUESDAY
+            ]
+            hc_dg_entries = [
+                e for e in tuesday_entries
+                if e.activity.name in self.TUESDAY_ONLY_ACTIVITIES
+            ]
 
-            has_hc_dg = 'History Center' in activity_names or 'Disc Golf' in activity_names
-            has_balls = 'Gaga Ball' in activity_names or '9 Square' in activity_names
+            for hc_dg_entry in hc_dg_entries:
+                slot_num = hc_dg_entry.time_slot.slot_number
+                neighbor_slots = [
+                    TimeSlot(Day.TUESDAY, n)
+                    for n in (slot_num - 1, slot_num + 1)
+                    if 1 <= n <= 3
+                ]
 
-            if has_hc_dg and not has_balls:
-                # Find an empty slot to add Gaga Ball or 9 Square
-                # Prefer the same day as HC/DG
-                hc_dg_day = None
-                for e in entries:
-                    if e.activity.name in ['History Center', 'Disc Golf']:
-                        hc_dg_day = e.time_slot.day
-                        break
+                has_compatible_neighbor = any(
+                    e.activity.name in compatible_neighbors
+                    and abs(e.time_slot.slot_number - slot_num) == 1
+                    for e in tuesday_entries
+                )
+                if has_compatible_neighbor:
+                    continue
 
-                # Build ordered list of slots to try (HC/DG day first)
-                slots_to_try = []
-                if hc_dg_day:
-                    for slot in self.time_slots:
-                        if slot.day == hc_dg_day:
-                            slots_to_try.append(slot)
-                for slot in self.time_slots:
-                    if slot not in slots_to_try:
-                        slots_to_try.append(slot)
+                preferred_pair = pair_map.get(hc_dg_entry.activity.name)
+                candidate_names = []
+                if preferred_pair:
+                    candidate_names.append(preferred_pair)
+                candidate_names.extend(["Gaga Ball", "9 Square", "Campsite Free Time"])
+                candidate_names = list(dict.fromkeys(candidate_names))
 
                 added = False
 
-                # Pass 1: Try to find an empty slot
-                for activity in [balls_activity, nine_square]:
-                    if not activity or added:
+                # Pass 1: Fill an empty adjacent Tuesday slot.
+                for slot in neighbor_slots:
+                    if not self.schedule.is_troop_free(slot, troop):
                         continue
-                    for slot in slots_to_try:
-                        if self.schedule.is_troop_free(slot, troop):
-                            if self._check_activity_capacity(slot, activity, troop):
-                                self._add_to_schedule(slot, activity, troop)
+                    for candidate_name in candidate_names:
+                        activity = get_activity_by_name(candidate_name)
+                        if not activity:
+                            continue
+                        if self._can_schedule(troop, activity, slot, Day.TUESDAY):
+                            if self._add_to_schedule(slot, activity, troop):
                                 print(f"  [HC/DG Pairing] {troop.name}: Added {activity.name} -> {slot}")
                                 paired_count += 1
                                 added = True
                                 break
+                    if added:
+                        break
 
-                # Pass 2: Displace a low-priority activity if no empty slots
+                # Pass 2: Replace an adjacent, non-protected, non-Top-5 activity.
                 if not added:
-                    for slot in slots_to_try:
-                        existing = [e for e in self.schedule.entries 
-                                   if e.troop == troop and e.time_slot == slot]
+                    for slot in neighbor_slots:
+                        existing = [
+                            e for e in self.schedule.entries
+                            if e.troop == troop and e.time_slot == slot
+                        ]
+                        if not existing:
+                            continue
+                        if any(e.activity.name in self.TUESDAY_ONLY_ACTIVITIES for e in existing):
+                            continue
+                        if any(e.activity.name in self.NON_DISPLACEABLE_ACTIVITIES for e in existing):
+                            continue
+                        if any(troop.get_priority(e.activity.name) < 5 for e in existing):
+                            continue
 
-                        for e in existing:
-                            if True: # aggressively allow any (checks pref rank below)
-                                # NEVER replace a Top 5 preference!
-                                try:
-                                    pref_rank = troop.preferences.index(e.activity.name)
-                                    if pref_rank < 5:
-                                        continue  # Skip - this is a Top 5 preference
-                                except ValueError:
-                                    pass  # Not in preferences - OK to displace
+                        snapshot = self._snapshot_scheduler_state()
+                        removed_any = False
+                        removed_names = []
+                        for entry in existing:
+                            if entry not in self.schedule.entries:
+                                continue
+                            if self._remove_from_schedule(entry):
+                                removed_any = True
+                                removed_names.append(entry.activity.name)
 
-                                # Found a displaceable activity - replace it
-                                self.schedule.entries.remove(e)
+                        if not removed_any:
+                            self._restore_scheduler_state(snapshot)
+                            continue
 
-                                for activity in [balls_activity, nine_square]:
-                                    if not activity:
-                                        continue
-                                    if self._check_activity_capacity(slot, activity, troop):
-                                        self._add_to_schedule(slot, activity, troop)
-                                        print(f"  [HC/DG Pairing] {troop.name}: {activity.name} -> {slot} (replaced {e.activity.name})")
-                                        paired_count += 1
-                                        added = True
-                                        break
-
-                                if added:
-                                    break
-                                else:
-                                    # Restore original if we couldn't add
-                                    self.schedule.entries.append(e)
+                        for candidate_name in candidate_names:
+                            activity = get_activity_by_name(candidate_name)
+                            if not activity:
+                                continue
+                            if self._can_schedule(troop, activity, slot, Day.TUESDAY) and self._add_to_schedule(slot, activity, troop):
+                                print(
+                                    f"  [HC/DG Pairing] {troop.name}: {activity.name} -> {slot} "
+                                    f"(replaced {', '.join(removed_names)})"
+                                )
+                                paired_count += 1
+                                added = True
+                                break
 
                         if added:
                             break
+                        self._restore_scheduler_state(snapshot)
+
+                if not added:
+                    print(
+                        f"  [HC/DG Pairing] Could not add compatible Tuesday adjacency for "
+                        f"{troop.name}: {hc_dg_entry.activity.name} @ Tue-{slot_num}"
+                    )
 
         if paired_count > 0:
-            print(f"  Added {paired_count} balls activities for HC/DG pairing")
+            print(f"  Added {paired_count} adjacency activities for HC/DG pairing")
 
 
     def _analyze_gap_patterns(self):

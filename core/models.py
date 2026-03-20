@@ -261,106 +261,15 @@ class Schedule(BaseModel):
             return False
     
     def is_activity_available(self, time_slot: TimeSlot, activity: Activity, requesting_troop: Troop = None) -> bool:
-        """Check availability using configuration from SKULL.json via config_loader."""
-        from core.scheduler import config_loader  # Lazy import to avoid cycles
-        
-        slot_entries = self.get_slot_activities(time_slot)
-        entry_activity_names = [e.activity.name for e in slot_entries]
+        """Check slot availability through the shared rules layer."""
+        from core.rules.capacity_rules import CapacityRules  # Lazy import to avoid cycles
 
-        # 1. Exclusive Activity Check
-        activity_area = config_loader.get_area_for_activity(activity.name)
-        exclusive_areas = config_loader.get_exclusive_areas()
-
-        concurrent_activities = set(config_loader.get_concurrent_activities())
-
-        for entry in slot_entries:
-            # Shared Aqua Trampoline logic
-            if activity.name == "Aqua Trampoline" and entry.activity.name == "Aqua Trampoline":
-                 # Load rules from config if possible, else generic logic
-                 # For now, duplicate logic but clean it up later with config
-                 existing_size = entry.troop.size
-                 requesting_size = requesting_troop.size if requesting_troop else 16
-                 aqua_count = sum(1 for e in slot_entries if e.activity.name == "Aqua Trampoline")
-                 
-                 # Hardcoded 16 threshold matching original
-                 if existing_size <= 16 and requesting_size <= 16 and aqua_count <= 1:
-                     continue
-                 else:
-                     return False
-            
-            # Name conflict
-            if entry.activity.name == activity.name:
-                # Concurrent activities like Reflection and Campsite Free Time
-                # may share a slot across different troops.
-                if activity.name in concurrent_activities:
-                    continue
-
-                # Water Polo Exception (2 allowed)
-                if activity.name == "Water Polo":
-                    if entry_activity_names.count("Water Polo") < 2:
-                        continue
-
-                # Sailing Exception (shared middle slot for staggered starts)
-                if activity.name == "Sailing":
-                    # Same-slot Sailing starts are exclusive.
-                    prev_slot_num = entry.time_slot.slot_number - 1
-                    is_continuation = prev_slot_num >= 1 and any(
-                        e.activity.name == "Sailing"
-                        and e.troop.name == entry.troop.name
-                        and e.time_slot.day == entry.time_slot.day
-                        and e.time_slot.slot_number == prev_slot_num
-                        for e in self.entries
-                    )
-                    if not is_continuation:
-                        return False
-
-                    # Shared middle slot can hold at most two Sailing occupancies.
-                    if entry_activity_names.count("Sailing") < 2:
-                        continue
-                    return False
-
-                return False
-            
-            # Area Conflict
-            if activity_area:
-                # Check if entry is in same exclusive area
-                entry_area = config_loader.get_area_for_activity(entry.activity.name)
-                if entry_area == activity_area:
-                     return False
-
-            # Explicit Conflict
-            if activity.name in entry.activity.conflicts_with:
-                return False
-            if entry.activity.name in activity.conflicts_with:
-                return False
-
-        # 2. Beach Constraint (Max Staff)
-        # We need to know which are beach staff activities
-        # Original hardcoded: BEACH_STAFF_ACTIVITIES
-        # New: config_loader? or check Zone + Staff?
-        # Ideally config_loader. But for now, let's verify if config_loader has this list
-        # We can implement a helper in keys if needed. 
-        # For now, we'll assume a helper 'is_beach_staff_activity' exists or we deduce it.
-        # Actually, let's use the explicit list from models.py as a fallback if config doesn't have it?
-        # User wants "Source from SKULL". 
-        # config_loader.get_exclusive_areas() doesn't give "Beach Staff Activities".
-        # We might need to add this property to SKULL or infer it.
-        
-        # INFERENCE: Activity.zone == BEACH and Activity.staff == "Beach Staff"
-        # This is safer and more data-driven than a hardcoded list name.
-        
-        if activity.zone == Zone.BEACH and activity.staff == "Beach Staff":
-             beach_staff_count = 0
-             for e in slot_entries:
-                 if e.activity.zone == Zone.BEACH and e.activity.staff == "Beach Staff":
-                     beach_staff_count += 1
-             
-             # Max 4 per slot (hardcoded in original models.py, should be in SKULL/constraints)
-             limit = config_loader.get_constraints().get("beach_staff_per_slot", 4)
-             if beach_staff_count >= limit:
-                 return False
-
-        return True
+        return CapacityRules().can_place_activity(
+            time_slot=time_slot,
+            activity=activity,
+            requesting_troop=requesting_troop,
+            existing_entries=self.entries,
+        )
 
     def is_troop_free(self, time_slot: TimeSlot, troop: Troop) -> bool:
         # Check exact slot

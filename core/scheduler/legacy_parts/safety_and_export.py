@@ -1105,6 +1105,11 @@ class LegacyPart07Mixin:
                 slot2 = slot_lookup.get((day, 2))
                 if not slot2:
                     continue
+                area_day_counts = Counter(
+                    entry.time_slot.day
+                    for entry in self.schedule.entries
+                    if entry.activity.name in area_activities
+                )
 
                 edge_candidates = sorted(
                     [
@@ -1206,6 +1211,102 @@ class LegacyPart07Mixin:
                                         break
                         if not fixed:
                             self._restore_scheduler_state(snapshot)
+
+                    # Attempt 3: pull a same-area single-slot activity from another day into slot 2.
+                    off_day_candidates = sorted(
+                        [
+                            e for e in self.schedule.entries
+                            if e.time_slot.day != day
+                            and e.activity.name in area_activities
+                            and e.activity.name not in protected_activities
+                            and _is_single_slot_entry(e)
+                        ],
+                        key=lambda e: (
+                            0 if area_day_counts.get(e.time_slot.day, 0) == 1 else 1,
+                            area_day_counts.get(e.time_slot.day, 0),
+                            -self._normalized_preference_rank(e.troop, e.activity.name),
+                            self._day_clustering_sort_key(e.time_slot.day),
+                            e.time_slot.slot_number,
+                        ),
+                    )
+
+                    for source_entry in off_day_candidates[:12]:
+                        troop = source_entry.troop
+                        source_slot = source_entry.time_slot
+                        slot2_entry = next(
+                            (e for e in self.schedule.entries if e.troop == troop and e.time_slot == slot2),
+                            None,
+                        )
+                        if (
+                            slot2_entry
+                            and (
+                                slot2_entry.activity.name in protected_activities
+                                or not _is_single_slot_entry(slot2_entry)
+                                or troop.get_priority(slot2_entry.activity.name) < 5
+                            )
+                        ):
+                            continue
+
+                        snapshot = self._snapshot_scheduler_state()
+                        if not self._remove_from_schedule(source_entry):
+                            self._restore_scheduler_state(snapshot)
+                            continue
+
+                        removed_slot2 = False
+                        if slot2_entry:
+                            removed_slot2 = self._remove_from_schedule(slot2_entry)
+                            if not removed_slot2:
+                                self._restore_scheduler_state(snapshot)
+                                continue
+
+                        can_move_source = self._can_schedule(
+                            troop, source_entry.activity, slot2, day, relax_constraints=False
+                        )
+                        can_restore_slot = True
+                        if slot2_entry:
+                            can_restore_slot = self._can_schedule(
+                                troop, slot2_entry.activity, source_slot, source_slot.day, relax_constraints=False
+                            )
+                        if not can_move_source or not can_restore_slot:
+                            self._restore_scheduler_state(snapshot)
+                            continue
+
+                        placed_source = self._add_to_schedule(slot2, source_entry.activity, troop)
+                        placed_other = True
+                        if slot2_entry:
+                            placed_other = self._add_to_schedule(source_slot, slot2_entry.activity, troop)
+                        if not placed_source or not placed_other:
+                            self._restore_scheduler_state(snapshot)
+                            continue
+
+                        if not slot2_entry:
+                            self._fill_vacated_slot(troop, source_slot)
+
+                        if self.schedule.is_troop_free(source_slot, troop):
+                            self._restore_scheduler_state(snapshot)
+                            continue
+
+                        after_non_exempt, _ = self._count_non_exempt_top5_misses()
+                        after_metrics = self._schedule_quality_snapshot()
+                        after_gaps = after_metrics["gaps"]
+                        if (
+                            after_non_exempt <= baseline_non_exempt
+                            and after_gaps < baseline_gaps
+                            and self._is_quality_snapshot_improvement(
+                                baseline_metrics,
+                                after_metrics,
+                            )
+                        ):
+                            fixes += 1
+                            improved = True
+                            fixed = True
+                            print(
+                                f"      [Cluster Gap Fix] {troop.name} {day.name[:3]} "
+                                f"({area_name}) pulled {source_entry.activity.name} from "
+                                f"{source_slot.day.name[:3]}-{source_slot.slot_number} into slot 2"
+                            )
+                            break
+                        self._restore_scheduler_state(snapshot)
 
                 if fixed:
                     break

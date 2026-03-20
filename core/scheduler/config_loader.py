@@ -35,6 +35,21 @@ def reload_skull() -> None:
     _load_skull()
 
 
+# === Activities ===
+
+def get_activity_definitions() -> List[Dict[str, Any]]:
+    """Get the authoritative activity definitions from SKULL.json."""
+    return _load_skull().get("activities", [])
+
+
+def get_activity_definition(activity_name: str) -> Optional[Dict[str, Any]]:
+    """Get the SKULL activity definition for a single activity."""
+    for activity in get_activity_definitions():
+        if activity.get("name") == activity_name:
+            return activity
+    return None
+
+
 # === Exclusive Areas ===
 
 def get_exclusive_areas() -> Dict[str, List[str]]:
@@ -72,8 +87,7 @@ def get_staff_role_map() -> Dict[str, List[str]]:
     Get mapping of Staff Role -> List[Activity Names].
     Derived from the 'activities' list in SKULL.json.
     """
-    skull = _load_skull()
-    activities = skull.get("activities", [])
+    activities = get_activity_definitions()
     role_map = {}
     
     for act in activities:
@@ -198,6 +212,11 @@ def get_activities_with_tag(tag: str) -> List[str]:
 def get_slot_rules() -> Dict[str, Any]:
     """Get slot placement rules."""
     return _load_skull().get("slot_rules", {})
+
+
+def get_slot_preferences() -> Dict[str, Any]:
+    """Get slot-specific preference configuration."""
+    return _load_skull().get("preferences", {}).get("slot_specific", {})
 
 
 def get_beach_allowed_slots() -> List[int]:
@@ -343,6 +362,65 @@ def get_tuesday_only_activities() -> List[str]:
     return ["History Center", "Disc Golf"]
 
 
+def get_beach_staff_activities() -> Set[str]:
+    """Get activities that consume beach-staff capacity."""
+    beach_tagged = set(get_activities_with_tag("beach"))
+    definitions = get_activity_definitions()
+
+    activities = {
+        activity["name"]
+        for activity in definitions
+        if activity.get("staff_needed") and activity.get("name") in beach_tagged
+    }
+
+    # Historical behavior treated Sailing as beach-staff constrained even when
+    # older tag sets omitted it.
+    if any(activity.get("name") == "Sailing" for activity in definitions):
+        activities.add("Sailing")
+
+    return activities
+
+
+def get_spine_beach_prohibited_pair() -> List[str]:
+    """
+    Get the canonical AT/WP/GM beach-pairing set derived from SKULL metadata.
+
+    This is inferred from configured soft beach pairs plus the `special_activities`
+    definitions so the scheduler no longer hardcodes the trio in multiple places.
+    """
+    special_names = set(get_special_activities().keys())
+    beach_related = set(get_activities_with_tag("beach")) | set(get_activities_with_tag("beach_slot_restricted"))
+    ordered_names: List[str] = []
+
+    for pair in get_soft_prohibited_pairs():
+        if len(pair) != 2:
+            continue
+        activity_a, activity_b = pair
+        if activity_a not in beach_related or activity_b not in beach_related:
+            continue
+        if activity_a not in special_names and activity_b not in special_names:
+            continue
+        for activity_name in (activity_a, activity_b):
+            if activity_name not in ordered_names:
+                ordered_names.append(activity_name)
+
+    return ordered_names
+
+
+def get_compatibility_same_day_conflicts() -> List[tuple[str, str]]:
+    """
+    Get the pair list used by the legacy rules package.
+
+    When SKULL defines explicit hard prohibited pairs, those win. Otherwise we
+    fall back to the configured same-day pair catalog to preserve compatibility
+    in the non-live rules/service layer while still sourcing from SKULL.
+    """
+    configured = [tuple(pair) for pair in get_prohibited_pairs() if len(pair) == 2]
+    if configured:
+        return configured
+    return [tuple(pair) for pair in get_soft_prohibited_pairs() if len(pair) == 2]
+
+
 def validate_brain_skull_alignment() -> None:
     """
     Fail fast when SKULL hard-policy lists diverge from BRAIN-required anchors.
@@ -376,6 +454,11 @@ def get_non_consecutive_activities() -> List[str]:
 def get_fill_priority() -> List[str]:
     """Get fill priority list."""
     return _load_skull().get("constraints", {}).get("fill_priority", [])
+
+
+def get_campsite_order() -> List[str]:
+    """Get the north-to-south campsite ordering."""
+    return _load_skull().get("camp_map", {}).get("campsite_order", [])
 
 
 def get_area_pairs() -> Dict[str, str]:

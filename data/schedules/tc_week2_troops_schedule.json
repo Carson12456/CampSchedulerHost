@@ -223,8 +223,8 @@
     {
       "troop_name": "Massasoit",
       "activity_name": "Hemp Craft",
-      "day": "WEDNESDAY",
-      "slot": 1
+      "day": "FRIDAY",
+      "slot": 2
     },
     {
       "troop_name": "Massasoit",
@@ -283,8 +283,8 @@
     {
       "troop_name": "Massasoit",
       "activity_name": "Gaga Ball",
-      "day": "FRIDAY",
-      "slot": 2
+      "day": "WEDNESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Taskalusa",

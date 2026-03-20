@@ -25,21 +25,26 @@ def _read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def _extract_int(pattern: str, text: str, label: str) -> int:
-    m = re.search(pattern, text, flags=re.IGNORECASE)
-    if not m:
-        raise ValueError(f"Could not extract '{label}' from BRAIN")
-    return int(m.group(1))
+def _extract_int(patterns: List[str], text: str, label: str) -> int:
+    for pattern in patterns:
+        m = re.search(pattern, text, flags=re.IGNORECASE)
+        if m:
+            return int(m.group(1))
+    raise ValueError(f"Could not extract '{label}' from BRAIN")
 
 
 def _contains_required_brain_clauses(brain: str) -> List[str]:
-    required = [
-        "non_exempt_top5_misses == 0",
-        "100% non-exempt Top 5 success",
-        "3-hour duplication rule",
-        "Tuesday HC/DG saturation rule",
+    required_groups = [
+        ("non_exempt_top5_misses == 0", "non_exempt_top5_misses == 0"),
+        ("100% non-exempt Top 5 success", "Zero Non-Exempt Top 5 Misses"),
+        ("3-hour duplication rule", "3-Hour Duplication"),
+        ("Tuesday HC/DG saturation rule", "Tuesday HC/DG Saturation"),
     ]
-    missing = [clause for clause in required if clause not in brain]
+    missing = [
+        label
+        for label, clause in required_groups
+        if clause not in brain
+    ]
     return missing
 
 
@@ -55,11 +60,35 @@ def check_consistency() -> Tuple[List[str], List[str]]:
         errors.append("SKULL missing constraints block")
         return errors, warnings
 
-    expected_canoe = _extract_int(r"Canoes max\s+(\d+)\s+people", brain, "canoe capacity")
-    expected_global_staff = _extract_int(r"Global staff max\s+(\d+)\s+per slot", brain, "global staff")
-    expected_beach_staff = _extract_int(r"Beach staff max\s+(\d+)\s+per slot", brain, "beach staff")
+    expected_canoe = _extract_int(
+        [
+            r"Canoes max\s+(\d+)\s+people",
+            r"Canoes:\s*Max\s+(\d+)\s+people",
+        ],
+        brain,
+        "canoe capacity",
+    )
+    expected_global_staff = _extract_int(
+        [
+            r"Global staff max\s+(\d+)\s+per slot",
+            r"Global Staff:\s*Base max\s+(\d+)\s+per slot",
+        ],
+        brain,
+        "global staff",
+    )
+    expected_beach_staff = _extract_int(
+        [
+            r"Beach staff max\s+(\d+)\s+per slot",
+            r"Beach Staff:\s*Max\s+(\d+)\s+per slot",
+        ],
+        brain,
+        "beach staff",
+    )
     expected_beach_sat = _extract_int(
-        r"Beach saturation max\s+(\d+)\s+staffed beach activities per slot",
+        [
+            r"Beach saturation max\s+(\d+)\s+staffed beach activities per slot",
+            r"Beach Saturation:\s*Max\s+(\d+)\s+staffed beach activities per slot",
+        ],
         brain,
         "beach saturation",
     )

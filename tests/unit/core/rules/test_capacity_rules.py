@@ -4,6 +4,7 @@ Unit tests for Capacity Rules
 import pytest
 
 from core.rules.capacity_rules import CapacityRules
+from core.entities import Activity, Day, ScheduleEntry, TimeSlot, Troop, Zone
 
 
 class TestCapacityRules:
@@ -68,3 +69,42 @@ class TestCapacityRules:
         
         # Verify count matches expected
         assert len(beach_staff) == len(expected_activities)
+
+    def test_can_place_activity_enforces_tuesday_only(self):
+        """Test that Tuesday-only activities are rejected outside Tuesday."""
+        rules = CapacityRules()
+        troop = Troop("Troop A", "Site A", ["History Center"], 10, 2)
+        activity = Activity("History Center", 1.0, Zone.OFF_CAMP)
+
+        monday_slot = TimeSlot(Day.MONDAY, 1)
+        tuesday_slot = TimeSlot(Day.TUESDAY, 1)
+
+        assert rules.can_place_activity(monday_slot, activity, troop, []) is False
+        assert rules.can_place_activity(tuesday_slot, activity, troop, []) is True
+
+    def test_can_place_activity_respects_sailing_overlap_model(self):
+        """Test the 90-minute Sailing overlap model for staggered starts."""
+        rules = CapacityRules()
+        sailing = Activity("Sailing", 1.5, Zone.BEACH, "Boats Director")
+        troop_a = Troop("Troop A", "Site A", ["Sailing"], 10, 2)
+        troop_b = Troop("Troop B", "Site B", ["Sailing"], 10, 2)
+        troop_c = Troop("Troop C", "Site C", ["Sailing"], 10, 2)
+
+        monday_slot_1 = TimeSlot(Day.MONDAY, 1)
+        monday_slot_2 = TimeSlot(Day.MONDAY, 2)
+
+        existing_entries = [
+            ScheduleEntry(monday_slot_1, sailing, troop_a),
+            ScheduleEntry(monday_slot_2, sailing, troop_a),
+        ]
+
+        assert rules.can_place_activity(monday_slot_2, sailing, troop_b, existing_entries) is True
+
+        existing_entries.extend(
+            [
+                ScheduleEntry(monday_slot_2, sailing, troop_b),
+                ScheduleEntry(TimeSlot(Day.MONDAY, 3), sailing, troop_b),
+            ]
+        )
+
+        assert rules.can_place_activity(monday_slot_2, sailing, troop_c, existing_entries) is False

@@ -245,6 +245,12 @@
       "slot": 2
     },
     {
+      "troop_name": "Samoset",
+      "activity_name": "History Center",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
       "troop_name": "Red Cloud",
       "activity_name": "Disc Golf",
       "day": "TUESDAY",
@@ -600,12 +606,6 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Knots and Lashings",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "Aqua Trampoline",
       "day": "WEDNESDAY",
       "slot": 3
@@ -647,6 +647,12 @@
       "slot": 1
     },
     {
+      "troop_name": "Black Hawk",
+      "activity_name": "Gaga Ball",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
       "troop_name": "Tamanend",
       "activity_name": "Tie Dye",
       "day": "WEDNESDAY",
@@ -654,40 +660,34 @@
     },
     {
       "troop_name": "Sequoyah",
-      "activity_name": "Gaga Ball",
+      "activity_name": "Float for Floats",
       "day": "MONDAY",
-      "slot": 2
+      "slot": 1
     },
     {
       "troop_name": "Sequoyah",
-      "activity_name": "Fishing",
+      "activity_name": "Float for Floats",
       "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Gaga Ball",
-      "day": "TUESDAY",
-      "slot": 1
+      "slot": 2
     }
   ],
   "unscheduled": {
-    "Sequoyah": {
-      "top5": [],
-      "top10": [
-        {
-          "name": "Float for Floats",
-          "rank": 10,
-          "is_exempt": true
-        }
-      ]
-    },
     "Massasoit": {
       "top5": [],
       "top10": [
         {
           "name": "Troop Shotgun",
           "rank": 6,
+          "is_exempt": false
+        }
+      ]
+    },
+    "Black Hawk": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Knots and Lashings",
+          "rank": 8,
           "is_exempt": false
         }
       ]

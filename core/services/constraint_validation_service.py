@@ -128,40 +128,13 @@ class ConstraintValidationService:
         Returns:
             True if activity is available, False otherwise
         """
-        # Get existing entries for the time slot
         existing_entries = self.schedule_repository.get_entries_for_time_slot(time_slot)
-        
-        for entry in existing_entries:
-            # Check if same activity is already booked (non-shareable)
-            if entry.activity.name == activity.name:
-                # Special cases for shareable activities
-                if activity.name == "Water Polo":
-                    # Allow up to 2 troops for Water Polo
-                    polo_count = sum(1 for e in existing_entries if e.activity.name == "Water Polo")
-                    if polo_count < 2:
-                        continue
-                
-                return False
-            
-            # Check exclusive area conflicts
-            if self.activity_rules.are_activities_same_exclusive_area(
-                activity.name, entry.activity.name
-            ):
-                return False
-            
-            # Check explicit conflicts
-            if (activity.name in entry.activity.conflicts_with or
-                entry.activity.name in activity.conflicts_with):
-                return False
-        
-        # Check beach staff capacity
-        if self.capacity_rules.is_beach_staff_activity(activity.name):
-            beach_count = sum(1 for e in existing_entries 
-                           if self.capacity_rules.is_beach_staff_activity(e.activity.name))
-            if not self.capacity_rules.can_add_beach_staff_activity(beach_count):
-                return False
-        
-        return True
+        return self.capacity_rules.can_place_activity(
+            time_slot=time_slot,
+            activity=activity,
+            requesting_troop=requesting_troop,
+            existing_entries=existing_entries,
+        )
     
     def validate_exclusive_area_conflict(
         self, 

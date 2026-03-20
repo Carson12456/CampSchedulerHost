@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import os
 import random
+import time
 import typing
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Optional, Set
@@ -69,8 +70,13 @@ class LegacyPart06Mixin:
             if area == "Water Polo" and len(entries) <= 2:
                 continue
 
-            # Sailing is EXCLUSIVE: Only 1 troop per slot (per Spine rule)
-            # No special handling needed - will be caught as violation if > 1
+            # Sailing follows the BRAIN 90-minute overlap model:
+            # slot 1 max 1, slot 2 max 2, slot 3 max 1.
+            # This preserves the legal overlap of a slot-1 start with a slot-2 start.
+            if area == "Sailing":
+                day_name = slot.day.name if hasattr(slot.day, "name") else str(slot.day).upper()
+                if slot.slot_number == 2 and day_name != "THURSDAY" and len(entries) <= 2:
+                    continue
 
             # Multiple troops have activities from this exclusive area in this slot!
             # Sort by preference rank (lower is better) - keep the best one
@@ -89,39 +95,30 @@ class LegacyPart06Mixin:
             to_remove = [e for e, _ in entries_with_rank[1:]]
 
             for entry in to_remove:
-                if entry in self.schedule.entries:
-                    self.schedule.entries.remove(entry)
-                    removed_count += 1
+                if entry not in self.schedule.entries:
+                    continue
+                before_count = len(self.schedule.entries)
+                if not self._remove_from_schedule(entry):
+                    continue
+                removed_count += before_count - len(self.schedule.entries)
 
-                    # FIX: Multi-slot atomicity - remove siblings!
-                    effective_slots = self.schedule._get_effective_slots(entry.activity, entry.troop)
-                    if effective_slots > 1:
-                        siblings = [s for s in self.schedule.entries 
-                                   if s.troop == entry.troop 
-                                   and s.activity.name == entry.activity.name 
-                                   and s.time_slot.day == entry.time_slot.day
-                                   and s != entry]
-                        for s in siblings:
-                            if s in self.schedule.entries:
-                                self.schedule.entries.remove(s)
+                # TRACK TOP 5 TO RECOVER LATER
+                rank = entry.troop.get_priority(entry.activity.name)
+                if rank < 5:
+                    if not hasattr(self, "_top5_to_recover"):
+                        self._top5_to_recover = []
+                    # Check if already in recovery list to avoid duplicates
+                    if (entry.troop, entry.activity, rank) not in self._top5_to_recover:
+                        self._top5_to_recover.append((entry.troop, entry.activity, rank))
 
-                    # TRACK TOP 5 TO RECOVER LATER
-                    rank = entry.troop.get_priority(entry.activity.name)
-                    if rank < 5:
-                        if not hasattr(self, "_top5_to_recover"):
-                            self._top5_to_recover = []
-                        # Check if already in recovery list to avoid duplicates
-                        if (entry.troop, entry.activity, rank) not in self._top5_to_recover:
-                            self._top5_to_recover.append((entry.troop, entry.activity, rank))
-
-                    # Show what happened
-                    if entry.activity.name == keep_entry.activity.name:
-                        print(f"  [Cleanup] Removed duplicate {entry.activity.name} for {entry.troop.name} at {slot}")
-                        print(f"            Kept {keep_entry.troop.name}'s {keep_entry.activity.name}")
-                    else:
-                        print(f"  [Cleanup] Area conflict in '{area}' at {slot}")
-                        print(f"            Removed {entry.troop.name}'s {entry.activity.name}")
-                        print(f"            Kept {keep_entry.troop.name}'s {keep_entry.activity.name}")
+                # Show what happened
+                if entry.activity.name == keep_entry.activity.name:
+                    print(f"  [Cleanup] Removed duplicate {entry.activity.name} for {entry.troop.name} at {slot}")
+                    print(f"            Kept {keep_entry.troop.name}'s {keep_entry.activity.name}")
+                else:
+                    print(f"  [Cleanup] Area conflict in '{area}' at {slot}")
+                    print(f"            Removed {entry.troop.name}'s {entry.activity.name}")
+                    print(f"            Kept {keep_entry.troop.name}'s {keep_entry.activity.name}")
 
         if removed_count > 0:
             print(f"  Removed {removed_count} exclusive area conflict entries")
@@ -833,22 +830,25 @@ class LegacyPart06Mixin:
 
                     # Only displace if ALL blocking activities are non-Top 5 (rank > 5)
                     if blocking and all(troop.get_priority(e.activity.name) > 5 for e in blocking):
-                        # Temporarily remove and check if we can schedule
+                        # Temporarily remove the full blocking activity instances and check if we can schedule.
+                        snapshot = self._snapshot_scheduler_state()
                         removed_blocking = []
+                        removed_names = []
                         for b in list(blocking):
-                            self.schedule.entries.remove(b)
-                            removed_blocking.append(b)
+                            if b not in self.schedule.entries:
+                                continue
+                            if self._remove_from_schedule(b):
+                                removed_blocking.append(b)
+                                removed_names.append(b.activity.name)
 
-                        if self._can_schedule(troop, activity, recovery_slot, recovery_slot.day):
+                        if removed_blocking and self._can_schedule(troop, activity, recovery_slot, recovery_slot.day):
                             self._add_to_schedule(recovery_slot, activity, troop)
-                            print(f"    [RECOVERED-DISPLACE] {troop.name}: {activity.name} (#{rank+1}) -> {recovery_slot.day.name[:3]}-{recovery_slot.slot_number} (displaced {', '.join(b.activity.name for b in removed_blocking)})")
+                            print(f"    [RECOVERED-DISPLACE] {troop.name}: {activity.name} (#{rank+1}) -> {recovery_slot.day.name[:3]}-{recovery_slot.slot_number} (displaced {', '.join(removed_names)})")
                             self._top5_to_recover.remove((troop, activity, rank))
                             recovered_count += 1
                             break
                         else:
-                            # Put them back
-                            for b in removed_blocking:
-                                self.schedule.entries.append(b)
+                            self._restore_scheduler_state(snapshot)
 
                 if (troop, activity, rank) in self._top5_to_recover:
                     print(f"    [FAILED] Could not recover {troop.name}: {activity.name} (#{rank+1})")
@@ -1101,7 +1101,12 @@ class LegacyPart06Mixin:
                             self.schedule.entries.append(slot_entry)
 
 
-    def _fill_empty_slots_final(self):
+    def _fill_empty_slots_final(
+        self,
+        allow_duplicates: bool = True,
+        allow_last_resort: bool = True,
+        allow_relaxed: bool = True,
+    ):
         """
         Fill any empty slots left after overlap removal with appropriate activities.
         AGGRESSIVE: Will try unique activities first, then allow duplicates to avoid gaps.
@@ -1365,7 +1370,7 @@ class LegacyPart06Mixin:
                                 filled = True
 
                         # PASS 2: If nothing worked, allow duplicates (better than gaps!)
-                        if not filled:
+                        if not filled and allow_duplicates:
                             for activity_name in fill_activities:
                                 activity = get_activity_by_name(activity_name)
                                 if activity and self._can_schedule(troop, activity, slot, day):
@@ -1376,7 +1381,7 @@ class LegacyPart06Mixin:
                                         break
 
                         # PASS 3: Last resort - try ANY activity from the full list
-                        if not filled:
+                        if not filled and allow_last_resort:
                             for activity in self.activities:
                                 if activity.name in ['Delta', 'Super Troop', 'Reflection']:
                                     continue  # Skip mandatory/special activities
@@ -1388,7 +1393,7 @@ class LegacyPart06Mixin:
                                         break
 
                         # PASS 4: ABSOLUTE LAST RESORT - relax constraints (NO GAPS ALLOWED!)
-                        if not filled:
+                        if not filled and allow_relaxed:
                             for activity in self.activities:
                                 if activity.name in ['Delta', 'Super Troop', 'Reflection']:
                                     continue
@@ -2313,137 +2318,503 @@ class LegacyPart06Mixin:
         return ultra_moves
 
 
+    def _normalized_preference_rank(self, troop: Troop, activity_name: str) -> int:
+        """Return a sortable preference rank where missing activities are very low priority."""
+        rank = troop.get_priority(activity_name)
+        if rank is None or rank >= 999:
+            return 99
+        return int(rank)
+
+
+    def _is_excess_day_single_slot_entry(self, entry: ScheduleEntry) -> bool:
+        effective_slots = self.schedule._get_effective_slots(entry.activity, entry.troop)
+        return int(effective_slots + 0.5) == 1
+
+    def _get_excess_day_target_tier(self, target_day: Day, day_counts: Counter) -> int:
+        """Rank target days by BRAIN search order: fill partial days before standalone merges."""
+        target_count = day_counts.get(target_day, 0)
+        if target_count == self._get_cluster_day_capacity(target_day) - 1:
+            return 0
+        if target_count > 0:
+            return 1
+        return 2
+
+    def _has_same_activity_adjacent_on_day(
+        self,
+        activity_name: str,
+        day: Day,
+        slot_number: int,
+        *,
+        exclude_entry: Optional[ScheduleEntry] = None,
+    ) -> bool:
+        """Check whether placing at a slot would create same-activity back-to-back adjacency."""
+        for entry in self.schedule.entries:
+            if exclude_entry is not None and entry == exclude_entry:
+                continue
+            if entry.activity.name != activity_name or entry.time_slot.day != day:
+                continue
+            if abs(entry.time_slot.slot_number - slot_number) == 1:
+                return True
+        return False
+
+    def _get_excess_day_switch_sort_key(
+        self,
+        source_entry: ScheduleEntry,
+        target_entry: ScheduleEntry,
+        day_counts: Counter,
+    ) -> tuple:
+        """Sort candidate switches to match the BRAIN excess-day search order."""
+        target_day = target_entry.time_slot.day
+        target_slot = target_entry.time_slot
+        consecutive_priority = self._is_consecutive_priority_activity(source_entry.activity.name)
+        same_activity_count = sum(
+            1
+            for entry in self.schedule.entries
+            if entry.activity.name == source_entry.activity.name
+            and entry.time_slot.day == target_day
+        )
+        return (
+            self._get_excess_day_target_tier(target_day, day_counts),
+            0
+            if consecutive_priority
+            and self._has_same_activity_adjacent_on_day(
+                source_entry.activity.name,
+                target_day,
+                target_slot.slot_number,
+                exclude_entry=target_entry,
+            )
+            else 1,
+            -same_activity_count,
+            -day_counts.get(target_day, 0),
+            abs(target_slot.slot_number - source_entry.time_slot.slot_number),
+            -self._normalized_preference_rank(source_entry.troop, target_entry.activity.name),
+            target_entry.troop.name,
+        )
+
+
+    def _cross_troop_excess_day_swap_is_safe(self, source_entry: ScheduleEntry, target_entry: ScheduleEntry) -> bool:
+        """
+        Keep cross-troop excess-day swaps from quietly degrading preference score.
+
+        Same-troop switches only change day/slot, but cross-troop swaps change which
+        activity each troop receives, so hold them to a tighter preference guard.
+        """
+        source_troop = source_entry.troop
+        target_troop = target_entry.troop
+
+        source_old = self._normalized_preference_rank(source_troop, source_entry.activity.name)
+        source_new = self._normalized_preference_rank(source_troop, target_entry.activity.name)
+        target_old = self._normalized_preference_rank(target_troop, target_entry.activity.name)
+        target_new = self._normalized_preference_rank(target_troop, source_entry.activity.name)
+
+        if source_old < 10 <= source_new:
+            return False
+        if target_old < 10 <= target_new:
+            return False
+        if source_new - source_old > 6:
+            return False
+        if target_new - target_old > 6:
+            return False
+        return True
+
+
+    def _attempt_excess_day_same_troop_switch(self, source_entry: ScheduleEntry, target_entry: ScheduleEntry) -> bool:
+        """Swap a clustered source entry with another entry in the same troop's week."""
+        if source_entry.troop != target_entry.troop:
+            return False
+        if not self._is_excess_day_single_slot_entry(source_entry):
+            return False
+        if not self._is_excess_day_single_slot_entry(target_entry):
+            return False
+
+        troop = source_entry.troop
+        source_slot = source_entry.time_slot
+        target_slot = target_entry.time_slot
+        snapshot = self._snapshot_scheduler_state()
+
+        if not self._remove_from_schedule(source_entry):
+            return False
+        if not self._remove_from_schedule(target_entry):
+            self._restore_scheduler_state(snapshot)
+            return False
+
+        can_move_source = self._can_schedule(
+            troop,
+            source_entry.activity,
+            target_slot,
+            target_slot.day,
+            relax_constraints=True,
+            ignore_day_requests=True,
+        )
+        can_move_target = self._can_schedule(
+            troop,
+            target_entry.activity,
+            source_slot,
+            source_slot.day,
+            relax_constraints=True,
+            ignore_day_requests=True,
+        )
+        if not can_move_source or not can_move_target:
+            self._restore_scheduler_state(snapshot)
+            return False
+
+        placed_source = self._add_to_schedule(target_slot, source_entry.activity, troop)
+        placed_target = self._add_to_schedule(source_slot, target_entry.activity, troop)
+        if not placed_source or not placed_target:
+            self._restore_scheduler_state(snapshot)
+            return False
+        return True
+
+
+    def _attempt_excess_day_cross_troop_switch(self, source_entry: ScheduleEntry, target_entry: ScheduleEntry) -> bool:
+        """Swap an excess-day source entry with a blocker from another troop on a target day."""
+        if source_entry.troop == target_entry.troop:
+            return False
+        if not self._is_excess_day_single_slot_entry(source_entry):
+            return False
+        if not self._is_excess_day_single_slot_entry(target_entry):
+            return False
+
+        source_troop = source_entry.troop
+        target_troop = target_entry.troop
+        source_slot = source_entry.time_slot
+        target_slot = target_entry.time_slot
+        snapshot = self._snapshot_scheduler_state()
+
+        if not self._remove_from_schedule(source_entry):
+            return False
+        if not self._remove_from_schedule(target_entry):
+            self._restore_scheduler_state(snapshot)
+            return False
+
+        can_place_target_activity = self._can_schedule(
+            source_troop,
+            target_entry.activity,
+            source_slot,
+            source_slot.day,
+            relax_constraints=True,
+            ignore_day_requests=True,
+        )
+        can_place_source_activity = self._can_schedule(
+            target_troop,
+            source_entry.activity,
+            target_slot,
+            target_slot.day,
+            relax_constraints=True,
+            ignore_day_requests=True,
+        )
+        if not can_place_target_activity or not can_place_source_activity:
+            self._restore_scheduler_state(snapshot)
+            return False
+
+        placed_source = self._add_to_schedule(source_slot, target_entry.activity, source_troop)
+        placed_target = self._add_to_schedule(target_slot, source_entry.activity, target_troop)
+        if not placed_source or not placed_target:
+            self._restore_scheduler_state(snapshot)
+            return False
+        return True
+
+
+    def _try_clear_excess_source_day(
+        self,
+        area_name: str,
+        area_activities: list[str],
+        source_day: Day,
+        ordered_target_days: list[Day],
+        protected_activities: set[str],
+        baseline_non_exempt: int,
+        baseline_metrics: dict,
+    ) -> Optional[dict]:
+        """
+        Try to clear one excess source day using a mix of same-troop and cross-troop switches.
+
+        The important distinction from the old logic is that a two-entry excess day often
+        needs a coordinated pair of switches before the clustering metric moves at all.
+        """
+        base_snapshot = self._snapshot_scheduler_state()
+        source_entries = sorted(
+            [
+                e
+                for e in self.schedule.entries
+                if e.activity.name in area_activities
+                and e.time_slot.day == source_day
+                and self._is_excess_day_single_slot_entry(e)
+            ],
+            key=lambda e: (
+                self._normalized_preference_rank(e.troop, e.activity.name),
+                e.time_slot.slot_number,
+                e.troop.name,
+            ),
+            reverse=True,
+        )
+        if not source_entries:
+            return None
+
+        move_notes = []
+        for source_entry in source_entries:
+            if source_entry not in self.schedule.entries:
+                continue
+
+            day_counts = Counter(
+                e.time_slot.day
+                for e in self.schedule.entries
+                if e.activity.name in area_activities
+            )
+            candidate_target_days = [
+                day
+                for day in ordered_target_days
+                if day != source_day and day_counts.get(day, 0) < self._get_cluster_day_capacity(day)
+            ]
+            candidate_target_days.sort(
+                key=lambda day: (
+                    self._get_excess_day_target_tier(day, day_counts),
+                    -day_counts.get(day, 0),
+                    self._day_clustering_sort_key(day),
+                )
+            )
+            if not candidate_target_days:
+                self._restore_scheduler_state(base_snapshot)
+                return None
+
+            same_troop_candidates = sorted(
+                [
+                    e
+                    for e in self.schedule.entries
+                    if e.troop == source_entry.troop
+                    and e.time_slot.day in candidate_target_days
+                    and e.activity.name not in area_activities
+                    and e.activity.name not in protected_activities
+                    and self._is_excess_day_single_slot_entry(e)
+                ],
+                key=lambda e: self._get_excess_day_switch_sort_key(
+                    source_entry,
+                    e,
+                    day_counts,
+                ),
+            )
+
+            switched = False
+            for target_entry in same_troop_candidates[:10]:
+                attempt_snapshot = self._snapshot_scheduler_state()
+                if self._attempt_excess_day_same_troop_switch(source_entry, target_entry):
+                    move_notes.append(
+                        f"{source_entry.troop.name}:{source_entry.activity.name} "
+                        f"{source_day.name[:3]}-{source_entry.time_slot.slot_number} -> "
+                        f"{target_entry.time_slot.day.name[:3]}-{target_entry.time_slot.slot_number} "
+                        f"(same troop via {target_entry.activity.name})"
+                    )
+                    switched = True
+                    break
+                self._restore_scheduler_state(attempt_snapshot)
+
+            if switched:
+                continue
+
+            cross_troop_candidates = sorted(
+                [
+                    e
+                    for e in self.schedule.entries
+                    if e.troop != source_entry.troop
+                    and e.time_slot.day in candidate_target_days
+                    and e.activity.name not in area_activities
+                    and e.activity.name not in protected_activities
+                    and self._is_excess_day_single_slot_entry(e)
+                ],
+                key=lambda e: (
+                    *self._get_excess_day_switch_sort_key(
+                        source_entry,
+                        e,
+                        day_counts,
+                    )[:5],
+                    (
+                        max(
+                            0,
+                            self._normalized_preference_rank(source_entry.troop, e.activity.name)
+                            - self._normalized_preference_rank(source_entry.troop, source_entry.activity.name),
+                        )
+                        + max(
+                            0,
+                            self._normalized_preference_rank(e.troop, source_entry.activity.name)
+                            - self._normalized_preference_rank(e.troop, e.activity.name),
+                        )
+                    ),
+                    e.troop.name,
+                ),
+            )
+
+            for target_entry in cross_troop_candidates[:14]:
+                if not self._cross_troop_excess_day_swap_is_safe(source_entry, target_entry):
+                    continue
+                attempt_snapshot = self._snapshot_scheduler_state()
+                if self._attempt_excess_day_cross_troop_switch(source_entry, target_entry):
+                    move_notes.append(
+                        f"{source_entry.troop.name}:{source_entry.activity.name} "
+                        f"{source_day.name[:3]}-{source_entry.time_slot.slot_number} -> "
+                        f"{target_entry.troop.name}:{target_entry.time_slot.day.name[:3]}-{target_entry.time_slot.slot_number} "
+                        f"(cross troop via {target_entry.activity.name})"
+                    )
+                    switched = True
+                    break
+                self._restore_scheduler_state(attempt_snapshot)
+
+            if not switched:
+                self._restore_scheduler_state(base_snapshot)
+                return None
+
+        remaining_on_source_day = [
+            e
+            for e in self.schedule.entries
+            if e.activity.name in area_activities and e.time_slot.day == source_day
+        ]
+        if remaining_on_source_day:
+            self._restore_scheduler_state(base_snapshot)
+            return None
+
+        new_non_exempt, _ = self._count_non_exempt_top5_misses()
+        new_metrics = self._schedule_quality_snapshot()
+        if (
+            new_non_exempt > baseline_non_exempt
+            or new_metrics["excess"] >= baseline_metrics["excess"]
+            or not self._is_quality_snapshot_improvement(baseline_metrics, new_metrics)
+        ):
+            self._restore_scheduler_state(base_snapshot)
+            return None
+
+        candidate = {
+            "state": self._snapshot_scheduler_state(),
+            "metrics": new_metrics,
+            "description": (
+                f"      [Excess Day Switch] {area_name} cleared {source_day.name[:3]} "
+                f"({'; '.join(move_notes)})"
+            ),
+        }
+        self._restore_scheduler_state(base_snapshot)
+        return candidate
+
+
     def _aggressive_excess_day_reduction_swaps(self):
         """
-        Find swaps that specifically reduce excess cluster days.
+        Reduce excess cluster days using real before/after schedule evaluation.
 
-        This method looks for cross-troop swaps where:
-        - Troop A has Activity X on Day 1 and Activity Y on Day 2
-        - Troop B has Activity X on Day 2 and Activity Y on Day 1
-        - Swapping would consolidate both activities onto fewer days
-
-        FIX 2026-01-30: Use strict constraint checking (not relaxed) and
-        add post-swap validation to prevent wet/dry pattern violations.
+        The previously-active implementation only swapped activities inside the same
+        cluster area, which cannot change that area's day spread. The live need is a
+        smarter "switching" pass:
+        - same-troop switches that move a cluster activity onto an already-used day
+        - guarded cross-troop switches when the target day is blocked by another troop
+        - coordinated day-clear bundles for 2-entry excess days
         """
-        from ...models import Day
-        import math
+        print("    [Aggressive Excess Day Reduction] Starting targeted switches...")
 
-        swaps_made = 0
+        cluster_areas = ["Tower", "Rifle Range", "Outdoor Skills", "Handicrafts"]
+        protected_activities = set(self.NON_DISPLACEABLE_ACTIVITIES) | {
+            "Sailing",
+            "History Center",
+            "Disc Golf",
+        }
 
-        # Target cluster areas
-        cluster_areas = SchedulerConstants.CLUSTER_AREAS
+        total_swaps = 0
+        max_swaps = max(10, len(self.troops) * 3)
+        candidate_check_cap = max(80, len(self.troops) * 40)
+        time_budget_s = float(os.getenv("EXCESS_DAY_SWAP_BUDGET_SECONDS", "1.75"))
+        started = time.monotonic()
 
-        for area in cluster_areas:
-            activities = EXCLUSIVE_AREAS.get(area, [])
-            if not activities:
-                continue
+        while total_swaps < max_swaps and time.monotonic() - started <= time_budget_s:
+            baseline_non_exempt, _ = self._count_non_exempt_top5_misses()
+            baseline_metrics = self._schedule_quality_snapshot()
+            if baseline_metrics["excess"] <= 0:
+                break
 
-            area_entries = [e for e in self.schedule.entries if e.activity.name in activities]
-            if len(area_entries) < 4:  # Need enough entries for meaningful swaps
-                continue
+            best_candidate = None
+            best_key = None
+            candidate_checks = 0
 
-            # Count current distribution
-            day_counts = {}
-            for entry in area_entries:
-                day_counts[entry.time_slot.day] = day_counts.get(entry.time_slot.day, 0) + 1
-
-            # Calculate if we have excess days
-            num_activities = len(area_entries)
-            min_days = math.ceil(num_activities / 3.0)
-            current_days = len(day_counts)
-            excess_days = max(0, current_days - min_days)
-
-            if excess_days <= 0:
-                continue
-
-            # Find potential swaps that reduce excess days
-            for i, entry1 in enumerate(area_entries):
-                for j, entry2 in enumerate(area_entries):
-                    if i >= j:  # Avoid duplicates and self-swaps
-                        continue
-                    if entry1.troop == entry2.troop:  # Same troop, skip
-                        continue
-
-                    day1 = entry1.time_slot.day
-                    day2 = entry2.time_slot.day
-
-                    if day1 == day2:  # Same day, no benefit
-                        continue
-
-                    # Check if swapping would reduce excess days
-                    # Count activities per day after potential swap
-                    new_day_counts = day_counts.copy()
-                    new_day_counts[day1] = new_day_counts.get(day1, 0) - 1 + 1  # Remove entry1, add entry2
-                    new_day_counts[day2] = new_day_counts.get(day2, 0) - 1 + 1  # Remove entry2, add entry1
-
-                    # Calculate new excess days
-                    new_current_days = len([d for d, count in new_day_counts.items() if count > 0])
-                    new_excess_days = max(0, new_current_days - min_days)
-
-                    if new_excess_days < excess_days:
-                        # This swap would reduce excess days, try to make it
-                        slot1 = entry1.time_slot
-                        slot2 = entry2.time_slot
-
-                        # FIX: Use strict constraint checking (relax_constraints=False)
-                        # to prevent wet/dry pattern violations
-                        can_swap = True
-
-                        # Check if troop1 can do activity2 in slot1
-                        if not self._can_schedule(entry1.troop, entry2.activity, slot1, slot1.day, relax_constraints=False):
-                            can_swap = False
-
-                        # Check if troop2 can do activity1 in slot2  
-                        if can_swap and not self._can_schedule(entry2.troop, entry1.activity, slot2, slot2.day, relax_constraints=False):
-                            can_swap = False
-
-                        if can_swap:
-                            # Make the swap
-                            self.schedule.entries.remove(entry1)
-                            self.schedule.entries.remove(entry2)
-
-                            self.schedule.add_entry(slot1, entry2.activity, entry1.troop)
-                            self.schedule.add_entry(slot2, entry1.activity, entry2.troop)
-
-                            # FIX: Post-swap validation for wet/dry patterns
-                            # Check if this created any wet/dry violations
-                            has_violation = False
-
-                            # Check troop1's day for wet/dry pattern violations
-                            if self._check_wet_dry_violation_for_troop_on_day(entry1.troop, slot1.day):
-                                has_violation = True
-
-                            # Check troop2's day for wet/dry pattern violations  
-                            if not has_violation and self._check_wet_dry_violation_for_troop_on_day(entry2.troop, slot2.day):
-                                has_violation = True
-
-                            if has_violation:
-                                # Revert the swap
-                                new_entry1 = [e for e in self.schedule.entries 
-                                             if e.troop == entry1.troop and e.time_slot == slot1 
-                                             and e.activity.name == entry2.activity.name][0]
-                                new_entry2 = [e for e in self.schedule.entries 
-                                             if e.troop == entry2.troop and e.time_slot == slot2 
-                                             and e.activity.name == entry1.activity.name][0]
-                                self.schedule.entries.remove(new_entry1)
-                                self.schedule.entries.remove(new_entry2)
-                                self.schedule.add_entry(slot1, entry1.activity, entry1.troop)
-                                self.schedule.add_entry(slot2, entry2.activity, entry2.troop)
-                                continue  # Skip this swap, try next
-
-                            swaps_made += 1
-                            print(f"  [Excess Day Reduction] {entry1.troop.name}: {entry1.activity.name} {day1.name[:3]} <-> {entry2.troop.name}: {entry2.activity.name} {day2.name[:3]}")
-
-                            # Update day counts for subsequent swaps
-                            day_counts = new_day_counts
-                            excess_days = new_excess_days
-
-                            break  # Move to next entry pair
-
-                if excess_days <= 0:
+            for area_name in cluster_areas:
+                if time.monotonic() - started > time_budget_s or candidate_checks >= candidate_check_cap:
                     break
 
-        return swaps_made
+                area_activities = EXCLUSIVE_AREAS.get(area_name, [])
+                if not area_activities:
+                    continue
+
+                area_entries = [
+                    e
+                    for e in self.schedule.entries
+                    if e.activity.name in area_activities and self._is_excess_day_single_slot_entry(e)
+                ]
+                if len(area_entries) < 2:
+                    continue
+
+                day_counts = Counter(e.time_slot.day for e in area_entries)
+                required_days = math.ceil(len(area_entries) / 3.0)
+                if len(day_counts) <= required_days:
+                    continue
+
+                ordered_days = [
+                    day
+                    for day, _ in sorted(
+                        day_counts.items(),
+                        key=lambda item: (
+                            -(item[1] / self._get_cluster_day_capacity(item[0])),
+                            -item[1],
+                            self._day_clustering_sort_key(item[0]),
+                        ),
+                    )
+                ]
+                preferred_keep_days = set(ordered_days[:required_days])
+                source_days = [
+                    day
+                    for day, _ in sorted(
+                        day_counts.items(),
+                        key=lambda item: (
+                            item[1] / self._get_cluster_day_capacity(item[0]),
+                            item[1],
+                            self._day_clustering_sort_key(item[0]),
+                        ),
+                    )
+                    if day not in preferred_keep_days
+                ]
+
+                for source_day in source_days:
+                    if time.monotonic() - started > time_budget_s or candidate_checks >= candidate_check_cap:
+                        break
+                    candidate_checks += 1
+
+                    candidate = self._try_clear_excess_source_day(
+                        area_name,
+                        area_activities,
+                        source_day,
+                        ordered_days,
+                        protected_activities,
+                        baseline_non_exempt,
+                        baseline_metrics,
+                    )
+                    if not candidate:
+                        continue
+
+                    candidate_metrics = candidate["metrics"]
+                    candidate_key = (
+                        baseline_metrics["excess"] - candidate_metrics["excess"],
+                        baseline_metrics["gaps"] - candidate_metrics["gaps"],
+                        baseline_metrics["soft_total"] - candidate_metrics["soft_total"],
+                        baseline_metrics["composite"] - candidate_metrics["composite"],
+                        baseline_metrics["commissioner"] - candidate_metrics["commissioner"],
+                    )
+                    if best_key is None or candidate_key > best_key:
+                        best_key = candidate_key
+                        best_candidate = candidate
+
+            if not best_candidate:
+                break
+
+            self._restore_scheduler_state(best_candidate["state"])
+            total_swaps += 1
+            print(best_candidate["description"])
+
+        if total_swaps > 0:
+            print(f"    [Aggressive Excess Day Reduction] Completed {total_swaps} successful day-clear switch(es)")
+        else:
+            print("    [Aggressive Excess Day Reduction] No safe switches found")
+        return total_swaps
 
 
     def _reduce_constraint_violations(self):

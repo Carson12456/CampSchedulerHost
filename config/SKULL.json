@@ -149,6 +149,9 @@
                 "beach",
                 "wet",
                 "staffed"
+            ],
+            "conflicts_with": [
+                "Troop Swim"
             ]
         },
         {
@@ -162,6 +165,9 @@
                 "wet",
                 "staffed",
                 "fill"
+            ],
+            "conflicts_with": [
+                "Underwater Obstacle Course"
             ]
         },
         {
@@ -296,6 +302,9 @@
                 "accuracy",
                 "staffed",
                 "fill"
+            ],
+            "conflicts_with": [
+                "Troop Shotgun"
             ]
         },
         {
@@ -308,6 +317,9 @@
                 "accuracy",
                 "staffed",
                 "request_only"
+            ],
+            "conflicts_with": [
+                "Troop Rifle"
             ]
         },
         {

@@ -35,10 +35,8 @@ from core.scheduler import config_loader
 EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
 BEACH_STAFF_ACTIVITIES = {
     name
-    for name in config_loader.get_activities_with_tag("beach")
-    if config_loader.get_staff_need(name) > 0
+    for name in config_loader.get_beach_staff_activities()
 }
-BEACH_STAFF_ACTIVITIES.add("Sailing")
 
 __all__ = [
     "Activity",

@@ -531,7 +531,7 @@ class LegacyPart03Mixin:
         paired_area = self.AREA_PAIRS.get(activity_area)
 
         # User Request: HC/DG need "balls (Gaga/9Sq) or reserve (Free Time)" paired
-        if activity_area in ["History Center", "Disc Golf"]:
+        if activity_area in self.TUESDAY_ONLY_ACTIVITIES:
              paired_activities = ["Gaga Ball", "9 Square", "Campsite Free Time"]
         elif paired_area:
              # Standard behavior
@@ -2321,7 +2321,7 @@ class LegacyPart03Mixin:
                 if slot.day == Day.TUESDAY and slot.slot_number == 2:
                      has_hc_dg = False
                      for pref in troop.preferences:
-                         if pref in ["History Center", "Disc Golf"]:
+                         if pref in self.TUESDAY_ONLY_ACTIVITIES:
                              has_hc_dg = True
                              break
                      if has_hc_dg:
