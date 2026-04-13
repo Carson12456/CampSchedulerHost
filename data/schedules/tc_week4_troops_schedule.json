@@ -480,18 +480,6 @@
       "slot": 1
     },
     {
-      "troop_name": "Tamanend",
-      "activity_name": "Water Polo",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Water Polo",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Black Hawk",
       "activity_name": "Archery",
       "day": "FRIDAY",
@@ -502,6 +490,18 @@
       "activity_name": "Archery",
       "day": "FRIDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Water Polo",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Water Polo",
+      "day": "FRIDAY",
+      "slot": 3
     },
     {
       "troop_name": "Tamanend",

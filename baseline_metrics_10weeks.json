@@ -1,7 +1,7 @@
 {
   "baseline_role": "comparison",
   "description": "Comparison Baseline: Regression comparison point. New changes are compared against this.",
-  "timestamp": "C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampSchedulers\\CampSchedulerHost\\CampSchedulerHost-1",
+  "timestamp": "C:\\Users\\Carson\\OneDrive - Minnesota State\\Desktop\\Projects\\CampSchedulerHost",
   "season_success_rate": 100.0,
   "total_top5_slots": 415,
   "total_exempt_misses": 3,
@@ -102,15 +102,15 @@
     "voyageur_week3_troops"
   ],
   "quality_metrics": {
-    "average_week_score": 851.5,
-    "average_core_goal_score": 764.5971428571429,
-    "average_raw_bonus_total": 82.50768716577541,
+    "average_week_score": 851.8,
+    "average_core_goal_score": 765.1661224489796,
+    "average_raw_bonus_total": 80.85670677361854,
     "average_effective_bonus_total": 43.66666666666667,
-    "average_constraint_violations": 0.6,
-    "average_staff_variance": 1.4785714285714286,
-    "average_clustering_efficiency": 4.8,
+    "average_constraint_violations": 0.8,
+    "average_staff_variance": 1.5387755102040817,
+    "average_clustering_efficiency": 4.7,
     "average_cluster_gaps": 0.7,
-    "average_commissioner_day_compliance_pct": 33.37734869011352,
+    "average_commissioner_day_compliance_pct": 32.726220314234865,
     "average_beach_slot_violations": 0.5,
     "week_details": [
       {
@@ -225,35 +225,36 @@
       },
       {
         "week_name": "tc_week3_troops",
-        "total_score": 847,
-        "core_goal_score": 745.8326530612245,
-        "raw_bonus_total": 109.72222222222223,
+        "total_score": 888,
+        "core_goal_score": 785.2071428571429,
+        "raw_bonus_total": 110.05555555555556,
         "effective_bonus_total": 50.0,
-        "preference_score": 409.2,
-        "constraint_violations": 1,
-        "staff_variance": 0.673469387755102,
-        "clustering_efficiency": 6,
+        "preference_score": 408.6,
+        "constraint_violations": 2,
+        "staff_variance": 0.6785714285714286,
+        "clustering_efficiency": 4,
         "cluster_gaps": 0,
-        "commissioner_day_compliance_pct": 33.9622641509434,
+        "commissioner_day_compliance_pct": 31.372549019607842,
         "commissioner_day_misses": 35,
         "beach_slot_2_violations": 0,
         "unnecessary_gaps": 0,
         "grade": "Unknown",
         "violation_details": [
+          "Taskalusa: Wet-Dry-Wet pattern on Wednesday",
           "Tamanend: Wet-Dry-Wet pattern on Monday"
         ],
         "cluster_area_details": {
           "Tower": {
-            "days_used": 5,
+            "days_used": 4,
             "required_days": 3,
             "activity_count": 7,
-            "excess_days": 2
+            "excess_days": 1
           },
           "Rifle Range": {
-            "days_used": 4,
+            "days_used": 3,
             "required_days": 2,
             "activity_count": 4,
-            "excess_days": 2
+            "excess_days": 1
           },
           "Outdoor Skills": {
             "days_used": 4,
@@ -270,7 +271,7 @@
         },
         "cluster_gap_details": [],
         "cluster_improvement_targets": {
-          "excess_day_reduction_opportunities": 6,
+          "excess_day_reduction_opportunities": 4,
           "cluster_gap_fill_opportunities": 0,
           "areas_with_excess_days": [
             "Tower",
@@ -280,7 +281,7 @@
           ]
         },
         "top5_pct": 100.0,
-        "top10_pct": 94.31818181818181
+        "top10_pct": 93.18181818181819
       },
       {
         "week_name": "tc_week4_troops",
@@ -487,17 +488,17 @@
       },
       {
         "week_name": "tc_week7_troops",
-        "total_score": 838,
-        "core_goal_score": 736.9683673469387,
-        "raw_bonus_total": 119.2156862745098,
+        "total_score": 811,
+        "core_goal_score": 710.5397959183673,
+        "raw_bonus_total": 108.0392156862745,
         "effective_bonus_total": 50.0,
         "preference_score": 402.3,
         "constraint_violations": 0,
-        "staff_variance": 2.066326530612245,
-        "clustering_efficiency": 5,
+        "staff_variance": 2.352040816326531,
+        "clustering_efficiency": 6,
         "cluster_gaps": 2,
-        "commissioner_day_compliance_pct": 45.09803921568628,
-        "commissioner_day_misses": 28,
+        "commissioner_day_compliance_pct": 41.1764705882353,
+        "commissioner_day_misses": 30,
         "beach_slot_2_violations": 0,
         "unnecessary_gaps": 2,
         "grade": "Unknown",
@@ -510,10 +511,10 @@
             "excess_days": 1
           },
           "Rifle Range": {
-            "days_used": 3,
+            "days_used": 4,
             "required_days": 2,
             "activity_count": 5,
-            "excess_days": 1
+            "excess_days": 2
           },
           "Outdoor Skills": {
             "days_used": 4,
@@ -541,7 +542,7 @@
           }
         ],
         "cluster_improvement_targets": {
-          "excess_day_reduction_opportunities": 5,
+          "excess_day_reduction_opportunities": 6,
           "cluster_gap_fill_opportunities": 2,
           "areas_with_excess_days": [
             "Tower",
@@ -672,13 +673,13 @@
       },
       {
         "week_name": "voyageur_week3_troops",
-        "total_score": 824,
-        "core_goal_score": 724.1795918367347,
-        "raw_bonus_total": 68.625,
+        "total_score": 813,
+        "core_goal_score": 716.9234693877551,
+        "raw_bonus_total": 62.958333333333336,
         "effective_bonus_total": 50.0,
-        "preference_score": 405.2,
-        "constraint_violations": 0,
-        "staff_variance": 1.2040816326530612,
+        "preference_score": 409.5,
+        "constraint_violations": 1,
+        "staff_variance": 1.5153061224489797,
         "clustering_efficiency": 7,
         "cluster_gaps": 0,
         "commissioner_day_compliance_pct": 0.0,
@@ -686,12 +687,14 @@
         "beach_slot_2_violations": 0,
         "unnecessary_gaps": 0,
         "grade": "Unknown",
-        "violation_details": [],
+        "violation_details": [
+          "Hibbing 1: Shower House before Aqua Trampoline on Wednesday"
+        ],
         "cluster_area_details": {
           "Tower": {
             "days_used": 4,
             "required_days": 3,
-            "activity_count": 8,
+            "activity_count": 7,
             "excess_days": 1
           },
           "Rifle Range": {
@@ -701,16 +704,16 @@
             "excess_days": 1
           },
           "Outdoor Skills": {
-            "days_used": 4,
-            "required_days": 2,
-            "activity_count": 5,
-            "excess_days": 2
-          },
-          "Handicrafts": {
             "days_used": 5,
             "required_days": 2,
-            "activity_count": 5,
+            "activity_count": 6,
             "excess_days": 3
+          },
+          "Handicrafts": {
+            "days_used": 4,
+            "required_days": 2,
+            "activity_count": 4,
+            "excess_days": 2
           }
         },
         "cluster_gap_details": [],
@@ -725,7 +728,7 @@
           ]
         },
         "top5_pct": 100.0,
-        "top10_pct": 87.5
+        "top10_pct": 88.75
       }
     ]
   },
