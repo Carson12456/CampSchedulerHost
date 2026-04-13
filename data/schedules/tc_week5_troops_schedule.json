@@ -554,12 +554,6 @@
       "slot": 1
     },
     {
-      "troop_name": "Tamanend",
-      "activity_name": "Troop Canoe",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Sequoyah",
       "activity_name": "Water Polo",
       "day": "FRIDAY",
@@ -568,6 +562,12 @@
     {
       "troop_name": "Taskalusa",
       "activity_name": "Water Polo",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Troop Canoe",
       "day": "FRIDAY",
       "slot": 3
     },
