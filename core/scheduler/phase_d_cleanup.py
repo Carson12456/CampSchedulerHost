@@ -1,13 +1,18 @@
 """
-Phase D Cleanup Module.
+Phase D Cleanup Module (Strict Swap Phase).
 
 Contains methods for Phase D of the scheduling algorithm:
-- D.1: Optimizing Friday Reflection slots
-- D.2: Comprehensive clustering & smart swaps
-- D.3: Forced clustering consolidation
-- D.4-D.7: Various optimizations
-- D.8: Recovery & gap filling
-- D.9: Comprehensive final cleanup
+- D.1: Friday Reflection optimization
+- D.2: Comprehensive clustering & smart swaps (guarded)
+- D.3: Forced clustering consolidation (guarded)
+- D.4: Ultra-aggressive excess day reduction (guarded)
+- D.5: Friday Super Troop optimization
+- D.6: Flexible Reflection slot optimization
+- D.7: Commissioner load balancing
+- D.8: Setup Efficiency & Activity Clustering (guarded)
+- D.9: Outlier Activity & Commissioner Day Ownership (guarded)
+- D.10: Post-Fill Cluster Gap Optimization
+- D.11: Comprehensive Final Cleanup (single gap-fill point)
 """
 
 from collections import defaultdict

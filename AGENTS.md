@@ -23,10 +23,10 @@ Phase A (Foundation)  →  Phase B (Core)  →  Phase C (Remaining)  →  Phase 
 
 | Phase | Purpose |
 |-------|---------|
-| **A** | Mandatory anchors first: Friday Reflection, Super Troop, HC/DG Tuesday, 3-hour activities, 2-hour activities, Sailing, limited activities. Rocks before sand. |
-| **B** | Core preference placement: Top 1, Top 2-5, guarantee 100% Top 5, Delta/Sailing pairing, Aqua Trampoline sharing. |
-| **C** | Remaining preferences (6-20), staff optimization, fill slots, Top 10 guarantees. |
-| **D** | Final polish: clustering, Reflection/Super Troop optimization, commissioner balance, gap recovery, cleanup, verification. |
+| **A** | Foundation: Mandatory anchors (A.1-A.3), then Rocks — 3-hour/2-hour multi-slot (A.4-A.5), then Sailing/Delta multi-slot (A.6-A.9), then beach protection (A.10-A.11), staff clustering, limited activities. |
+| **B** | Core preference placement: Top 1-5 guarantee (B.1-B.3), Delta scheduling (B.4), Delta+Sailing enforcement (B.6), consolidated AT sharing (B.7). |
+| **C** | Remaining preferences 6-20 (C.3), staff optimization (C.2), Top 10 guarantees (C.4-C.5), fill all slots (C.6). |
+| **D** | Final polish (strict swap phase): clustering D.2-D.4 (guarded), Reflection/Super Troop D.1/D.5-D.6, commissioner D.7/D.9, setup D.8, gap close D.10, single cleanup D.11. All destructive steps wrapped in Top-5/Top-10 safety harness. |
 
 Gap checks run after each major phase. The composition uses mixins in `core/constrained_scheduler.py`; implementation lives in `core/scheduler/legacy_parts/`.
 

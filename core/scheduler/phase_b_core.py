@@ -2,14 +2,13 @@
 Phase B Core Module.
 
 Contains methods for Phase B of the scheduling algorithm:
-- B.1: Top 1-5 Preferences (Top 5 Guarantee)
+- B.1/B.1b/B.1c: Top 1-5 Preferences (Top 5 Guarantee)
 - B.2: Guaranteeing 100% Top 5 satisfaction
-- B.3: Mandatory enforcement
-- B.6: Delta scheduling
-- B.8: Early Sailing for Top 10 troops
-- B.9: Enforce Delta + Sailing same-day pairing
-- B.10: Consolidate Sailing same-day clustering
-- B.11: Aqua Trampoline sharing
+- B.3: Mandatory Top 5 enforcement
+- B.4: Delta scheduling (requested only)
+- B.5: Commissioner Busy Map (diagnostic)
+- B.6: Enforce Delta + Sailing same-day pairing
+- B.7: Aqua Trampoline sharing (consolidated single pass)
 """
 
 from ..models import Day, TimeSlot, generate_time_slots
@@ -193,7 +192,7 @@ class PhaseBCoreMixin:
         return None
     
     # =========================================================================
-    # B.6: DELTA SCHEDULING
+    # B.4: DELTA SCHEDULING
     # =========================================================================
     
     def _schedule_delta_early(self):
@@ -241,7 +240,7 @@ class PhaseBCoreMixin:
                     break
     
     # =========================================================================
-    # B.11: AQUA TRAMPOLINE SHARING
+    # B.7: AQUA TRAMPOLINE SHARING (CONSOLIDATED)
     # =========================================================================
     
     def _aggressive_aqua_trampoline_sharing(self):

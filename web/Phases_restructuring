@@ -1,0 +1,59 @@
+Walkthrough: Phase A-D Documentation & Structural Analysis
+Overview
+I have completed the review of the scheduling pipeline (core/scheduler/pipeline.py), replacing the abstract headers in config/BRAIN.md with the exact execution steps and defined goals for Phases A through D. While mapping out the process, I also analyzed the pipeline's execution flow and identified several logical and architectural inconsistencies that risk degrading schedule quality.
+
+Documentation Changes (config/BRAIN.md)
+Section 5 (System Architecture & Phase Gates) was rewritten to reflect the precise execution order found in the codebase.
+
+Phase A (Foundation): Mapped out 12 distinct steps (A.0 through A.8, with interleaving steps like A.0b, A.5b). Explicitly highlighted the goal of securing multi-slot "Rocks" and critical Top-5 resources.
+Phase B (Core Requests): Documented the hierarchical Top 1-5 placement, aggressive Sailing consolidation (B.8-B.10), and the hard Top 5 compliance loops.
+Phase C (Remaining & Optimization): Captured the staff optimization, Top-10 baselining, and the final 100% capacity fill.
+Phase D (Final Polish): Outlined the 12+ optimization passes targeting clustering layout, gap elimination, and the final D.10 swap protocol.
+Architectural Inconsistencies Discovered
+During the documentation process, I identified several structural problems in the orchestration flow that violate the "Rocks, Pebbles, Sand" strategy or introduce schedule churn.
+
+1. Phase A: Sequencing Risk (Sand before Rocks)
+Issue: A.5 (Sailing), A.5b (Aqua Trampoline), and A.5c (Guarantee Top 1 Beach) execute before A.1 (3-Hour Activities) and A.2 (2-Hour Activities). Impact: 3-hour activities (Rocks) require very large, contiguous time blocks. Placing single-slot beach activities (Sand) into the schedule first risks arbitrarily fragmenting the available day, making it significantly harder to find a valid block for 3-hour requirements later in the identical phase. This risks dropping heavy preferences due to manufactured constraint collisions.
+
+2. Phase B: Late Multi-Slot Execution
+Issue: B.8 (Early Sailing Top 10) and B.9 (Enforce Delta/Sailing pairing) execute after the core preference placements (B.1-B.3). Impact: Just like in Phase A, Sailing requires 2 capacity slots, and Delta/Sailing pairing mandates synchronized geographical planning. Attempting to place these massive structures after the core Top 5 preferences have scattered across the board almost guarantees gridlock or necessitates destructive displacement swaps. These should be localized to Phase A.
+
+3. Duplication and Label Collisions
+Issue: Functionality overlaps needlessly.
+
+_aggressive_aqua_trampoline_sharing is invoked identically at B.11 and C.7.
+Method numbering is duplicated entirely in Phase D: D.8 and D.9 are used for two entirely distinct sets of recovery passes (D.8 is Outlier Optimization, and later Top 10 Recovery. D.9 is Post-Fill Cluster Gap, and later Comprehensive Cleanup).
+4. Phase D: The Gap Fix Leak
+Issue: Phase C finishes with C.6 (_fill_all_remaining), explicitly filling every valid slot to build a complete 100% schedule. However, Phase D employs 5 separate, emergency _immediate_gap_fix_if_needed checks. Impact: If a schedule is totally full upon entering Phase D and the gap_fix hooks are continually triggering, Phase D's clustering optimizations are aggressively deleting top-tier assignments without replacing them symmetrically. When the gap fix triggers, it uses passive filler activities to plug the hole. This strongly suggests Phase D is silently sabotaging high-quality preference placements with low-value garbage just to satisfy clustering criteria, directly breaking the priority ladder.
+
+WARNING
+
+While BRAIN.md is now an accurate reflection of the current code, the pipeline execution sequence currently contains structural flaws that limit optimization capacity. It is recommended to follow up with a task directly resolving Phase A ordering and enforcing strictly symmetrical atomic swaps in Phase D.
+
+Analysis of Scheduling Pipeline (Phases A-D)
+This document outlines the proposed update to config/BRAIN.md reflecting the explicit numbered steps of the scheduler pipeline, as well as an architectural review of the logical inconsistencies present in the current implementation.
+
+User Review Required
+Please review the identified logical inconsistencies across Phase A-D below. Once approved, I will replace Section 5 of config/BRAIN.md with the new detailed pipeline breakdown. Let me know if you would like me to also fix the code sequence in core/scheduler/pipeline.py based on these findings or simply document them for now.
+
+🚨 Identified Inconsistencies & Logical Issues
+Jumbled Execution Order vs Numbering in Phase A:
+
+Current Order: A.0 → A.0b → A.3 → A.5 → A.5b → A.5c → A.1 → A.7 → A.2 → A.4 → A.6 → A.8
+Logical Risk (Rocks vs Sand): Beach activities and early sailing (A.5 series) are scheduled before 3-hour activities (A.1) and Top-10 2-hour activities (A.2). Because 3-hour activities require large, contiguous blocks, placing 1-slot beach activities first risks unnecessarily fragmenting available time, potentially causing those 3-hour blocks to fail placement.
+Late Execution of Multi-Slot Fills in Phase B:
+
+Issue: B.8 (Early Sailing for Top 10 troops), B.9 (Enforce Delta+Sailing pairing), and B.10 (Sailing consolidation) happen after B.1-B.3 (Top 1-5 preferences).
+Logical Risk: Since Sailing requires 90 minutes (2 capacity slots) and Delta+Sailing pairings require whole-day synchronization, trying to place them in Phase B means they are fighting against slots that were just randomly plugged with standard Top 5 single-slot activities. Multi-slot constraints should run together in Phase A.
+Duplicated Logic Across Phases:
+
+Aqua Trampoline: _aggressive_aqua_trampoline_sharing is run at B.11 and identically again at C.7.
+Redundant Optimization Passes: There are multiple forced clustering consolidations (D.2, D.3, D.3b) running back-to-back.
+Phase D Number Collisions:
+
+D.8 is used for Outlier Activity Optimization AND later for Top 10 Recovery.
+D.9 is used for Post-Fill Cluster Gap Optimization AND later for Comprehensive Final Cleanup.
+Destructive Optimizations in Phase D (The Gap Fix Leak):
+
+Issue: Phase C finishes with C.6 which fills all slots so troops have a 100% full schedule. However, Phase D is riddled with GAP CHECK passes after D.2, D.3, D.3b, D.7, and D.9.
+Logical Risk: If a schedule is totally full entering Phase D, any subsequent gap checks firing means the Phase D optimizations are aggressively deleting assignments without symmetrically replacing them. The fallback GAP CHECK uses rudimentary generic fill logic, which means Phase D is likely sabotaging high-quality preference placements with low-value random fills just to satisfy clustering. Phase D swaps should strictly be atomic 1-for-1 swaps to prevent gap hemorrhaging.

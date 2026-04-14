@@ -1,19 +1,21 @@
 """
 Phase A Foundation Module.
 
-Contains methods for Phase A of the scheduling algorithm:
-- A.0: Friday Reflection (reserve slots early)
-- A.0b: Super Troop (mandatory for all)
-- A.1: 3-Hour Activities
-- A.2: Top 10 2-Hour Activities
-- A.3: HC/DG Tuesday scheduling
-- A.4: Early staff area clustering
-- A.5: Thursday Sailing reservation
-- A.5b: Early Aqua Trampoline for Top 5
-- A.5c: Guarantee Top 1 Beach
-- A.6: Priority scheduling for limited activities
+Contains methods for Phase A of the scheduling algorithm (Rocks, Pebbles, Sand):
+- A.1: Friday Reflection (mandatory anchor)
+- A.2: Super Troop (mandatory anchor)
+- A.3: HC/DG Tuesday scheduling (mandatory anchor)
+- A.4: 3-Hour Activities (Rocks)
+- A.5: Top-10 2-Hour Activities (Rocks)
+- A.6: Sailing Optimization (9-Slot)
 - A.7: Delta + Sailing pairing
-- A.8: Sailing pairs for same-day bonus
+- A.8: Early Sailing for Top 10 troops (from Phase B)
+- A.9: Consolidate Sailing same-day clustering (from Phase B)
+- A.10: Early Aqua Trampoline for Top 5
+- A.11: Guarantee Top 1 Beach
+- A.12: Early staff area clustering
+- A.13: Priority limited activities (Global Rank 0-4)
+- A.14: Sailing pairs for same-day bonus
 """
 
 from ..models import Day, TimeSlot, generate_time_slots
@@ -33,7 +35,7 @@ class PhaseAFoundationMixin:
     """
     
     # =========================================================================
-    # A.0: FRIDAY REFLECTION
+    # A.1: FRIDAY REFLECTION
     # =========================================================================
     
     def _schedule_friday_reflection(self):
@@ -103,7 +105,7 @@ class PhaseAFoundationMixin:
                     print(f"  [FORCE] {troop.name}: Reflection -> {force_slot}")
     
     # =========================================================================
-    # A.0b: SUPER TROOP
+    # A.2: SUPER TROOP
     # =========================================================================
     
     def _schedule_super_troop(self):
@@ -157,7 +159,7 @@ class PhaseAFoundationMixin:
                 print(f"  WARNING: Could not schedule Super Troop for {troop.name}")
     
     # =========================================================================
-    # A.1: 3-HOUR ACTIVITIES
+    # A.4: 3-HOUR ACTIVITIES (ROCKS)
     # =========================================================================
     
     def _schedule_three_hour_activities(self):
@@ -203,7 +205,7 @@ class PhaseAFoundationMixin:
                     print(f"  {troop.name}: Could not schedule {activity_name}")
     
     # =========================================================================
-    # A.3: HC/DG TUESDAY
+    # A.3: HC/DG TUESDAY (MANDATORY ANCHOR)
     # =========================================================================
     
     def _schedule_hc_dg_tuesday(self):
@@ -266,7 +268,7 @@ class PhaseAFoundationMixin:
                     break
     
     # =========================================================================
-    # A.5: THURSDAY SAILING
+    # A.6: SAILING OPTIMIZATION (legacy Thursday Sailing helper)
     # =========================================================================
     
     def _schedule_thursday_sailing_largest_troop(self):
