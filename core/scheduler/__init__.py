@@ -10,7 +10,6 @@ from .utilities import UtilityMixin
 from .validators import ValidatorMixin
 from .phase_a_foundation import PhaseAFoundationMixin
 from .phase_b_core import PhaseBCoreMixin
-from .phase_c_optimization import PhaseCOptimizationMixin
 from .phase_d_cleanup import PhaseDCleanupMixin
 from .pipeline import SchedulingPipelineMixin
 
@@ -21,7 +20,6 @@ __all__ = [
     'ValidatorMixin',
     'PhaseAFoundationMixin',
     'PhaseBCoreMixin',
-    'PhaseCOptimizationMixin',
     'PhaseDCleanupMixin',
     'SchedulingPipelineMixin',
 ]

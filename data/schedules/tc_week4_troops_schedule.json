@@ -510,6 +510,12 @@
       "slot": 1
     },
     {
+      "troop_name": "Tamanend",
+      "activity_name": "9 Square",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Skenandoa",
       "activity_name": "Campsite Free Time",
       "day": "MONDAY",
@@ -541,6 +547,12 @@
     },
     {
       "troop_name": "Joseph",
+      "activity_name": "9 Square",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Joseph",
       "activity_name": "Trading Post",
       "day": "THURSDAY",
       "slot": 1
@@ -556,6 +568,12 @@
       "activity_name": "Gaga Ball",
       "day": "TUESDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Campsite Free Time",
+      "day": "THURSDAY",
+      "slot": 1
     },
     {
       "troop_name": "Powhatan",
@@ -642,9 +660,27 @@
       "slot": 1
     },
     {
+      "troop_name": "Skenandoa",
+      "activity_name": "Water Polo",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Ultimate Survivor",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Cochise",
       "activity_name": "Climbing Tower",
       "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Nature Canoe",
+      "day": "TUESDAY",
       "slot": 3
     },
     {
@@ -666,30 +702,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Tamanend",
-      "activity_name": "9 Square",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Skenandoa",
-      "activity_name": "Water Polo",
-      "day": "FRIDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Nature Canoe",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Joseph",
-      "activity_name": "9 Square",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Cochise",
       "activity_name": "9 Square",
       "day": "THURSDAY",
@@ -697,20 +709,8 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Campsite Free Time",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "9 Square",
       "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Ultimate Survivor",
-      "day": "FRIDAY",
       "slot": 2
     },
     {

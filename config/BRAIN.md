@@ -132,43 +132,68 @@ Violating these will lower the schedule's quality score, but will not break the 
 
 ## 🏗️ 5. System Architecture & Phase Gates
 
-The `ConstrainedScheduler` executes from Phase A to Phase D. Every phase includes Top 5 anti-miss safeguards.
+The `ConstrainedScheduler` executes from Phase A to Phase D. Every phase includes Top 5 anti-miss safeguards. The order below represents the actual execution flow.
 
 ### Phase A: Foundation (The Skeleton)
-1.  **Place Anchors:** Lock in rigid requirements (`Reflection`, `Super Troop`, Tuesday mechanics).
-2.  **Reserve Large Blocks:** Map out multi-slot structures (3-hour blocks, Sailing, Delta/Sailing shapes).
-3.  **Secure High-Risk Assets:** Front-load highly contested Top 5 resources (especially constrained beach windows).
-* **Exit Gate A (Operational):** Run immediate gap detection/repair and preserve Top-5 safety context for subsequent recovery passes. 
+**Goal:** Place the mandatory anchors, multi-slot structures (rocks), and aggressively protect heavily-contested Top-5 resources before fragmentation occurs.
+
+*   **A.0: Friday Reflection** - First mandatory placement. Reserves Friday slots implicitly.
+*   **A.0b: Super Troop** - Mandatory weekly placement for all troops.
+*   **A.3: HC/DG Tuesday** - Secures Tuesday-only activities before spine slots fill.
+*   **A.5: Sailing Optimization** - Front-loads 9-slot Sailing capacity.
+*   **A.5b: Early Aqua Trampoline (Top 5)** - Protects scarce beach slots for Top 5 requesters.
+*   **A.5c: Guarantee Top 1 Beach** - Prevents missed Top-1 beach preferences.
+*   **A.1: 3-Hour Activities** - Maps full-day blocks (Rocks).
+*   **A.7: Delta + Sailing Pairing** - Pairs synchronized activities onto the same geographical day.
+*   **A.2: Top-10 2-Hour Activities** - Secures consecutive multi-slot requirements.
+*   **A.4: Early Staff Area Clustering** - Pre-schedules Tower, ODS, and Rifle for setup efficiency.
+*   **A.6: Priority Limited Activities** - Targets Global Rank 0-4 constrained activities.
+*   **A.8: Sailing Pairs for Same-Day Bonus** - Syncs overlapping Sailing sessions.
+*   **Exit Gate A:** Immediate gap repair if a troop is missing placements for available slots.
 
 ### Phase B: Core Requests (The Meat)
-2.  **Place Top 1–5:** Schedule the remaining primary requests.
-3.  **Mandatory Recovery Loops:** Run placement passes (Strict -> Relaxed -> Displacement/Cross-slot recovery).
-4.  **The Golden Rule:** Never displace an existing Top 5 request just to accommodate a Top 6+ request.
-* **Exit Gate B (Operational):** Top-5 recovery loops are required in Phase B; strict zero non-exempt Top-5 misses is hard-enforced at final acceptance gate.
+**Goal:** Guarantee the Top 1–5 preferences are satisfied (The Hard Contract) and lock in priority requested pairings.
 
-### Phase C: Optimization (The Polish)
-1.  **Optimize:** Balance staff loads and improve cluster quality.
-2.  **Fill Gaps:** Utilize the **Fill Priority Algorithm** (sourced from `SKULL.json` under `constraints.fill_priority`). Always use high-value activities first, falling back on passive fillers only as a last resort.
-3.  **Preserve Top 5:** Maintain Top 5 integrity through all reshuffling.
-* **Continuous Gate C (Operational):** Optimization and swap paths use localized Top-5 safety checks/rollback patterns; final global zero-miss enforcement happens in Phase D acceptance.
+*   **B.1: Top 1 First / Force Top 1 / Top 2-5** - Secures primary rank preferences hierarchically.
+*   **B.2: Guarantee 100% Top 5** - Recovery loops to ensure Top 5 satisfaction.
+*   **B.3: Mandatory Top 5 Enforcement** - Strict compliance check.
+*   **B.6: Delta Scheduling** - Books requested Delta (non-mandatory placements).
+*   **B.7: Commissioner Busy Map** - Diagnostic/tracking generation.
+*   **B.8: Early Sailing Top 10** - Fits lower-rank Sailing requests.
+*   **B.9: Enforce Delta + Sailing Pairing** - Day alignment check.
+*   **B.10: Consolidate Sailing** - Aggressively clusters Sailing groups to 2 per day.
+*   **B.11: Early Aqua Trampoline Sharing** - Starts opportunistic capacity sharing for Top 5.
+*   **Exit Gate B:** Immediate gap check and repair.
 
-### Phase D: Final Verification (The Shield)
-1.  **Sanitize:** Apply final constraint cleanup.
-2.  **Targeted Recovery:** Fix any post-optimization drift.
-3.  **Final Acceptance Gate:** The schedule is only accepted if there are:
-    * No accepted hard constraint violations after final sanitization/repair passes.
-    * No empty troop slots.
-    * `non_exempt_top5_misses == 0`.
-    *(If any condition fails, re-enter the repair loop before acceptance.)*
-4.  **Last Scheduling Action (D.10):** The final optimization pass may replace a lower-ranked **staffed** activity with a higher-ranked missing **unstaffed** preference for the same troop when:
-    * hard constraints remain satisfied,
-    * non-exempt Top 5 misses do not increase,
-    * and penalty-oriented quality signals do not regress (soft-pattern violations, excess cluster days, area-level cluster gaps, and composite quality trend).
-    The swap is slot-conservative to avoid unnecessary schedule churn.
-5. **Additional Implemented Verification Passes:**
-    * Multi-slot integrity normalization.
-    * Beach saturation cleanup.
-    * Final Sailing exclusivity normalization pass.
+### Phase C: Remaining & Optimization
+**Goal:** Accommodate lower-tier preferences (6-20), protect the Top-10 baseline, and achieve a 100% filled schedule.
+
+*   **C.1: Day Specific Requests** - Overrides placement logic based on day hints.
+*   **C.2: Staff Optimization** - Clusters consecutive activities to lower staff teardown footprint.
+*   **C.4: Remaining Preferences (6-20)** - Places general requests.
+*   **C.4.5: Guarantee Minimum Top 10** - Assures each troop gets 2-3 Top 10 requests.
+*   **C.5: Guarantee Top 10 with Exceptions** - Reconciles lingering valuable requests.
+*   **C.6: Fill All Remaining Slots** - Fills available empty slots based on the Fill Priority Algorithm. Also schedules generic balls activities during Sailing windows.
+*   **C.7: Aggressive Aqua Trampoline Sharing** - Final capacity overload pass.
+*   **Exit Gate C:** Local safety checks for Top 5 integrity against reshuffling. Ensure schedule is 100% populated.
+
+### Phase D: Final Polish (The Shield)
+**Goal:** Execute localized swaps to resolve cluster gaps, reduce day variance, optimize commissioner ownership, and strictly validate the Hard Contract.
+
+*   **D.1: Friday Reflection Optimization** - Packs standard Reflections efficiently.
+*   **D.2: Comprehensive Clustering Optimization** - Cross-slot smart trades.
+*   **D.3: Early Forced Consolidation** - Pulls distant activities closer.
+*   **D.3b: Ultra-aggressive Clustering** - Slashes excess days at high threshold.
+*   **D.4: Friday Super Troop Optimization** - Aligns Friday blocks.
+*   **D.5: Flexible Reflection Optimization** - Maneuvers floating Reflections.
+*   **D.6: Commissioner Load Balancing** - Evens geographic load.
+*   **D.7: Setup Efficiency / Activity Clustering** - Smooths wet/dry transitions.
+*   **D.8 (First): Outlier Activity Optimization** - Tweaks rogue single-day placements. Day Ownership tweaks.
+*   **D.9 (First): Post-Fill Cluster Gap Optimization** - Closes 1-0-1 pattern gaps.
+*   **D.8 (Second): Top 10 Recovery** - Final attempt to squeeze in displaced Top 10 preferences.
+*   **D.9 (Second): Comprehensive Cleanup** - Multi-layer validation fixes.
+*   **Exit Gate D (Acceptance Gate):** Immediate gap patch passes (run multiple times during the phase). Final gate checks `non_exempt_top5_misses == 0` and validates multi-slot integrity.
+*   **Last Scheduling Action (D.10):** The final optimization pass may replace a lower-ranked **staffed** activity with a higher-ranked missing **unstaffed** preference for the same troop when hard constraints and Top-5 success are preserved.
 
 ---
 

@@ -275,6 +275,24 @@
       "slot": 1
     },
     {
+      "troop_name": "Massasoit",
+      "activity_name": "Itasca State Park",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Itasca State Park",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Itasca State Park",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
       "troop_name": "Red Cloud",
       "activity_name": "Canoe Snorkel",
       "day": "THURSDAY",
@@ -323,16 +341,16 @@
       "slot": 3
     },
     {
+      "troop_name": "Massasoit",
+      "activity_name": "Trading Post",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
       "troop_name": "Black Hawk",
       "activity_name": "Shower House",
       "day": "TUESDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Greased Watermelon",
-      "day": "THURSDAY",
-      "slot": 1
     },
     {
       "troop_name": "Massasoit",
@@ -342,27 +360,9 @@
     },
     {
       "troop_name": "Massasoit",
-      "activity_name": "Itasca State Park",
-      "day": "WEDNESDAY",
+      "activity_name": "Greased Watermelon",
+      "day": "THURSDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Itasca State Park",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Itasca State Park",
-      "day": "WEDNESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Trading Post",
-      "day": "FRIDAY",
-      "slot": 3
     },
     {
       "troop_name": "Tamanend",

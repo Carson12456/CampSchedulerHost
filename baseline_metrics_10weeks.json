@@ -102,15 +102,15 @@
     "voyageur_week3_troops"
   ],
   "quality_metrics": {
-    "average_week_score": 845.5,
-    "average_core_goal_score": 757.8930612244898,
-    "average_raw_bonus_total": 81.16914392796745,
+    "average_week_score": 849.1,
+    "average_core_goal_score": 762.5232653061224,
+    "average_raw_bonus_total": 80.60670677361854,
     "average_effective_bonus_total": 43.66666666666667,
     "average_constraint_violations": 0.8,
-    "average_staff_variance": 1.669387755102041,
-    "average_clustering_efficiency": 4.9,
+    "average_staff_variance": 1.5673469387755101,
+    "average_clustering_efficiency": 4.8,
     "average_cluster_gaps": 0.7,
-    "average_commissioner_day_compliance_pct": 33.02972469471046,
+    "average_commissioner_day_compliance_pct": 33.103578804800904,
     "average_beach_slot_violations": 0.5,
     "week_details": [
       {
@@ -225,35 +225,36 @@
       },
       {
         "week_name": "tc_week3_troops",
-        "total_score": 894,
-        "core_goal_score": 788.75,
-        "raw_bonus_total": 110.22649572649573,
+        "total_score": 888,
+        "core_goal_score": 785.2071428571429,
+        "raw_bonus_total": 110.05555555555556,
         "effective_bonus_total": 50.0,
-        "preference_score": 405.0,
-        "constraint_violations": 1,
-        "staff_variance": 1.25,
+        "preference_score": 408.6,
+        "constraint_violations": 2,
+        "staff_variance": 0.6785714285714286,
         "clustering_efficiency": 4,
         "cluster_gaps": 0,
-        "commissioner_day_compliance_pct": 35.294117647058826,
-        "commissioner_day_misses": 33,
+        "commissioner_day_compliance_pct": 31.372549019607842,
+        "commissioner_day_misses": 35,
         "beach_slot_2_violations": 0,
         "unnecessary_gaps": 0,
         "grade": "Unknown",
         "violation_details": [
+          "Taskalusa: Wet-Dry-Wet pattern on Wednesday",
           "Tamanend: Wet-Dry-Wet pattern on Monday"
         ],
         "cluster_area_details": {
           "Tower": {
-            "days_used": 5,
+            "days_used": 4,
             "required_days": 3,
             "activity_count": 7,
-            "excess_days": 2
+            "excess_days": 1
           },
           "Rifle Range": {
-            "days_used": 2,
+            "days_used": 3,
             "required_days": 2,
             "activity_count": 4,
-            "excess_days": 0
+            "excess_days": 1
           },
           "Outdoor Skills": {
             "days_used": 4,
@@ -264,7 +265,7 @@
           "Handicrafts": {
             "days_used": 3,
             "required_days": 2,
-            "activity_count": 4,
+            "activity_count": 5,
             "excess_days": 1
           }
         },
@@ -274,12 +275,13 @@
           "cluster_gap_fill_opportunities": 0,
           "areas_with_excess_days": [
             "Tower",
+            "Rifle Range",
             "Outdoor Skills",
             "Handicrafts"
           ]
         },
         "top5_pct": 100.0,
-        "top10_pct": 90.9090909090909
+        "top10_pct": 93.18181818181819
       },
       {
         "week_name": "tc_week4_troops",
@@ -346,17 +348,17 @@
       },
       {
         "week_name": "tc_week5_troops",
-        "total_score": 804,
-        "core_goal_score": 678.6969387755103,
-        "raw_bonus_total": 113.45454545454545,
+        "total_score": 777,
+        "core_goal_score": 652.2683673469388,
+        "raw_bonus_total": 110.95454545454545,
         "effective_bonus_total": 50.0,
         "preference_score": 382.6,
         "constraint_violations": 1,
-        "staff_variance": 2.7806122448979593,
-        "clustering_efficiency": 6,
+        "staff_variance": 3.066326530612245,
+        "clustering_efficiency": 7,
         "cluster_gaps": 2,
-        "commissioner_day_compliance_pct": 35.84905660377358,
-        "commissioner_day_misses": 34,
+        "commissioner_day_compliance_pct": 39.62264150943396,
+        "commissioner_day_misses": 32,
         "beach_slot_2_violations": 0,
         "unnecessary_gaps": 2,
         "grade": "Unknown",
@@ -365,10 +367,10 @@
         ],
         "cluster_area_details": {
           "Tower": {
-            "days_used": 4,
+            "days_used": 5,
             "required_days": 2,
             "activity_count": 6,
-            "excess_days": 2
+            "excess_days": 3
           },
           "Rifle Range": {
             "days_used": 3,
@@ -402,7 +404,7 @@
           }
         ],
         "cluster_improvement_targets": {
-          "excess_day_reduction_opportunities": 6,
+          "excess_day_reduction_opportunities": 7,
           "cluster_gap_fill_opportunities": 2,
           "areas_with_excess_days": [
             "Tower",
@@ -416,17 +418,17 @@
       },
       {
         "week_name": "tc_week6_troops",
-        "total_score": 810,
-        "core_goal_score": 705.615306122449,
-        "raw_bonus_total": 118.45098039215686,
+        "total_score": 866,
+        "core_goal_score": 768.1540816326531,
+        "raw_bonus_total": 119.0392156862745,
         "effective_bonus_total": 50.0,
-        "preference_score": 399.6,
+        "preference_score": 410.2,
         "constraint_violations": 2,
-        "staff_variance": 2.5969387755102042,
-        "clustering_efficiency": 5,
+        "staff_variance": 2.2091836734693877,
+        "clustering_efficiency": 3,
         "cluster_gaps": 2,
-        "commissioner_day_compliance_pct": 41.666666666666664,
-        "commissioner_day_misses": 28,
+        "commissioner_day_compliance_pct": 42.5531914893617,
+        "commissioner_day_misses": 27,
         "beach_slot_2_violations": 2,
         "unnecessary_gaps": 2,
         "grade": "Unknown",
@@ -448,16 +450,16 @@
             "excess_days": 1
           },
           "Outdoor Skills": {
-            "days_used": 4,
+            "days_used": 3,
             "required_days": 2,
-            "activity_count": 6,
-            "excess_days": 2
+            "activity_count": 5,
+            "excess_days": 1
           },
           "Handicrafts": {
             "days_used": 4,
-            "required_days": 2,
-            "activity_count": 6,
-            "excess_days": 2
+            "required_days": 3,
+            "activity_count": 7,
+            "excess_days": 1
           }
         },
         "cluster_gap_details": [
@@ -473,7 +475,7 @@
           }
         ],
         "cluster_improvement_targets": {
-          "excess_day_reduction_opportunities": 5,
+          "excess_day_reduction_opportunities": 3,
           "cluster_gap_fill_opportunities": 2,
           "areas_with_excess_days": [
             "Rifle Range",
@@ -482,7 +484,7 @@
           ]
         },
         "top5_pct": 100.0,
-        "top10_pct": 89.0
+        "top10_pct": 91.0
       },
       {
         "week_name": "tc_week7_troops",
@@ -611,13 +613,13 @@
       },
       {
         "week_name": "voyageur_week1_troops",
-        "total_score": 833,
-        "core_goal_score": 737.5938775510205,
-        "raw_bonus_total": 123.20833333333333,
+        "total_score": 846,
+        "core_goal_score": 751.3285714285714,
+        "raw_bonus_total": 119.66666666666667,
         "effective_bonus_total": 50.0,
-        "preference_score": 405.90000000000003,
-        "constraint_violations": 3,
-        "staff_variance": 2.061224489795918,
+        "preference_score": 407.9,
+        "constraint_violations": 2,
+        "staff_variance": 1.7142857142857142,
         "clustering_efficiency": 5,
         "cluster_gaps": 0,
         "commissioner_day_compliance_pct": 0.0,
@@ -626,9 +628,8 @@
         "unnecessary_gaps": 0,
         "grade": "Unknown",
         "violation_details": [
-          "Ely: Trading Post + Shower House on same day (Wednesday)",
           "Ft. William: Tower/ODS->Wet transition on Monday (Slot 2->3)",
-          "Quetico: Multiple accuracy activities on Friday (Troop Shotgun, Archery)"
+          "Quetico: Multiple accuracy activities on Friday (Archery, Troop Shotgun)"
         ],
         "cluster_area_details": {
           "Tower": {
@@ -646,7 +647,7 @@
           "Outdoor Skills": {
             "days_used": 4,
             "required_days": 3,
-            "activity_count": 7,
+            "activity_count": 9,
             "excess_days": 1
           },
           "Handicrafts": {
@@ -668,7 +669,7 @@
           ]
         },
         "top5_pct": 100.0,
-        "top10_pct": 88.65979381443299
+        "top10_pct": 89.69072164948453
       },
       {
         "week_name": "voyageur_week3_troops",

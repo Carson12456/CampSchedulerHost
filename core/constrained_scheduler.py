@@ -25,7 +25,7 @@ from .scheduler.utilities import UtilityMixin
 from .scheduler.validators import ValidatorMixin, would_create_excess_day_for_entries
 from .scheduler.phase_a_foundation import PhaseAFoundationMixin
 from .scheduler.phase_b_core import PhaseBCoreMixin
-from .scheduler.phase_c_optimization import PhaseCOptimizationMixin
+
 from .scheduler.phase_d_cleanup import PhaseDCleanupMixin
 from .scheduler.legacy_interface import LegacyInterfaceMixin
 from .scheduler.legacy_parts import (
@@ -56,7 +56,6 @@ class ConstrainedScheduler(
     ValidatorMixin,
     PhaseAFoundationMixin,
     PhaseBCoreMixin,
-    PhaseCOptimizationMixin,
     PhaseDCleanupMixin
 ):
 

@@ -432,6 +432,12 @@
       "slot": 2
     },
     {
+      "troop_name": "Tecumseh",
+      "activity_name": "Dr. DNA",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Powhatan",
       "activity_name": "Gaga Ball",
       "day": "TUESDAY",
@@ -484,12 +490,6 @@
       "activity_name": "Float for Floats",
       "day": "MONDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "Dr. DNA",
-      "day": "FRIDAY",
-      "slot": 2
     },
     {
       "troop_name": "Samoset",

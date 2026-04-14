@@ -423,11 +423,11 @@ class LegacyPart02Mixin:
                     scheduled = False
                     for slot in day_slots:
                         if self._can_schedule(troop, activity, slot, day):
-                            self.schedule.add_entry(slot, activity, troop)
-                            self._update_progress(troop, activity_name)
-                            print(f"  {troop.name}: {activity_name} -> {day_name} [OK]")
-                            scheduled = True
-                            break
+                            if self._add_to_schedule(slot, activity, troop):
+                                self._update_progress(troop, activity_name)
+                                print(f"  {troop.name}: {activity_name} -> {day_name} [OK]")
+                                scheduled = True
+                                break
 
                     if not scheduled:
                         print(f"  ERROR: Could not schedule {activity_name} on {day_name} for {troop.name}!")
@@ -1840,6 +1840,28 @@ class LegacyPart02Mixin:
                         break
                     self._restore_scheduler_state(snapshot)
 
+                if placed:
+                    continue
+
+                # ===========================================
+                # PASS 4: Try ANY slot with relaxed constraints
+                # ===========================================
+                # For higher preferences, we prioritize placement over soft constraints.
+                projected_slots = self._rerank_slots_by_projected_score(
+                    troop,
+                    activity,
+                    list(self.time_slots),
+                    pref_rank,
+                )
+                for slot in projected_slots:
+                    if self._can_schedule(troop, activity, slot, slot.day, relax_constraints=True):
+                        self._add_to_schedule(slot, activity, troop)
+                        if pref_rank < 15:
+                            print(f"    {troop.name}: {activity_name} (#{pref_rank + 1}) -> {slot} (RELAXED)")
+                        placed = True
+                        placed_count += 1
+                        break
+
                 # Track failures by priority tier
                 if not placed:
                     if pref_rank < 5:
@@ -2388,7 +2410,10 @@ class LegacyPart02Mixin:
                     if candidate not in self.schedule.entries:
                         continue
 
-                    self.schedule.entries.remove(candidate)
+                    snapshot = self._snapshot_scheduler_state()
+                    if not self._remove_from_schedule(candidate):
+                        self._restore_scheduler_state(snapshot)
+                        continue
                     if self._can_schedule(troop, activity, slot, slot.day):
                         self._add_to_schedule(slot, activity, troop)
                         print(f"    {troop.name}: {pref_name} (Pref #{pref_rank + 1}) <- {candidate.activity.name} @ {slot}")
@@ -2399,7 +2424,7 @@ class LegacyPart02Mixin:
                         placed = True
                         break
                     else:
-                        self.schedule.entries.append(candidate)
+                        self._restore_scheduler_state(snapshot)
 
                 if not placed:
                     # Try with relaxed constraints
@@ -3160,7 +3185,10 @@ class LegacyPart02Mixin:
                 for entry, _ in replaceable:
                     slot = entry.time_slot
 
-                    self.schedule.entries.remove(entry)
+                    snapshot = self._snapshot_scheduler_state()
+                    if not self._remove_from_schedule(entry):
+                        self._restore_scheduler_state(snapshot)
+                        continue
 
                     if self._can_schedule(troop, activity, slot, slot.day, relax_constraints=True):
                         self._add_to_schedule(slot, activity, troop)
@@ -3169,7 +3197,7 @@ class LegacyPart02Mixin:
                         troop_entries = [e for e in self.schedule.entries if e.troop == troop]
                         break
                     else:
-                        self.schedule.entries.append(entry)
+                        self._restore_scheduler_state(snapshot)
 
         if recoveries > 0:
             print(f"  Recovered {recoveries} Top 10 preferences")
@@ -3403,35 +3431,61 @@ class LegacyPart02Mixin:
             scored.sort(key=lambda item: (-item[0], -item[1], -item[2], item[3], item[4]))
             return [s for *_, s in scored]
 
-        # PASS 1: Aggressively fill ALL remaining preferences, prioritizing Top 5
-        # This ensures we fill as many preferences as possible before using default fills
-        for troop in self.troops:
-            # Get all remaining preferences, prioritizing Top 5
-            remaining_prefs = []
-            top5_remaining = []
-            other_remaining = []
+        # PASS 1: Fill remaining preferences using HYBRID priority strategy
+        # - Top 10 (ranks 1-10): RANK-BY-RANK across all troops to prevent priority
+        #   inversion (e.g. troop A's #13 stealing a slot troop B needed for #9)
+        # - Ranks 11+: TROOP-BY-TROOP to preserve existing clustering patterns
+        #   where the priority difference matters less
 
-            for i, pref_name in enumerate(troop.preferences):
+        # --- PASS 1a: Top 10 preferences, globally rank-ordered ---
+        top10_remaining = []
+        for troop in self.troops:
+            for i, pref_name in enumerate(troop.preferences[:10]):
                 activity = get_activity_by_name(pref_name)
                 if activity and not self._troop_has_activity(troop, activity):
-                    if i < 5:
-                        top5_remaining.append((pref_name, i+1))
-                    else:
-                        other_remaining.append((pref_name, i+1))
+                    top10_remaining.append((troop, pref_name, i))
 
-            # Prioritize Top 5 first
-            remaining_prefs = top5_remaining + other_remaining
+        # Sort globally by rank (lower = higher priority).
+        # Secondary: troop size descending (larger troops harder to place later).
+        top10_remaining.sort(key=lambda x: (x[2], -(x[0].scouts + x[0].adults)))
 
-            # Try to fill each remaining preference
-            for pref_name, pref_rank in remaining_prefs:
+        for troop, pref_name, pref_rank_0 in top10_remaining:
+            activity = get_activity_by_name(pref_name)
+            if not activity or self._troop_has_activity(troop, activity):
+                continue  # May have been placed by an earlier iteration
+
+            for slot in _ordered_slots_for_activity(troop, activity):
+                if slot.day == Day.FRIDAY:
+                    has_reflection = any(e.activity.name == "Reflection" 
+                                        for e in self.schedule.entries 
+                                        if e.troop == troop)
+                    if not has_reflection:
+                        free_friday = sum(1 for s in self.time_slots 
+                                         if s.day == Day.FRIDAY and self.schedule.is_troop_free(s, troop))
+                        if free_friday <= 1:
+                            continue
+
+                if self._can_schedule(troop, activity, slot, slot.day):
+                    self._add_to_schedule(slot, activity, troop)
+                    self._update_progress(troop, activity.name)
+                    self.logger.info(f"  [Fill Pref] {troop.name}: {pref_name} -> {slot} (#{pref_rank_0 + 1})")
+                    break
+                elif self._can_schedule(troop, activity, slot, slot.day, relax_constraints=True):
+                    self._add_to_schedule(slot, activity, troop)
+                    self._update_progress(troop, activity.name)
+                    self.logger.info(f"  [Fill Pref Relaxed] {troop.name}: {pref_name} -> {slot} (#{pref_rank_0 + 1})")
+                    break
+
+        # --- PASS 1b: Remaining preferences (11+), troop-by-troop ---
+        for troop in self.troops:
+            for i, pref_name in enumerate(troop.preferences):
+                if i < 10:
+                    continue  # Already handled in PASS 1a
                 activity = get_activity_by_name(pref_name)
-                if not activity:
+                if not activity or self._troop_has_activity(troop, activity):
                     continue
 
-                # Find an available slot for this preference (cluster-aware ordering)
                 for slot in _ordered_slots_for_activity(troop, activity):
-
-                    # Reserve one Friday slot for Reflection if not scheduled yet
                     if slot.day == Day.FRIDAY:
                         has_reflection = any(e.activity.name == "Reflection" 
                                             for e in self.schedule.entries 
@@ -3440,19 +3494,17 @@ class LegacyPart02Mixin:
                             free_friday = sum(1 for s in self.time_slots 
                                              if s.day == Day.FRIDAY and self.schedule.is_troop_free(s, troop))
                             if free_friday <= 1:
-                                continue  # Skip this slot - reserve for Reflection
+                                continue
 
-                    # Try to schedule with normal constraints first
                     if self._can_schedule(troop, activity, slot, slot.day):
                         self._add_to_schedule(slot, activity, troop)
                         self._update_progress(troop, activity.name)
-                        self.logger.info(f"  [Fill Pref] {troop.name}: {pref_name} -> {slot} (#{pref_rank})")
+                        self.logger.info(f"  [Fill Pref] {troop.name}: {pref_name} -> {slot} (#{i + 1})")
                         break
-                    # If normal constraints fail, try with relaxed constraints (especially for Top 5)
-                    elif pref_rank <= 5 and self._can_schedule(troop, activity, slot, slot.day, relax_constraints=True):
+                    elif self._can_schedule(troop, activity, slot, slot.day, relax_constraints=True):
                         self._add_to_schedule(slot, activity, troop)
                         self._update_progress(troop, activity.name)
-                        self.logger.info(f"  [Fill Pref Relaxed] {troop.name}: {pref_name} -> {slot} (#{pref_rank})")
+                        self.logger.info(f"  [Fill Pref Relaxed] {troop.name}: {pref_name} -> {slot} (#{i + 1})")
                         break
 
         # PASS 2: Fill any remaining empty slots - PREFERENCES FIRST, then default fills
@@ -3745,16 +3797,16 @@ class LegacyPart02Mixin:
                 if self.schedule.is_troop_free(other_slot_obj, solo_troop):
                     # Check if we can move the activity
                     if self._can_schedule(solo_troop, AT_ACTIVITY, other_slot_obj, other_day):
-                        # Remove old entry
-                        self.schedule.entries.remove(solo_entry)
-                        # Add to new slot
-                        self._add_to_schedule(other_slot_obj, AT_ACTIVITY, solo_troop)
-                        print(f"  [AT Share] Moved {solo_troop.name} ({solo_size}) to share with {other_troop.name} ({other_size}) at {other_day.name} slot {other_slot}")
-                        swaps_made += 1
-                        # Fill vacated slot
-                        vacated_slot = TimeSlot(day=day, slot_number=slot_num)
-                        self._fill_vacated_slot(solo_troop, vacated_slot)
-                        break
+                        # Remove old entry via safe wrapper
+                        if self._remove_from_schedule(solo_entry):
+                            # Add to new slot
+                            self._add_to_schedule(other_slot_obj, AT_ACTIVITY, solo_troop)
+                            print(f"  [AT Share] Moved {solo_troop.name} ({solo_size}) to share with {other_troop.name} ({other_size}) at {other_day.name} slot {other_slot}")
+                            swaps_made += 1
+                            # Fill vacated slot
+                            vacated_slot = TimeSlot(day=day, slot_number=slot_num)
+                            self._fill_vacated_slot(solo_troop, vacated_slot)
+                            break
 
         if swaps_made > 0:
             print(f"  Created {swaps_made} Aqua Trampoline sharing pairs")

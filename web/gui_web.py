@@ -912,18 +912,38 @@ def get_troop_schedule(troop_name):
                     if designated_day and entry.time_slot.day != designated_day:
                         is_spillover = True
             
+            effective_slots = schedule._get_effective_slots(entry.activity, troop)
             schedule_grid[day_name][slot_num] = {
                 'activity': entry.activity.name,
                 'is_continuation': is_continuation,
                 'is_spillover': is_spillover,
                 'priority': troop.get_priority(entry.activity.name),
                 'zone': entry.activity.zone.name if entry.activity.zone else None,
-                'slots': entry.activity.slots  # Add slots information for multi-slot display
+                'slots': effective_slots  # Add slots information for multi-slot display
             }
+            
+            # Manually inject continuation slots for the frontend if they are missing
+            slots_needed = int(effective_slots + 0.5)
+            if slots_needed > 1 and not is_continuation:
+                for offset in range(1, slots_needed):
+                    next_slot_num = slot_num + offset
+                    max_slot = 2 if day_name == 'THURSDAY' else 3
+                    if next_slot_num <= max_slot:
+                        if schedule_grid[day_name][next_slot_num] is None:
+                            schedule_grid[day_name][next_slot_num] = {
+                                'activity': entry.activity.name,
+                                'is_continuation': True,
+                                'is_spillover': is_spillover,
+                                'priority': troop.get_priority(entry.activity.name),
+                                'zone': entry.activity.zone.name if entry.activity.zone else None,
+                                'slots': effective_slots
+                            }
         
         return jsonify({
             'troop': troop_name,
             'commissioner': troop.commissioner,
+            'scouts': troop.scouts,
+            'adults': troop.adults,
             'schedule': schedule_grid,
             'preferences': troop.preferences,
             'exemptions': []  # TODO: Calculate exemptions if needed
@@ -1023,7 +1043,10 @@ def get_area_schedule(area_name):
         prefs_achieved = sum(1 for p in troop.preferences if p in scheduled_activities)
         prefs_total = len(troop.preferences)
         
-        schedule_grid[day_name][slot_num].append({
+        effective_slots = schedule._get_effective_slots(entry.activity, troop)
+        slots_needed = int(effective_slots + 0.5)
+        
+        item_data = {
             'troop': entry.troop.name,
             'activity': entry.activity.name,
             'priority': entry.troop.get_priority(entry.activity.name),
@@ -1031,7 +1054,25 @@ def get_area_schedule(area_name):
             'adults': entry.troop.adults,
             'prefs_achieved': prefs_achieved,
             'prefs_total': prefs_total
-        })
+        }
+        
+        existing = [item for item in schedule_grid[day_name][slot_num] if item['troop'] == troop.name and item['activity'] == entry.activity.name]
+        if not existing:
+            schedule_grid[day_name][slot_num].append(item_data)
+            
+        if slots_needed > 1:
+            is_start = not any(
+                e.activity.name == entry.activity.name and e.time_slot.day == entry.time_slot.day and e.time_slot.slot_number < slot_num
+                for e in area_entries if e.troop == troop
+            )
+            if is_start:
+                for offset in range(1, slots_needed):
+                    next_slot_num = slot_num + offset
+                    max_slot = 2 if day_name == 'THURSDAY' else 3
+                    if next_slot_num <= max_slot:
+                        next_existing = [item for item in schedule_grid[day_name][next_slot_num] if item['troop'] == troop.name and item['activity'] == entry.activity.name]
+                        if not next_existing:
+                            schedule_grid[day_name][next_slot_num].append(item_data)
     
     return schedule_grid
 
@@ -1607,13 +1648,35 @@ def get_staff_schedule(staff_name):
     for entry in staff_entries:
         day_name = entry.time_slot.day.name
         slot_num = entry.time_slot.slot_number
-        schedule_grid[day_name][slot_num].append({
+        
+        effective_slots = schedule._get_effective_slots(entry.activity, entry.troop)
+        slots_needed = int(effective_slots + 0.5)
+        
+        item_data = {
             'troop': entry.troop.name,
             'activity': entry.activity.name,
             'priority': entry.troop.get_priority(entry.activity.name),
             'scouts': entry.troop.scouts,
             'adults': entry.troop.adults
-        })
+        }
+        
+        existing = [item for item in schedule_grid[day_name][slot_num] if item['troop'] == entry.troop.name and item['activity'] == entry.activity.name]
+        if not existing:
+            schedule_grid[day_name][slot_num].append(item_data)
+            
+        if slots_needed > 1:
+            is_start = not any(
+                e.activity.name == entry.activity.name and e.time_slot.day == entry.time_slot.day and e.time_slot.slot_number < slot_num
+                for e in staff_entries if e.troop == entry.troop
+            )
+            if is_start:
+                for offset in range(1, slots_needed):
+                    next_slot_num = slot_num + offset
+                    max_slot = 2 if day_name == 'THURSDAY' else 3
+                    if next_slot_num <= max_slot:
+                        next_existing = [item for item in schedule_grid[day_name][next_slot_num] if item['troop'] == entry.troop.name and item['activity'] == entry.activity.name]
+                        if not next_existing:
+                            schedule_grid[day_name][next_slot_num].append(item_data)
     
     return schedule_grid
 

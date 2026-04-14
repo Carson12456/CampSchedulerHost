@@ -363,10 +363,10 @@ class LegacyPart04Mixin:
                         continue
 
                     if self._can_schedule(troop, activity, target_slot, day):
-                        self.schedule.add_entry(target_slot, activity, troop)
-                        self._update_progress(troop, activity.name)
-                        print(f"  [Staff Opt] {troop.name}: {activity.name} -> {target_slot}")
-                        break
+                        if self._add_to_schedule(target_slot, activity, troop):
+                            self._update_progress(troop, activity.name)
+                            print(f"  [Staff Opt] {troop.name}: {activity.name} -> {target_slot}")
+                            break
                 else:
                     continue
                 break  # Slot filled, move to next slot

@@ -146,6 +146,18 @@
       "slot": 1
     },
     {
+      "troop_name": "Tecumseh",
+      "activity_name": "History Center",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Disc Golf",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
       "troop_name": "Black Hawk",
       "activity_name": "Aqua Trampoline",
       "day": "MONDAY",
@@ -210,18 +222,6 @@
       "activity_name": "Sailing",
       "day": "WEDNESDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "History Center",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Disc Golf",
-      "day": "TUESDAY",
-      "slot": 1
     },
     {
       "troop_name": "Black Hawk",

@@ -323,8 +323,20 @@
       "slot": 2
     },
     {
+      "troop_name": "Tamanend",
+      "activity_name": "Disc Golf",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
       "troop_name": "Red Cloud",
       "activity_name": "History Center",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Disc Golf",
       "day": "TUESDAY",
       "slot": 1
     },
@@ -386,12 +398,6 @@
       "troop_name": "Red Cloud",
       "activity_name": "Canoe Snorkel",
       "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Red Cloud",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
       "slot": 1
     },
     {
@@ -425,12 +431,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Black Hawk",
-      "activity_name": "Troop Canoe",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Tecumseh",
       "activity_name": "Archery",
       "day": "FRIDAY",
@@ -443,9 +443,9 @@
       "slot": 2
     },
     {
-      "troop_name": "Taskalusa",
-      "activity_name": "Water Polo",
-      "day": "WEDNESDAY",
+      "troop_name": "Black Hawk",
+      "activity_name": "Troop Canoe",
+      "day": "FRIDAY",
       "slot": 3
     },
     {
@@ -455,10 +455,28 @@
       "slot": 3
     },
     {
+      "troop_name": "Tecumseh",
+      "activity_name": "Trading Post",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Dr. DNA",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
       "troop_name": "Taskalusa",
       "activity_name": "Trading Post",
-      "day": "WEDNESDAY",
-      "slot": 2
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Campsite Free Time",
+      "day": "THURSDAY",
+      "slot": 1
     },
     {
       "troop_name": "Sequoyah",
@@ -473,22 +491,22 @@
       "slot": 3
     },
     {
-      "troop_name": "Taskalusa",
+      "troop_name": "Pontiac",
       "activity_name": "Greased Watermelon",
       "day": "FRIDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Pontiac",
-      "activity_name": "Greased Watermelon",
-      "day": "TUESDAY",
-      "slot": 3
     },
     {
       "troop_name": "Tecumseh",
       "activity_name": "Shower House",
       "day": "THURSDAY",
       "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Greased Watermelon",
+      "day": "WEDNESDAY",
+      "slot": 3
     },
     {
       "troop_name": "Tecumseh",
@@ -503,27 +521,15 @@
       "slot": 1
     },
     {
-      "troop_name": "Tecumseh",
-      "activity_name": "Disc Golf",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "Dr. DNA",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "Trading Post",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Tamanend",
       "activity_name": "Super Troop",
       "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
       "slot": 1
     },
     {
@@ -552,9 +558,9 @@
     },
     {
       "troop_name": "Pontiac",
-      "activity_name": "Delta",
-      "day": "FRIDAY",
-      "slot": 2
+      "activity_name": "Ultimate Survivor",
+      "day": "TUESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Pontiac",
@@ -564,7 +570,13 @@
     },
     {
       "troop_name": "Pontiac",
-      "activity_name": "Archery",
+      "activity_name": "Gaga Ball",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Fishing",
       "day": "MONDAY",
       "slot": 3
     },
@@ -576,9 +588,15 @@
     },
     {
       "troop_name": "Pontiac",
-      "activity_name": "Ultimate Survivor",
+      "activity_name": "Delta",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Water Polo",
       "day": "TUESDAY",
-      "slot": 1
+      "slot": 3
     },
     {
       "troop_name": "Pontiac",
@@ -587,46 +605,10 @@
       "slot": 2
     },
     {
-      "troop_name": "Pontiac",
-      "activity_name": "Water Polo",
-      "day": "FRIDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Pontiac",
-      "activity_name": "Gaga Ball",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Climbing Tower",
-      "day": "FRIDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Powhatan",
       "activity_name": "Aqua Trampoline",
       "day": "TUESDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Fishing",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Delta",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Gaga Ball",
-      "day": "TUESDAY",
-      "slot": 3
     },
     {
       "troop_name": "Powhatan",
@@ -638,7 +620,7 @@
       "troop_name": "Powhatan",
       "activity_name": "Archery",
       "day": "THURSDAY",
-      "slot": 2
+      "slot": 1
     },
     {
       "troop_name": "Red Cloud",
@@ -703,25 +685,19 @@
     {
       "troop_name": "Tamanend",
       "activity_name": "Troop Canoe",
-      "day": "MONDAY",
-      "slot": 3
+      "day": "THURSDAY",
+      "slot": 1
     },
     {
       "troop_name": "Tamanend",
-      "activity_name": "Campsite Free Time",
+      "activity_name": "9 Square",
       "day": "MONDAY",
       "slot": 2
     },
     {
       "troop_name": "Tamanend",
       "activity_name": "Archery",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tamanend",
-      "activity_name": "Fishing",
-      "day": "TUESDAY",
+      "day": "MONDAY",
       "slot": 3
     },
     {
@@ -732,21 +708,9 @@
     },
     {
       "troop_name": "Tamanend",
-      "activity_name": "9 Square",
+      "activity_name": "Fishing",
       "day": "THURSDAY",
       "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Sauna",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Campsite Free Time",
-      "day": "FRIDAY",
-      "slot": 3
     },
     {
       "troop_name": "Taskalusa",
@@ -756,21 +720,39 @@
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Gaga Ball",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
       "activity_name": "Aqua Trampoline",
       "day": "TUESDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Water Polo",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Gaga Ball",
+      "day": "MONDAY",
+      "slot": 2
     },
     {
       "troop_name": "Samoset",
       "activity_name": "Dr. DNA",
       "day": "THURSDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Campsite Free Time",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Delta",
+      "day": "TUESDAY",
+      "slot": 3
     },
     {
       "troop_name": "Samoset",
@@ -801,6 +783,18 @@
       "activity_name": "9 Square",
       "day": "FRIDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Climbing Tower",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Gaga Ball",
+      "day": "THURSDAY",
+      "slot": 2
     },
     {
       "troop_name": "Black Hawk",
@@ -876,19 +870,25 @@
     },
     {
       "troop_name": "Taskalusa",
+      "activity_name": "Delta",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Sauna",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
       "activity_name": "Archery",
       "day": "TUESDAY",
       "slot": 1
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Canoe Snorkel",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Canoe Snorkel",
+      "activity_name": "Climbing Tower",
       "day": "THURSDAY",
       "slot": 2
     },
@@ -1005,16 +1005,6 @@
         }
       ]
     },
-    "Taskalusa": {
-      "top5": [],
-      "top10": [
-        {
-          "name": "Climbing Tower",
-          "rank": 9,
-          "is_exempt": false
-        }
-      ]
-    },
     "Tamanend": {
       "top5": [],
       "top10": [
@@ -1051,7 +1041,7 @@
         {
           "name": "History Center",
           "rank": 9,
-          "is_exempt": false
+          "is_exempt": true
         }
       ]
     },

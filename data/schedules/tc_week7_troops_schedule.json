@@ -601,6 +601,12 @@
     },
     {
       "troop_name": "Tamanend",
+      "activity_name": "Campsite Free Time",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tamanend",
       "activity_name": "Sailing",
       "day": "TUESDAY",
       "slot": 2
@@ -634,12 +640,6 @@
       "activity_name": "GPS & Geocaching",
       "day": "FRIDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Tamanend",
-      "activity_name": "Campsite Free Time",
-      "day": "THURSDAY",
-      "slot": 2
     },
     {
       "troop_name": "Samoset",

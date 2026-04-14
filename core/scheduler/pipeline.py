@@ -221,10 +221,6 @@ class SchedulingPipelineMixin:
         self.logger.subsection("C.2 Staff Optimization (consecutive activities)")
         self._schedule_staff_optimized_areas()
 
-        # Phase C.3: Balance Staff Loads
-        self.logger.subsection("C.3 Balancing staff workload")
-        # Skip - this is now handled in the enhanced staff variance optimization
-
         # Phase C.4: Remaining Preferences (Top 6-20)
         self.logger.subsection("C.4 Scheduling Remaining Preferences (Top 6-20)")
         self._schedule_preferences_range(5, 20)

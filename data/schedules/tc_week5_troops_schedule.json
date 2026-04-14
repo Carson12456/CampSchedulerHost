@@ -470,6 +470,18 @@
       "slot": 3
     },
     {
+      "troop_name": "Taskalusa",
+      "activity_name": "Sailing",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Sailing",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
       "troop_name": "Red Cloud",
       "activity_name": "Aqua Trampoline",
       "day": "TUESDAY",
@@ -518,6 +530,18 @@
       "slot": 3
     },
     {
+      "troop_name": "Tamanend",
+      "activity_name": "Float for Floats",
+      "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Float for Floats",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Black Hawk",
       "activity_name": "Float for Floats",
       "day": "WEDNESDAY",
@@ -554,6 +578,12 @@
       "slot": 1
     },
     {
+      "troop_name": "Tamanend",
+      "activity_name": "Troop Canoe",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
       "troop_name": "Sequoyah",
       "activity_name": "Water Polo",
       "day": "FRIDAY",
@@ -566,15 +596,15 @@
       "slot": 3
     },
     {
-      "troop_name": "Tamanend",
-      "activity_name": "Troop Canoe",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Taskalusa",
       "activity_name": "Archery",
       "day": "TUESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Fishing",
+      "day": "WEDNESDAY",
       "slot": 2
     },
     {
@@ -626,16 +656,22 @@
       "slot": 2
     },
     {
+      "troop_name": "Tecumseh",
+      "activity_name": "Greased Watermelon",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Chopped!",
+      "day": "FRIDAY",
+      "slot": 1
+    },
+    {
       "troop_name": "Sequoyah",
       "activity_name": "Monkey's Fist",
       "day": "WEDNESDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "Fishing",
-      "day": "WEDNESDAY",
-      "slot": 2
     },
     {
       "troop_name": "Tecumseh",
@@ -644,27 +680,9 @@
       "slot": 1
     },
     {
-      "troop_name": "Tecumseh",
+      "troop_name": "Joseph",
       "activity_name": "Greased Watermelon",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Tamanend",
-      "activity_name": "Float for Floats",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tamanend",
-      "activity_name": "Float for Floats",
-      "day": "THURSDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Tamanend",
-      "activity_name": "Chopped!",
-      "day": "FRIDAY",
+      "day": "WEDNESDAY",
       "slot": 1
     },
     {
@@ -729,6 +747,12 @@
     },
     {
       "troop_name": "Joseph",
+      "activity_name": "9 Square",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Joseph",
       "activity_name": "Campsite Free Time",
       "day": "MONDAY",
       "slot": 2
@@ -741,20 +765,14 @@
     },
     {
       "troop_name": "Joseph",
-      "activity_name": "Aqua Trampoline",
-      "day": "THURSDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Joseph",
       "activity_name": "Sauna",
       "day": "FRIDAY",
       "slot": 3
     },
     {
       "troop_name": "Joseph",
-      "activity_name": "Greased Watermelon",
-      "day": "WEDNESDAY",
+      "activity_name": "Aqua Trampoline",
+      "day": "THURSDAY",
       "slot": 1
     },
     {
@@ -1042,20 +1060,8 @@
     {
       "troop_name": "Taskalusa",
       "activity_name": "Climbing Tower",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Sailing",
       "day": "THURSDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Sailing",
-      "day": "THURSDAY",
-      "slot": 2
     },
     {
       "troop_name": "Sequoyah",
@@ -1071,15 +1077,9 @@
     },
     {
       "troop_name": "Joseph",
-      "activity_name": "9 Square",
+      "activity_name": "Loon Lore",
       "day": "MONDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Joseph",
-      "activity_name": "Loon Lore",
-      "day": "WEDNESDAY",
-      "slot": 2
     },
     {
       "troop_name": "Tecumseh",
