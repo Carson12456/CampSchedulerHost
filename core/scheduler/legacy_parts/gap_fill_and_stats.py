@@ -87,6 +87,107 @@ class LegacyPart05Mixin:
                     count += 1
         return count
 
+    def _get_activity_family_name(self, activity_name: str) -> Optional[str]:
+        """Return the durable family-policy key for an activity, if any."""
+        if activity_name in {"Delta", "Sailing"}:
+            return "Delta/Sailing"
+        if activity_name == "Super Troop":
+            return "Super Troop"
+        if activity_name == "Climbing Tower" or activity_name in self.TOWER_ODS_ACTIVITIES:
+            return "Tower/ODS"
+        if activity_name in {"Troop Rifle", "Troop Shotgun"}:
+            return "Rifle"
+        return None
+
+    def _set_family_day_policy(
+        self,
+        family_name: str,
+        *,
+        policy_type: str,
+        allowed_days: Optional[List[Day]] = None,
+        preferred_days: Optional[List[Day]] = None,
+        target_days: Optional[List[Day]] = None,
+        protect_from_phase_d: bool = False,
+        shared_staff_group: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> dict:
+        """Persist a normalized family-policy object for the current run."""
+        weekday_order = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]
+
+        def _normalize(days: Optional[List[Day]]) -> List[Day]:
+            if not days:
+                return []
+            seen = set()
+            ordered = []
+            for day in days:
+                if day in weekday_order and day not in seen:
+                    ordered.append(day)
+                    seen.add(day)
+            return ordered
+
+        policy = {
+            "family_name": family_name,
+            "policy_type": policy_type,
+            "allowed_days": _normalize(allowed_days) or list(weekday_order),
+            "preferred_days": _normalize(preferred_days),
+            "target_days": _normalize(target_days),
+            "protect_from_phase_d": protect_from_phase_d,
+            "shared_staff_group": shared_staff_group,
+            "metadata": metadata or {},
+        }
+        self.family_day_policies[family_name] = policy
+        return policy
+
+    def _get_family_day_policy(
+        self,
+        family_name: Optional[str] = None,
+        *,
+        activity_name: Optional[str] = None,
+    ) -> Optional[dict]:
+        """Fetch a stored family day policy by family or activity."""
+        if family_name is None and activity_name is not None:
+            family_name = self._get_activity_family_name(activity_name)
+        if not family_name:
+            return None
+        return (getattr(self, "family_day_policies", {}) or {}).get(family_name)
+
+    def _get_activity_policy_days(self, activity_name: str) -> tuple[list[Day], list[Day], list[Day]]:
+        """Return (preferred_days, target_days, allowed_days) for an activity."""
+        policy = self._get_family_day_policy(activity_name=activity_name)
+        if not policy:
+            return [], [], []
+        preferred = list(policy.get("preferred_days") or [])
+        target = list(policy.get("target_days") or preferred)
+        allowed = list(policy.get("allowed_days") or [])
+        if not allowed:
+            allowed = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]
+        return preferred, target, allowed
+
+    def _family_policy_allows_day(self, activity_name: str, day: Day, *, strict: bool = False) -> bool:
+        """Check whether the family policy allows using ``day`` for ``activity_name``."""
+        preferred, target, allowed = self._get_activity_policy_days(activity_name)
+        if not allowed and not target and not preferred:
+            return True
+        if strict:
+            active_days = target or preferred or allowed
+            return day in active_days
+        return day in allowed
+
+    def _count_family_policy_drift(self) -> int:
+        """Count scheduled entries that drift outside strict family target days."""
+        drift = 0
+        for entry in self.schedule.entries:
+            family = self._get_activity_family_name(entry.activity.name)
+            if not family:
+                continue
+            policy = self._get_family_day_policy(family)
+            if not policy:
+                continue
+            target_days = policy.get("target_days") or policy.get("preferred_days") or []
+            if target_days and entry.time_slot.day not in target_days:
+                drift += 1
+        return drift
+
 
     def _get_cluster_areas_map(self, include_commissioner: bool = True) -> dict:
         """
@@ -280,6 +381,57 @@ class LegacyPart05Mixin:
             if d not in seen:
                 candidates.append(d)
                 seen.add(d)
+
+        policy = self._get_family_day_policy(activity_name=activity_name)
+        if policy:
+            preferred_days, target_days, allowed_days = self._get_activity_policy_days(activity_name)
+
+            day_counts = defaultdict(int)
+            for e in self.schedule.entries:
+                if e.troop == troop:
+                    day_counts[e.time_slot.day] += 1
+
+            area_day_counts = defaultdict(int)
+            area_name = self._get_cluster_area_name_for_activity(
+                activity_name,
+                include_commissioner=False,
+            )
+            if area_name:
+                area_activities = self._get_cluster_areas_map(include_commissioner=False).get(area_name, set())
+                for e in self.schedule.entries:
+                    if e.activity.name in area_activities:
+                        area_day_counts[e.time_slot.day] += 1
+
+            strict_phase = getattr(self, "current_pipeline_phase", "init").strip().lower() in {
+                "remaining",
+                "polish",
+                "final",
+            }
+
+            def policy_bucket(day: Day) -> tuple[int, int]:
+                if day in preferred_days:
+                    return (0, preferred_days.index(day))
+                if day in target_days:
+                    return (1, target_days.index(day))
+                if day in allowed_days:
+                    return (2, allowed_days.index(day))
+                # In late phases, keep disallowed days last so drift does not grow.
+                return (4 if strict_phase else 3, self._day_clustering_sort_key(day))
+
+            candidates.sort(
+                key=lambda d: (
+                    policy_bucket(d),
+                    -area_day_counts[d],
+                    -day_counts[d],
+                    self._day_clustering_sort_key(d),
+                )
+            )
+
+            for day in [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]:
+                if day not in seen:
+                    candidates.append(day)
+                    seen.add(day)
+            return candidates
 
         if self._phase_prefers_existing_cluster_days():
             day_counts = defaultdict(int)
@@ -505,21 +657,29 @@ class LegacyPart05Mixin:
 
         # 1. Determine troop's commissioner
         comm = self.troop_commissioner.get(troop.name)
+        preferred_policy_days, target_policy_days, allowed_policy_days = self._get_activity_policy_days(
+            activity.name
+        )
 
         # 2. Check if this activity belongs to a commissioner-managed area
         forced_day = None
 
-        # Commissioner-day assignment is mode-aware (strong / ownership / mixed).
-        forced_day = self._get_activity_commissioner_day(troop, activity.name)
+        # Durable family policies take precedence over inferred late-phase drift.
+        if target_policy_days:
+            area_primary_days = set(target_policy_days)
+            forced_day = target_policy_days[0]
+        else:
+            # Commissioner-day assignment is mode-aware (strong / ownership / mixed).
+            forced_day = self._get_activity_commissioner_day(troop, activity.name)
 
-        if forced_day:
+        if forced_day and area_primary_days is None:
             # STRICT ENFORCEMENT: The primary day is THE day.
             area_primary_days = {forced_day}
             # For Rifle/Shotgun, if we have both, we need a second day.
             # But the constraint says "Max 1 accuracy per day".
             # The simple logic: Stick to the main day. If full, adjacent days will naturally be picked by adjacency score.
 
-        elif activity_staff_area:
+        elif activity_staff_area and area_primary_days is None:
             area_activities_set = STAFF_AREAS[activity_staff_area]
 
             # Count total demand from all troops preferences
@@ -568,6 +728,11 @@ class LegacyPart05Mixin:
             else:
                 # No activities yet - use first N preferred days
                 area_primary_days = set(PREFERRED_DAY_ORDER[:min_days_needed])
+
+        if allowed_policy_days:
+            area_primary_days = {
+                day for day in (area_primary_days or set()) if day in set(allowed_policy_days)
+            } or set(allowed_policy_days[: max(1, len(area_primary_days or []))])
 
         if activity.name == 'Climbing Tower':
              print(f"DEBUG_TOWER: {troop.name} ({comm}) -> Forced Day: {forced_day}")
@@ -670,8 +835,9 @@ class LegacyPart05Mixin:
                     else:
                         score += area_count_on_day * 100  # Strong bonus for non-Top 5 area clustering
 
-                # Excess-day avoidance: penalize placements that spread an area beyond ceil(n/3).
-                if self._would_create_excess_day(activity.name, day):
+                # Excess-day avoidance: penalize placements that spread this troop's
+                # area beyond ceil(n/3). Uses per-troop semantics per BRAIN §6.
+                if self._would_create_excess_day(activity.name, day, troop=troop):
                     if is_top5:
                         score -= 120  # Keep flexibility for critical preferences.
                     else:
@@ -2570,6 +2736,10 @@ class LegacyPart05Mixin:
 
                         if swap_day == current_day:
                             continue  # Same day, no clustering improvement
+                        if not self._family_policy_allows_day(cluster_activity, swap_day, strict=True):
+                            continue
+                        if not self._family_policy_allows_day(swap_activity, current_day, strict=True):
+                            continue
 
                         # Check if this pair was already swapped (prevent oscillation)
                         pair_key = tuple(sorted([cluster_activity, swap_activity]))

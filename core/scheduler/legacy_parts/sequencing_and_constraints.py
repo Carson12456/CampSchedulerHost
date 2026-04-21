@@ -203,7 +203,13 @@ class LegacyPart04Mixin:
 
         Strategy:
         1. For each staff area, count how many troops want activities in it
-        2. Pre-assign primary days based on demand
+        2. ADAPTIVE DAY SELECTION:
+           - Low demand (fits in <= 2 days): consolidate onto 2 high-signal
+             days (Mon/Tue default, pulled toward existing Sailing/family
+             placements via _plan_cluster_activity_day_strategy).
+           - High demand (3+ days of work): spread across the area's
+             commissioner-rotation days. This avoids forcing excess-day
+             penalties when the family genuinely needs 3 days.
         3. Schedule high-priority (Top 8) requests for those activities on primary days
 
         This establishes cluster patterns early so subsequent scheduling respects them.
@@ -218,10 +224,22 @@ class LegacyPart04Mixin:
             'Handicrafts': ['Tie Dye', 'Hemp Craft', 'Woggle Neckerchief Slide', "Monkey's Fist"],
         }
 
-        # Prefer CONSECUTIVE days to reduce gaps in staff area scheduling
-        # Monday/Tuesday/Wednesday are consecutive and avoid constraints
-        # (Tuesday HC/DG is paired, Friday has Reflection)
-        PREFERRED_DAYS = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]
+        # Commissioner-rotation lookup key for each staff area (some areas
+        # share day ownership; Tower and ODS both use Climbing Tower's map).
+        COMMISSIONER_KEY_BY_AREA = {
+            'Tower': 'Climbing Tower',
+            'Rifle': 'Troop Rifle',
+            'ODS': 'Climbing Tower',  # Tower/ODS share commissioner rotation
+            'Handicrafts': None,       # no commissioner rotation; use default
+        }
+
+        # Fallback day order for when strategy is unavailable (Handicrafts,
+        # no commissioner map). Matches the legacy behavior.
+        FALLBACK_DAYS = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]
+
+        # Cache strategies for downstream Phase D use.
+        if not hasattr(self, "_staff_area_day_strategy"):
+            self._staff_area_day_strategy = {}
 
         for area_name, area_activities in STAFF_AREAS.items():
             # Count demand: how many troops want activities in this area (Top 8)?
@@ -234,10 +252,69 @@ class LegacyPart04Mixin:
             if not demand:
                 continue
 
-            # Calculate primary days needed (max 3 per day, cap at 2 primary days for tighter clustering)
             import math
-            num_days_needed = min(math.ceil(len(demand) / 3), 2)  # Cap at 2 days for bulletproof clustering
-            primary_days = PREFERRED_DAYS[:num_days_needed]
+
+            # Consult the adaptive planner so we use commissioner rotation
+            # when demand exceeds what 2 days can absorb. Low-demand weeks
+            # still use the legacy Mon/Tue consolidation (no Sailing-signal
+            # shuffling) because Tower/Rifle/ODS don't pair with Sailing and
+            # shuffling days tended to stack multiple families on the same
+            # slot-starved day (observed traffic jams on Thursday).
+            comm_key = COMMISSIONER_KEY_BY_AREA.get(area_name)
+            strategy = None
+            if comm_key is not None:
+                # Staff-area adaptive commissioner-rotation is OFF by default.
+                # Empirical A/B: -1.2pts average across 10 weeks. The
+                # consolidated path is redundant with legacy's Mon/Tue cap,
+                # and the high-demand commissioner-rotation path tends to
+                # destabilize cluster gaps on small weeks. Flip
+                # ``CLUSTER_CONSOLIDATE_{TOWER,RIFLE,ODS}=auto`` to re-enable.
+                strategy = self._plan_cluster_activity_day_strategy(
+                    area_activities,
+                    per_day_capacity=3,
+                    max_consolidated_days=2,
+                    commissioner_key=comm_key,
+                    family_label=area_name,
+                    demand_pref_limit=8,
+                    sailing_signal_weight=0,
+                    default_mode="off",
+                )
+                self._staff_area_day_strategy[area_name] = strategy
+                print(
+                    f"  [{area_name} Strategy] mode={strategy['mode']} — {strategy['reason']}"
+                )
+
+            if strategy and strategy["mode"] == "consolidated":
+                # Low demand: keep legacy Mon/Tue behavior (equivalent to
+                # pre-adaptive) to preserve tight clustering without risking
+                # day-stacking collisions with other consolidating families.
+                num_days_needed = min(math.ceil(len(demand) / 3), 2)
+                primary_days = FALLBACK_DAYS[:num_days_needed]
+            elif strategy and strategy["mode"] == "commissioner" and strategy["commissioner_days"]:
+                # High-demand: spread across commissioner rotation days so the
+                # area uses ceil(n/3) days naturally instead of forcing 2.
+                num_days_needed = min(math.ceil(len(demand) / 3), 3)
+                comm_days = list(strategy["commissioner_days"])
+                # Seed primary days with commissioner rotation, then backfill
+                # with other weekdays if more are needed.
+                primary_days = []
+                for d in comm_days:
+                    if d not in primary_days:
+                        primary_days.append(d)
+                    if len(primary_days) >= num_days_needed:
+                        break
+                for d in FALLBACK_DAYS:
+                    if len(primary_days) >= num_days_needed:
+                        break
+                    if d not in primary_days and d != Day.FRIDAY:
+                        primary_days.append(d)
+            else:
+                # Legacy fallback path:
+                # - strategy is None (Handicrafts or missing commissioner map)
+                # - strategy.mode == "legacy" (env override=off for this family)
+                # Cap at 2 days with Mon/Tue/... order, matching pre-adaptive code.
+                num_days_needed = min(math.ceil(len(demand) / 3), 2)
+                primary_days = FALLBACK_DAYS[:num_days_needed]
 
             print(f"  {area_name}: {len(demand)} requests -> {num_days_needed} primary days: {[d.value[:3] for d in primary_days]}")
 
@@ -258,7 +335,7 @@ class LegacyPart04Mixin:
 
                 # Try primary days first, then fallback
                 placed = False
-                for day in primary_days + [d for d in PREFERRED_DAYS if d not in primary_days]:
+                for day in primary_days + [d for d in FALLBACK_DAYS if d not in primary_days]:
                     day_slots = [s for s in self.time_slots if s.day == day]
 
                     for slot in day_slots:
@@ -802,7 +879,7 @@ class LegacyPart04Mixin:
             # ENHANCED: Stricter enforcement to reduce violations
             if activity.name in self.BEACH_SLOT_ACTIVITIES:
                 # Special handling for 2-slot beach activities
-                is_2slot_beach = activity.slots >= 2 and activity.name in set(self.CANOE_ACTIVITIES)
+                is_2slot_beach = activity.slots >= 2
 
                 if is_2slot_beach:
                     # For 2-slot beach activities, slot 1 is preferred.
@@ -1052,9 +1129,8 @@ class LegacyPart04Mixin:
             pass
 
         # Multi-slot activities
-        if activity.slots > 1 and activity.name != "Sailing":
+        if effective_slots > 1 and activity.name != "Sailing":
             slot_index = self.time_slots.index(slot)
-            slots_needed = int(activity.slots + 0.5)
             if not self._check_consecutive_slots(troop, activity, slot_index, slots_needed):
                 return False
 
@@ -1064,7 +1140,7 @@ class LegacyPart04Mixin:
         beach_slot_activities = set(self.BEACH_SLOT_ACTIVITIES)
         if activity.name in beach_slot_activities:
             # Special handling for 2-slot beach activities (already checked above, but ensure consistency)
-            is_2slot_beach = activity.slots >= 2 and activity.name in set(self.CANOE_ACTIVITIES)
+            is_2slot_beach = activity.slots >= 2
             if not is_2slot_beach:
                 # Slot 2 only allowed on Thursday, or Top 5 relaxation (Spine Exception 3)
                 if slot.slot_number == 2 and day != Day.THURSDAY:

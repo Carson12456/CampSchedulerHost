@@ -452,8 +452,8 @@ class LegacyPart02Mixin:
                  if not activity: 
                      continue
 
-                 # 2 slots or Sailing (1.5 slots - Spine: include in 2-hour phase)
-                 if activity.slots == 2 or pref_name == "Sailing":
+                 effective_slots = self.schedule._get_effective_slots(activity, troop)
+                 if effective_slots >= 1.5:
                       # Special handling for 2-slot activities
                       if self._troop_has_activity(troop, activity):
                           continue
@@ -806,7 +806,8 @@ class LegacyPart02Mixin:
         """
         from ...activities import get_activity_by_name
 
-        PROTECTED = self.NON_DISPLACEABLE_ACTIVITIES
+        # Protect multi-slot activities (Rocks) from being shredded
+        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
         missed = []
         placed = 0
 
@@ -865,7 +866,8 @@ class LegacyPart02Mixin:
                     if entry_priority > 0:  # lower priority than top-1
                         replaceable.append((entry, entry_priority))
 
-            replaceable.sort(key=lambda x: x[1], reverse=True)
+            # Protect multi-slot activities (Rocks) from being displaced by Sand
+            replaceable.sort(key=lambda x: (0 if getattr(x[0].activity, 'slots', 1.0) > 1.0 else 1, x[1]), reverse=True)
 
             for candidate, _ in replaceable:
                 slot = candidate.time_slot
@@ -913,7 +915,8 @@ class LegacyPart02Mixin:
         """
         from ...activities import get_activity_by_name
 
-        PROTECTED = self.NON_DISPLACEABLE_ACTIVITIES
+        # Protect multi-slot activities (Rocks) from being shredded
+        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
         forced = 0
         missed = []
 
@@ -949,7 +952,8 @@ class LegacyPart02Mixin:
                     entry_priority = 999
                 if entry_priority > 0:  # lower priority than top-1
                     replaceable.append((entry, entry_priority))
-            replaceable.sort(key=lambda x: x[1], reverse=True)
+            # Protect multi-slot activities (Rocks) from being displaced by Sand
+            replaceable.sort(key=lambda x: (0 if getattr(x[0].activity, 'slots', 1.0) > 1.0 else 1, x[1]), reverse=True)
 
             # Same-slot swap (relaxed)
             for candidate, _ in replaceable:
@@ -1146,6 +1150,9 @@ class LegacyPart02Mixin:
         print("\n--- Enforcing Delta + Sailing Same-Day Pairing ---")
         fixes = 0
         protected = {"Reflection", "Super Troop"}
+        delta_policy = self._get_family_day_policy(family_name="Delta/Sailing")
+        if delta_policy is None and hasattr(self, "_ensure_delta_sailing_family_policy"):
+            delta_policy = self._ensure_delta_sailing_family_policy()
 
         def is_protected(occupant_entry) -> bool:
             """Never displace Reflection, Super Troop, or any Top 5 preference."""
@@ -1169,6 +1176,13 @@ class LegacyPart02Mixin:
 
             def move_entry_to_slot(entry, target_slot):
                 """Move a single-slot entry to target_slot, swapping out any non-protected occupant."""
+                if entry.activity.name in {"Delta", "Sailing"} and delta_policy:
+                    if not self._family_policy_allows_day(
+                        entry.activity.name,
+                        target_slot.day,
+                        strict=False,
+                    ):
+                        return False
                 occupant = next((e for e in self.schedule.entries
                                  if e.troop == troop and e.time_slot == target_slot), None)
                 if occupant and is_protected(occupant):
@@ -1224,6 +1238,13 @@ class LegacyPart02Mixin:
 
             # Determine sailing day + start slot
             sailing_days = sorted({e.time_slot.day for e in sailing_entries}, key=lambda d: list(Day).index(d))
+            if delta_policy:
+                sailing_days.sort(
+                    key=lambda day: (
+                        0 if self._family_policy_allows_day("Sailing", day, strict=True) else 1,
+                        list(Day).index(day),
+                    )
+                )
             sailing_day = sailing_days[0]
             sailing_slots = sorted({e.time_slot.slot_number for e in sailing_entries if e.time_slot.day == sailing_day})
             if not sailing_slots:
@@ -1673,7 +1694,9 @@ class LegacyPart02Mixin:
         print(f"\n--- Per-Preference Scheduling (ranks {start_rank+1}-{end_rank}) ---")
 
         # Protected activities that cannot be displaced (BRAIN mandatory anchors).
-        PROTECTED = self.NON_DISPLACEABLE_ACTIVITIES
+        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES)
+        # Protect Multi-Slot Top-10 preferences (Rocks) from being shredded for single-slot Top-5s.
+        PROTECTED.update(["Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"])
 
         placed_count = 0
         failed_top5 = []  # Track Top 5 failures separately (critical)
@@ -1745,8 +1768,9 @@ class LegacyPart02Mixin:
                 # For clustered activities, prefer non-excess-day placements earlier.
                 # Keep Top 1-5 flexible to protect satisfaction.
                 if activity_name in clustered_activity_names and pref_rank >= 5:
-                    non_excess_slots = [s for s in slots_to_try if not self._would_create_excess_day(activity_name, s.day)]
-                    excess_slots = [s for s in slots_to_try if self._would_create_excess_day(activity_name, s.day)]
+                    # Use per-troop excess check (BRAIN §6 is a per-troop metric).
+                    non_excess_slots = [s for s in slots_to_try if not self._would_create_excess_day(activity_name, s.day, troop=troop)]
+                    excess_slots = [s for s in slots_to_try if self._would_create_excess_day(activity_name, s.day, troop=troop)]
                     slots_to_try = non_excess_slots + excess_slots  # Try non-excess first
 
                 for slot in slots_to_try:
@@ -1896,7 +1920,8 @@ class LegacyPart02Mixin:
 
         print("\n--- Aggressive Top 6-15 Preference Recovery (Clustering-Aware) ---")
 
-        PROTECTED = self.NON_DISPLACEABLE_ACTIVITIES  # Never swap mandatory anchors
+        # Protect multi-slot activities (Rocks) from being shredded
+        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
 
         total_recovered = 0
 
@@ -1954,8 +1979,8 @@ class LegacyPart02Mixin:
                 for candidate, _ in displaceable:
                     slot = candidate.time_slot
 
-                    # Check if scheduling here would create excess day
-                    if self._would_create_excess_day(pref_name, slot.day):
+                    # Check if scheduling here would create excess day for this troop
+                    if self._would_create_excess_day(pref_name, slot.day, troop=troop):
                         continue  # Skip to preserve clustering
 
                     # Check if candidate still exists
@@ -1982,8 +2007,8 @@ class LegacyPart02Mixin:
                 ordered_slots = self._get_cluster_ordered_slots(troop, activity)
 
                 for slot in ordered_slots:
-                    # Check clustering impact - skip if would create excess day
-                    if self._would_create_excess_day(pref_name, slot.day):
+                    # Check clustering impact - skip if would create excess day for this troop
+                    if self._would_create_excess_day(pref_name, slot.day, troop=troop):
                         continue
 
                     if self._can_schedule(troop, activity, slot, slot.day):
@@ -2007,8 +2032,8 @@ class LegacyPart02Mixin:
                         entry_rank = 999
 
                     if entry_rank > pref_rank:  # Lower priority
-                        # Check if swapping would create excess day
-                        if not self._would_create_excess_day(pref_name, entry.time_slot.day):
+                        # Check if swapping would create excess day for this troop
+                        if not self._would_create_excess_day(pref_name, entry.time_slot.day, troop=troop):
                             displaceable.append((entry, entry_rank))
 
                 displaceable.sort(key=lambda x: x[1], reverse=True)
@@ -2055,7 +2080,8 @@ class LegacyPart02Mixin:
 
         print("\n--- ENHANCED: Guaranteeing 100% non-exempt Top 5 Satisfaction ---")
 
-        PROTECTED = self.NON_DISPLACEABLE_ACTIVITIES  # Never swap mandatory anchors
+        # Protect multi-slot activities (Rocks) from being shredded
+        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
 
         swaps_made = 0
         total_recovered = 0
@@ -2145,7 +2171,8 @@ class LegacyPart02Mixin:
                             replaceable.append((entry, entry_priority))
 
                 # Sort by priority (highest index = lowest priority = best to replace)
-                replaceable.sort(key=lambda x: x[1], reverse=True)
+                # Protect multi-slot activities (Rocks) from being displaced by Sand
+                replaceable.sort(key=lambda x: (0 if getattr(x[0].activity, 'slots', 1.0) > 1.0 else 1, x[1]), reverse=True)
 
                 success = False
 
@@ -2330,7 +2357,8 @@ class LegacyPart02Mixin:
 
         print("\n--- Guaranteeing Minimum Top 10 (2-3 per troop) ---")
 
-        PROTECTED = self.NON_DISPLACEABLE_ACTIVITIES  # Never swap mandatory anchors
+        # Protect multi-slot activities (Rocks) from being shredded
+        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
         MIN_TOP10_REQUIRED = 3  # Require at least 3 of Top 10
 
         total_recovered = 0
@@ -2453,7 +2481,8 @@ class LegacyPart02Mixin:
         print("\n--- MANDATORY Top 5 Enforcement (ALL Top 1-5 Required) ---")
 
         # Activities that cannot be displaced (Spine protected)
-        PROTECTED = self.NON_DISPLACEABLE_ACTIVITIES
+        # Protect multi-slot activities (Rocks) from being shredded
+        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
 
         enforcements = 0
         failures = []
@@ -2889,7 +2918,7 @@ class LegacyPart02Mixin:
         Ultra-aggressive recovery for Top 3 activities using cross-day consolidation.
         """
         failures = []
-        PROTECTED = {"Reflection", "Super Troop", "Delta", "Sailing"}
+        PROTECTED = {"Reflection", "Super Troop", "Delta", "Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"}
 
         for troop in self.troops:
             troop_entries = [e for e in self.schedule.entries if e.troop == troop]
@@ -3141,7 +3170,7 @@ class LegacyPart02Mixin:
             'Sailing',                 # Beach slot constraints
         }
 
-        PROTECTED = {"Reflection", "Delta", "Super Troop"}
+        PROTECTED = {"Reflection", "Delta", "Super Troop", "Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"}
 
         recoveries = 0
         skipped = []
@@ -3180,7 +3209,8 @@ class LegacyPart02Mixin:
                     if entry_rank > rank and entry.activity.name not in PROTECTED:
                         replaceable.append((entry, entry_rank))
 
-                replaceable.sort(key=lambda x: x[1], reverse=True)
+                # Protect multi-slot activities (Rocks) from being displaced by Sand
+                replaceable.sort(key=lambda x: (0 if getattr(x[0].activity, 'slots', 1.0) > 1.0 else 1, x[1]), reverse=True)
 
                 for entry, _ in replaceable:
                     slot = entry.time_slot

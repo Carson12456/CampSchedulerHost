@@ -836,6 +836,10 @@ class LegacyPart07Mixin:
                             # Check if swap is possible
                             source_slot = source_entry.time_slot
                             target_slot = target_entry.time_slot
+                            if not self._family_policy_allows_day(source_entry.activity.name, target_day, strict=True):
+                                continue
+                            if not self._family_policy_allows_day(target_entry.activity.name, source_day, strict=True):
+                                continue
 
                             can_swap = True
 
@@ -909,6 +913,22 @@ class LegacyPart07Mixin:
             "Climbing Tower",
         } | set(self.TOWER_ODS_ACTIVITIES)
 
+        # Respect the retained durable family policy envelope for Delta/Sailing.
+        # Broader staffed-family protection remains experimental and is not part
+        # of the default scoring baseline.
+        for family_name, activities in {
+            "Delta/Sailing": {"Delta"},
+        }.items():
+            policy = self._get_family_day_policy(family_name=family_name)
+            if not policy or not policy.get("protect_from_phase_d"):
+                continue
+            for act in activities:
+                commissioner_activities.discard(act)
+            print(
+                f"    [Commissioner Day Ownership] Skipping {family_name} — "
+                "family policy protected"
+            )
+
         def _is_single_slot_entry(entry) -> bool:
             effective_slots = self.schedule._get_effective_slots(entry.activity, entry.troop)
             return int(effective_slots + 0.5) == 1
@@ -962,6 +982,8 @@ class LegacyPart07Mixin:
                 target_slot = target_entry.time_slot
                 if source_slot == target_slot:
                     continue
+                if not self._family_policy_allows_day(entry.activity.name, target_slot.day, strict=True):
+                    continue
 
                 snapshot = self._snapshot_scheduler_state()
                 removed_entry = self._remove_from_schedule(entry)
@@ -1007,6 +1029,8 @@ class LegacyPart07Mixin:
             expected_slots = sorted([s for s in self.time_slots if s.day == expected_day], key=lambda s: s.slot_number)
             for target_slot in expected_slots:
                 if not self.schedule.is_troop_free(target_slot, troop):
+                    continue
+                if not self._family_policy_allows_day(entry.activity.name, target_slot.day, strict=True):
                     continue
 
                 source_slot = entry.time_slot

@@ -134,6 +134,10 @@ class SchedulerState:
         self.total_staff_by_slot = defaultdict(int)
         self.prioritize_staff_balance = False
         self.commissioner_activity_day_assignments = {}
+        # Durable family day-policy registry. Family-specific strategy
+        # decisions are stored here so later phases can optimize within the
+        # same envelope instead of re-interpreting the intent from scratch.
+        self.family_day_policies = {}
         self.current_pipeline_phase = "init"
         mode = os.getenv("COMM_CLUSTER_MODE", "mixed").strip().lower()
         if mode not in {"strong", "ownership", "mixed"}:

@@ -214,26 +214,23 @@
 
 <body>
     <div class="header">
-        <h1>⛺ Summer Camp Scheduler</h1>
-        <p>Ten Chiefs - 2024</p>
-        <div class="week-selector">
-            <select id="weekSelect" onchange="changeWeek(this.value)">
+        <h1>Summer Camp Scheduler</h1>
+        <p>Ten Chiefs - 2024 
+            <select id="weekSelect" onchange="changeWeek(this.value)" style="margin-left: 15px; padding: 4px 8px; font-size: 14px; background: #2d2d30; color: #fff; border: 1px solid #4a9eff; border-radius: 3px; cursor: pointer;">
                 {% for week_id in available_weeks %}
                 <option value="{{ week_id }}" {% if week_id==current_week %}selected{% endif %}>
                     {{ week_data[week_id] }}
                 </option>
                 {% endfor %}
             </select>
-            <button id="regenerateBtn" onclick="regenerateCurrentWeek()" style="margin-left: 10px; padding: 8px 16px; background: #ff6b6b; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">🔄 Regenerate</button>
-            <button id="reportBtn" onclick="downloadSuccessReport()" style="margin-left: 10px; padding: 8px 16px; background: #4a9eff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">📄 Success Report</button>
-            <button id="seasonReportBtn" onclick="downloadSeasonReport()" style="margin-left: 10px; padding: 8px 16px; background: #6f8f33; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">📊 TC Season Report</button>
-        </div>
-        <p style="font-size: 14px; margin-top: 5px;">Week Total: <span id="weekTotal"></span></p>
+            <span style="margin-left: 20px; font-size: 14px;">Week Total: <span id="weekTotal"></span></span>
+        </p>
         <div id="evaluationBanner" style="margin-top: 12px; padding: 10px 16px; border-radius: 8px; display: none;"></div>
         <div id="evaluationMetrics" style="margin-top: 8px; font-size: 13px; color: #aaa;"></div>
     </div>
 
     <div class="tab-section">
+        <h3> Troops</h3>
         <h3>👥 Troops</h3>
         <div class="tabs" id="troopTabs"></div>
     </div>
@@ -255,7 +252,7 @@
     </div>
 
     <script>
-        const troops = {{ troops | tojson }};
+        const troops = {{ troops | tojson | safe }};
         const commColors = {
             'Commissioner A': '#bd1e1e', // Red
             'Commissioner B': '#1e4dbd', // Blue
@@ -346,7 +343,7 @@
         });
         document.getElementById('weekTotal').textContent = `${totalScouts}/${totalAdults}`;
 
-        // Load evaluation metrics (score, violations, double-book warning, beach slot 2)
+        // Load evaluation metrics (score, violations, double-book warning)
         async function loadEvaluation() {
             const banner = document.getElementById('evaluationBanner');
             const metricsEl = document.getElementById('evaluationMetrics');
@@ -365,13 +362,7 @@
                     banner.style.background = '#8b0000';
                     banner.style.color = '#fff';
                     banner.style.border = '2px solid #ff6b6b';
-                    banner.innerHTML = '&#9888; <strong>Schedule invalid</strong> – exclusive double-book detected (e.g. two troops in same Tower slot). Regenerate this week to fix.';
-                } else if (data.beach_slot_2_uses > 0) {
-                    banner.style.display = 'block';
-                    banner.style.background = '#5c4a00';
-                    banner.style.color = '#fff';
-                    banner.style.border = '1px solid #b8860b';
-                    banner.innerHTML = `Beach in slot 2 used ${data.beach_slot_2_uses} time(s) (penalized; prefer slot 1 or 3).`;
+                    banner.innerHTML = '&#9888; <strong>Schedule invalid</strong> - exclusive double-book detected (e.g. two troops in same Tower slot). Regenerate this week to fix.';
                 } else {
                     banner.style.display = 'none';
                 }
@@ -381,7 +372,23 @@
                 const soft = Number(components.soft_constraint_points || 0).toFixed(1);
                 const staff = Number(components.staff_balance_points || 0).toFixed(1);
                 const bonus = Number(components.bonuses_points || 0).toFixed(1);
-                metricsEl.textContent = `Score: ${data.final_score}  |  Violations: ${data.constraint_violations}  |  Top 5: ${data.top5_pct.toFixed(1)}% (${data.missing_top5} missed)  |  Components: Pref ${pref}, Cluster ${cluster}, Soft ${soft}, Staff ${staff}, Bonus ${bonus}`;
+                // Build violation details
+                let violationDetails = '';
+                const hardDetails = data.hard_violation_details || [];
+                const softDetails = data.soft_violation_details || [];
+                const allDetails = [...hardDetails, ...softDetails];
+                
+                if (allDetails.length > 0) {
+                    violationDetails = '<br><strong>Violations (' + data.constraint_violations + '):</strong><br>' + 
+                        allDetails.slice(0, 5).map(detail => '  &bull; ' + detail).join('<br>');
+                    if (allDetails.length > 5) {
+                        violationDetails += '<br>  &bull; ... and ' + (allDetails.length - 5) + ' more';
+                    }
+                } else {
+                    violationDetails = '<br>Violations: ' + data.constraint_violations + ' (none)';
+                }
+                
+                metricsEl.innerHTML = `Score: ${data.final_score}/1000  |  Top 5: ${data.top5_pct.toFixed(1)}% (${data.missing_top5} missed)  |  Components: Pref ${pref}/450, Cluster ${cluster}/250, Soft ${soft}/150, Staff ${staff}/100, Bonus ${bonus}/50${violationDetails}`;
             } catch (e) {
                 metricsEl.textContent = 'Evaluation: could not load';
                 banner.style.display = 'none';
@@ -460,10 +467,101 @@
             document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
 
             try {
-                const response = await fetch(`/api/schedule/${troopName}?week=${currentWeek}`);
-                const data = await response.json();
-                document.getElementById('scheduleTitle').textContent = `Troop: ${troopName} (${data.scouts}/${data.adults})`;
-                renderTroopScheduleGrid(data);
+                // Load schedule data
+                const scheduleResponse = await fetch(`/api/schedule/${troopName}?week=${currentWeek}`);
+                const scheduleData = await scheduleResponse.json();
+                
+                // Load troop scoring data
+                const scoringResponse = await fetch(`/api/troop_scoring/${currentWeek}`);
+                const scoringData = await scoringResponse.json();
+                
+                // Find this troop's scoring data
+                const troopScoring = scoringData.troops.find(t => t.name === troopName);
+                
+                // Update title with scoring information
+                let titleText = `Troop: ${troopName} (${scheduleData.scouts}/${scheduleData.adults})`;
+                if (troopScoring) {
+                    const scorePercentage = troopScoring.max_possible > 0 ? 
+                        (troopScoring.score / troopScoring.max_possible * 100).toFixed(1) : 0;
+                    titleText += `<br><span style="font-size: 0.8em; color: #4a9eff; white-space: nowrap;">${troopScoring.score}/${troopScoring.max_possible}, ${scorePercentage}% max</span>`;
+                }
+                document.getElementById('scheduleTitle').innerHTML = titleText;
+                
+                // Render schedule grid
+                renderTroopScheduleGrid(scheduleData);
+                
+                // Add scoring information below the schedule
+                if (troopScoring) {
+                    const scoringDiv = document.createElement('div');
+                    scoringDiv.className = 'troop-scoring';
+                    scoringDiv.style.cssText = `
+                        margin-top: 20px;
+                        padding: 15px;
+                        background: #2a2a2a;
+                        border: 1px solid #4a9eff;
+                        border-radius: 8px;
+                    `;
+                    
+                    // Calculate score percentage and reduction
+                    const scorePercentage = troopScoring.max_possible > 0 ? 
+                        (troopScoring.score / troopScoring.max_possible * 100).toFixed(1) : 0;
+                    const scoreReduction = troopScoring.max_possible - troopScoring.score;
+                    
+                    scoringDiv.innerHTML = `
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <div style="font-size: 1.2em; font-weight: bold; color: #4a9eff;">
+                                ${troopScoring.score} / ${troopScoring.max_possible}
+                            </div>
+                            <div style="font-size: 0.9em; color: #888;">
+                                ${scorePercentage}% of theoretical maximum
+                            </div>
+                        </div>
+                        
+                        <h4 style="color: #4a9eff; margin-bottom: 10px;">Scoring Analysis</h4>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-bottom: 15px; font-size: 0.9em;">
+                            <div>
+                                <strong>Score:</strong> ${troopScoring.score}/${troopScoring.max_possible}
+                            </div>
+                            <div>
+                                <strong>Reduction:</strong> ${scoreReduction.toFixed(1)} pts
+                            </div>
+                            <div>
+                                <strong>Slots:</strong> ${troopScoring.available_slots}
+                            </div>
+                            <div>
+                                <strong>Fit:</strong> ${troopScoring.activities_fit}
+                            </div>
+                            <div>
+                                <strong>Scheduled:</strong> ${troopScoring.scheduled_prefs}
+                            </div>
+                        </div>
+                        
+                        <div style="border-top: 1px solid #444; padding-top: 10px;">
+                            <h5 style="color: #4a9eff; margin-bottom: 8px;">Logic Explanation</h5>
+                            <div style="font-size: 0.9em; color: #ccc; line-height: 1.4;">
+                                <div style="margin-bottom: 8px;">
+                                    <strong>Maximum Score (${troopScoring.max_possible}):</strong> 
+                                    Calculated by packing the highest-ranked preferences into available slots. 
+                                    Each preference uses its physical slot requirement (1.0, 1.5, 2.0, or 3.0 slots).
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <strong>Actual Score (${troopScoring.score}):</strong> 
+                                    Sum of linear staircase weights for scheduled preferences. 
+                                    Rank 1 = 5.0 points, Rank 20 = 0.25 points (continuous 0.25 point decrement).
+                                </div>
+                                <div>
+                                    <strong>Score Reduction (${scoreReduction.toFixed(1)} points):</strong> 
+                                    Caused by getting lower-ranked preferences instead of higher-ranked ones, 
+                                    or multi-slot activities consuming space that could have held more high-ranked preferences.
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('scheduleContent').appendChild(scoringDiv);
+                }
+                
             } catch (error) {
                 document.getElementById('scheduleContent').innerHTML = '<div class="loading">Error loading schedule</div>';
                 console.error('Error:', error);
@@ -980,17 +1078,17 @@
                             continue;
                         }
 
-                        const troops = dayData[slot] || [];
-                        if (troops.length > 0) {
+                        const slotTroops = dayData[slot] || [];
+                        if (slotTroops.length > 0) {
                             cell.classList.add('activity');
                             cell.style.background = '#2d5016';
 
                             // Handle Aqua Trampoline objects vs plain troop names
                             let troopNames;
-                            if (typeof troops[0] === 'object' && troops[0].troop) {
-                                troopNames = troops.map(t => t.troop);
+                            if (typeof slotTroops[0] === 'object' && slotTroops[0].troop) {
+                                troopNames = slotTroops.map(t => t.troop);
                             } else {
-                                troopNames = troops;
+                                troopNames = slotTroops;
                             }
 
                             cell.innerHTML = `<div style="font-size: 9px; line-height: 1.2;">${troopNames.join('<br>')}</div>`;
@@ -1186,13 +1284,13 @@
                         let html = '';
                         Object.keys(activityGroups).forEach(activity => {
                             const items = activityGroups[activity];
-                            const troops = items.map(item =>
+                            const staffTroops = items.map(item =>
                                 `${item.troop} (${item.scouts}/${item.adults})`
                             ).join(', ');
 
                             html += `<div style="margin-bottom: 3px;">
                                 <strong style="font-size: 9px;">${activity}</strong><br>
-                                <small style="font-size: 8px;">${troops}</small>
+                                <small style="font-size: 8px;">${staffTroops}</small>
                             </div>`;
                         });
 

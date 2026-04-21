@@ -82,12 +82,12 @@ class LegacyPart03Mixin:
             # Try each slot in staff-load order
             for slot in all_slots:
                 if self._can_schedule(troop, activity, slot, slot.day):
-                    self._add_to_schedule(slot, activity, troop)
-                    self._update_progress(troop, activity.name)
-                    if slot.day == Day.FRIDAY:
-                        self._check_and_schedule_reflection(troop)
-                    self._try_pair_chain(troop, activity, slot)
-                    return True
+                    if self._add_to_schedule(slot, activity, troop):
+                        self._update_progress(troop, activity.name)
+                        if slot.day == Day.FRIDAY:
+                            self._check_and_schedule_reflection(troop)
+                        self._try_pair_chain(troop, activity, slot)
+                        return True
 
             # If no slot found in staff-balance mode, fall through to normal logic
             # (This shouldn't happen normally, but provides fallback)
@@ -358,12 +358,12 @@ class LegacyPart03Mixin:
             # Try each globally-sorted slot
             for slot in all_slots:
                 if self._can_schedule(troop, activity, slot, slot.day):
-                    self._add_to_schedule(slot, activity, troop)
-                    self._update_progress(troop, activity.name)
-                    if slot.day == Day.FRIDAY:
-                        self._check_and_schedule_reflection(troop)
-                    self._try_pair_chain(troop, activity, slot)
-                    return True
+                    if self._add_to_schedule(slot, activity, troop):
+                        self._update_progress(troop, activity.name)
+                        if slot.day == Day.FRIDAY:
+                            self._check_and_schedule_reflection(troop)
+                        self._try_pair_chain(troop, activity, slot)
+                        return True
 
             # If global search failed, fall through to day-by-day (shouldn't happen normally)
 
@@ -441,14 +441,14 @@ class LegacyPart03Mixin:
             for slot in day_slots:
 
                 if self._can_schedule(troop, activity, slot, day):
-                    self._add_to_schedule(slot, activity, troop)
-                    self._update_progress(troop, activity.name)
-                    # DEBUG: Show where archery was placed
-                    if activity.name == "Archery":
-                        print(f"  [Cluster Debug] {troop.name} Archery: Scheduled on {slot.day.name}-{slot.slot_number}")
-                    # Try to chain a paired activity in adjacent slot
-                    self._try_pair_chain(troop, activity, slot)
-                    return True
+                    if self._add_to_schedule(slot, activity, troop):
+                        self._update_progress(troop, activity.name)
+                        # DEBUG: Show where archery was placed
+                        if activity.name == "Archery":
+                            print(f"  [Cluster Debug] {troop.name} Archery: Scheduled on {slot.day.name}-{slot.slot_number}")
+                        # Try to chain a paired activity in adjacent slot
+                        self._try_pair_chain(troop, activity, slot)
+                        return True
                 elif activity.name == "Archery":
                     # DEBUG: Show why slot was rejected
                     print(f"  [Cluster Debug] {troop.name} Archery: REJECTED {day.name}-{slot.slot_number}")
@@ -474,10 +474,10 @@ class LegacyPart03Mixin:
                 )
                 for slot in cluster_slots:
                     if self._can_schedule(troop, activity, slot, slot.day):
-                        self._add_to_schedule(slot, activity, troop)
-                        self._update_progress(troop, activity.name)
-                        self._try_pair_chain(troop, activity, slot)
-                        return True
+                        if self._add_to_schedule(slot, activity, troop):
+                            self._update_progress(troop, activity.name)
+                            self._try_pair_chain(troop, activity, slot)
+                            return True
 
             # Second pass: Allow new days only if necessary
             new_day_slots = [s for s in self.time_slots if s.day not in days_with_activity]
@@ -487,13 +487,13 @@ class LegacyPart03Mixin:
             )
             for slot in new_day_slots:
                 if self._can_schedule(troop, activity, slot, slot.day):
-                    self._add_to_schedule(slot, activity, troop)
-                    self._update_progress(troop, activity.name)
-                    # SMART REFLECTION: Check if this Friday fill triggers Reflection
-                    if slot.day == Day.FRIDAY:
-                        self._check_and_schedule_reflection(troop)
-                    self._try_pair_chain(troop, activity, slot)
-                    return True
+                    if self._add_to_schedule(slot, activity, troop):
+                        self._update_progress(troop, activity.name)
+                        # SMART REFLECTION: Check if this Friday fill triggers Reflection
+                        if slot.day == Day.FRIDAY:
+                            self._check_and_schedule_reflection(troop)
+                        self._try_pair_chain(troop, activity, slot)
+                        return True
         else:
             # Non-clusterable: regular fallback
             for slot in sorted(
@@ -501,13 +501,13 @@ class LegacyPart03Mixin:
                 key=lambda s: self._beach_slot_preference_rank(troop, activity, s, s.day),
             ):
                 if self._can_schedule(troop, activity, slot, slot.day):
-                    self._add_to_schedule(slot, activity, troop)
-                    self._update_progress(troop, activity.name)
-                    # SMART REFLECTION: Check if this Friday fill triggers Reflection
-                    if slot.day == Day.FRIDAY:
-                        self._check_and_schedule_reflection(troop)
-                    self._try_pair_chain(troop, activity, slot)
-                    return True
+                    if self._add_to_schedule(slot, activity, troop):
+                        self._update_progress(troop, activity.name)
+                        # SMART REFLECTION: Check if this Friday fill triggers Reflection
+                        if slot.day == Day.FRIDAY:
+                            self._check_and_schedule_reflection(troop)
+                        self._try_pair_chain(troop, activity, slot)
+                        return True
         return False
 
 
@@ -775,9 +775,33 @@ class LegacyPart03Mixin:
         return counts
 
 
-    def _would_create_excess_day(self, activity_name: str, day: Day) -> bool:
-        # Delegate to shared validator helper to keep excess-day semantics consistent.
-        return would_create_excess_day_for_entries(self.schedule.entries, activity_name, day)
+    def _would_create_excess_day(self, activity_name: str, day: Day, troop: Troop = None) -> bool:
+        """
+        Excess-day check aligned with BRAIN §6.
+
+        BRAIN's excess-day formula (`required_days = ceil(area_count / 3)`) is a
+        per-troop clustering metric. When a `troop` is supplied, the check is
+        scoped to that troop's entries — this is the correct semantics for any
+        placement / swap / fill decision made inside a per-troop loop.
+
+        The legacy behavior (no troop argument) scans all schedule entries, which
+        answers a different question ("is the area globally stretched?") and
+        should only be used for global diagnostics. Every in-pipeline caller
+        that has a troop in scope passes it explicitly.
+        """
+        if troop is not None:
+            entries = [e for e in self.schedule.entries if e.troop == troop]
+        else:
+            entries = self.schedule.entries
+        return would_create_excess_day_for_entries(entries, activity_name, day)
+
+
+    def _troop_would_create_excess_day(self, troop: Troop, activity_name: str, day: Day) -> bool:
+        """Convenience wrapper preserved for clarity at call sites.
+
+        Equivalent to ``self._would_create_excess_day(activity_name, day, troop=troop)``.
+        """
+        return self._would_create_excess_day(activity_name, day, troop=troop)
 
 
     def _get_day_clustering_score(self, troop: Troop, day: Day) -> int:
@@ -1320,6 +1344,8 @@ class LegacyPart03Mixin:
                     for heavy_day in heavy_days:
                         if heavy_day == Day.FRIDAY:
                             continue
+                        if not self._family_policy_allows_day(activity.name, heavy_day, strict=True):
+                            continue
 
                         # Find empty slots for this area on the heavy day
                         heavy_day_slots = [s for s in self.time_slots if s.day == heavy_day]
@@ -1844,12 +1870,252 @@ class LegacyPart03Mixin:
         return True
 
 
+    def _plan_cluster_activity_day_strategy(
+        self,
+        activity_names,
+        per_day_capacity: int = 3,
+        max_consolidated_days: int = 2,
+        *,
+        commissioner_key: Optional[str] = None,
+        family_label: Optional[str] = None,
+        demand_pref_limit: Optional[int] = None,
+        demand_is_all_troops: bool = False,
+        exclude_days: Optional[Set[Day]] = None,
+        sailing_signal_weight: int = 1,
+        default_mode: str = "auto",
+    ) -> dict:
+        """Adaptive day strategy for a commissioner-managed cluster activity
+        (or family of activities that share commissioner-day ownership).
+
+        BRAIN says pairing integrity takes priority over strict day ownership
+        (Section 3 "The Waltz"). When total weekly demand for a cluster is
+        low, spreading across 3 commissioner days wastes a day, fragments
+        staff scheduling, and misses same-day pairings. When demand is high,
+        forcing consolidation into just 2 days causes unavoidable excess-day
+        penalties. This planner anticipates demand and picks between:
+
+        - ``consolidated``: pile all requesters onto 1-2 high-signal days
+          (chosen to maximize Sailing overlap + pairing), disregarding the
+          commissioner-day rotation.
+        - ``commissioner``: use the normal commissioner day rotation for
+          this activity family.
+
+        Decision rule:
+        ``required_days = ceil(requesters / per_day_capacity)``. If
+        ``required_days <= max_consolidated_days`` (default 2), pick that many
+        high-signal days and consolidate. Otherwise fall back to commissioner
+        rotation.
+
+        Parameters:
+        - ``activity_names``: a single activity name (str) OR a list of names
+          that share commissioner-day ownership (e.g. Rifle family is
+          ["Troop Rifle", "Troop Shotgun"]).
+        - ``commissioner_key``: which activity name to use when looking up the
+          commissioner-day map. Defaults to the first item in ``activity_names``.
+        - ``family_label``: human-readable label used in logs & env-var key.
+          Defaults to the first activity name.
+        - ``demand_pref_limit``: if set (e.g. 8), only count troops that
+          requested the activity within their top-N preferences. Matches the
+          Top-N filtering used by some early clustering passes so demand
+          estimates stay aligned.
+
+        Env override ``CLUSTER_CONSOLIDATE_{LABEL}`` = ``auto`` (default) |
+        ``on`` | ``off`` for A/B testing (label is the family_label uppercased
+        with spaces/slashes replaced by ``_``).
+
+        Returns a dict: ``{mode, demand, required_days, preferred_days, reason}``.
+        """
+        if isinstance(activity_names, str):
+            family_activities: List[str] = [activity_names]
+        else:
+            family_activities = list(activity_names)
+
+        label = family_label or family_activities[0]
+        comm_key = commissioner_key or family_activities[0]
+
+        if demand_is_all_troops:
+            # For mandatory-for-everyone activities like Super Troop, demand
+            # equals the number of troops regardless of explicit preferences.
+            demand = len(self.troops)
+        else:
+            demand = 0
+            for troop in self.troops:
+                prefs = troop.preferences or []
+                search = prefs if demand_pref_limit is None else prefs[:demand_pref_limit]
+                if any(name in search for name in family_activities):
+                    demand += 1
+
+        env_key = (
+            "CLUSTER_CONSOLIDATE_"
+            + label.upper().replace(" ", "_").replace("/", "_")
+        )
+        override = os.getenv(env_key, default_mode).strip().lower()
+
+        required_days = max(1, math.ceil(demand / max(1, per_day_capacity)))
+        auto_consolidate = (
+            demand > 0
+            and required_days <= max_consolidated_days
+        )
+
+        use_consolidated = (
+            override == "on"
+            or (override == "auto" and auto_consolidate)
+        )
+        if override == "off":
+            use_consolidated = False
+
+        # Commissioner day map for this family.
+        day_map = self._get_commissioner_day_map_for_activity(comm_key) or {}
+        comm_days: Set[Day] = set(day_map.values())
+
+        if not use_consolidated:
+            # Mode classification:
+            # - "legacy" when the user explicitly disabled the feature (env
+            #   override=off). Callers should behave exactly as before —
+            #   useful for A/B baselines.
+            # - "commissioner" when demand genuinely warrants spreading; the
+            #   new code paths may use commissioner rotation instead of
+            #   legacy's 2-day cap.
+            mode = "legacy" if override == "off" else "commissioner"
+            return {
+                "mode": mode,
+                "family": label,
+                "demand": demand,
+                "required_days": required_days,
+                "preferred_days": [],
+                "commissioner_days": sorted(comm_days, key=self._day_clustering_sort_key),
+                "reason": (
+                    f"demand={demand} required_days={required_days} "
+                    f"override={override}"
+                ),
+            }
+
+        # Score candidate days by how much Sailing-pairing + same-family
+        # activity they already host. Tie-breaks prefer commissioner days
+        # and early-week bias so results stay stable across runs.
+        weekday_order = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]
+        early_week_bias = {d: i for i, d in enumerate(weekday_order)}
+
+        sailing_day_counts: Dict[Day, int] = defaultdict(int)
+        same_family_counts: Dict[Day, int] = defaultdict(int)
+        family_set = set(family_activities)
+        for entry in self.schedule.entries:
+            if entry.activity.name == "Sailing":
+                sailing_day_counts[entry.time_slot.day] += 1
+            if entry.activity.name in family_set:
+                same_family_counts[entry.time_slot.day] += 1
+
+        # Thursday has only 2 visible slots; treat it as a less-preferred
+        # consolidation target for 3-per-day capacity planning. Friday is
+        # always excluded (Reflection anchor). Callers may add more.
+        excluded: Set[Day] = {Day.FRIDAY}
+        if exclude_days:
+            excluded.update(exclude_days)
+
+        def day_score(day: Day) -> tuple:
+            # Higher tuple = better. Sort descending. The sailing signal
+            # is weighted so callers can dampen it (set to 0) when day
+            # choice should be driven purely by commissioner / early-week
+            # signals (e.g. staff areas where sailing-pairing is irrelevant).
+            sailing_term = sailing_day_counts[day] * max(0, sailing_signal_weight)
+            return (
+                sailing_term,
+                same_family_counts[day],
+                1 if day in comm_days else 0,
+                -early_week_bias[day],
+            )
+
+        ranked_days = sorted(
+            [d for d in weekday_order if d not in excluded],
+            key=day_score,
+            reverse=True,
+        )
+        preferred_days = ranked_days[:max_consolidated_days]
+
+        return {
+            "mode": "consolidated",
+            "family": label,
+            "demand": demand,
+            "required_days": required_days,
+            "preferred_days": preferred_days,
+            "commissioner_days": sorted(comm_days, key=self._day_clustering_sort_key),
+            "reason": (
+                f"demand={demand} fits in {required_days} day(s); "
+                f"consolidating onto {[d.value for d in preferred_days]} "
+                f"(override={override})"
+            ),
+        }
+
+    def _ensure_delta_sailing_family_policy(self) -> Optional[dict]:
+        """Create or return the durable Delta/Sailing family policy."""
+        existing = self._get_family_day_policy(family_name="Delta/Sailing")
+        if existing:
+            return existing
+
+        strategy = self._plan_cluster_activity_day_strategy("Delta")
+        metadata = {
+            "source_activity": "Delta",
+            "strategy_mode": strategy["mode"],
+            "reason": strategy["reason"],
+            "required_days": strategy["required_days"],
+            "demand": strategy["demand"],
+        }
+
+        if strategy["mode"] == "consolidated":
+            preferred_days = list(strategy["preferred_days"])
+            allowed_days = preferred_days + [
+                d for d in [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY]
+                if d not in preferred_days
+            ]
+            policy = self._set_family_day_policy(
+                "Delta/Sailing",
+                policy_type="pairing_first",
+                allowed_days=allowed_days,
+                preferred_days=preferred_days,
+                target_days=preferred_days,
+                protect_from_phase_d=True,
+                shared_staff_group="Commissioner/Boats",
+                metadata=metadata,
+            )
+        elif strategy["mode"] == "commissioner":
+            commissioner_days = list(strategy.get("commissioner_days") or [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY])
+            allowed_days = commissioner_days + [d for d in [Day.THURSDAY, Day.FRIDAY] if d not in commissioner_days]
+            policy = self._set_family_day_policy(
+                "Delta/Sailing",
+                policy_type="commissioner_rotation",
+                allowed_days=allowed_days,
+                preferred_days=commissioner_days,
+                target_days=commissioner_days[: max(1, min(strategy["required_days"], len(commissioner_days)))],
+                protect_from_phase_d=False,
+                shared_staff_group="Commissioner/Boats",
+                metadata=metadata,
+            )
+        else:
+            policy = self._set_family_day_policy(
+                "Delta/Sailing",
+                policy_type="legacy",
+                allowed_days=[Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY],
+                preferred_days=[],
+                target_days=[],
+                protect_from_phase_d=False,
+                shared_staff_group="Commissioner/Boats",
+                metadata=metadata,
+            )
+
+        self._delta_day_strategy = strategy
+        return policy
+
+
     def _schedule_delta_early(self):
         """Schedule Delta ONLY for troops that have it in their preferences.
 
         Delta is now treated like any other requested activity (no longer mandatory).
         It is scheduled based purely on preference rank with early week bias.
         PROMOTED PAIRING: Prefers days where Sailing is already scheduled (+15 bonus per Spine).
+        ADAPTIVE STRATEGY: When weekly Delta demand fits in <=2 days, disregards
+        commissioner rotation and consolidates onto Sailing-heavy days to improve
+        staff efficiency and Delta+Sailing pairing. See
+        ``_plan_cluster_activity_day_strategy``.
         """
         print("\n--- Scheduling Delta (by preference rank, early week bias, Sailing pairing) ---")
         delta = get_activity_by_name("Delta")
@@ -1873,6 +2139,15 @@ class LegacyPart03Mixin:
 
         print(f"  Troops requesting Delta (sorted by rank): {[(t.name, r+1) for t, r in troops_wanting_delta]}")
 
+        # Decide strategy once per run based on anticipated Delta count.
+        policy = self._ensure_delta_sailing_family_policy()
+        strategy = getattr(self, "_delta_day_strategy", None) or self._plan_cluster_activity_day_strategy("Delta")
+        print(
+            f"  [Delta Strategy] mode={strategy['mode']} — {strategy['reason']}"
+        )
+        # Cache on the scheduler so sibling Delta routines can reuse it.
+        self._delta_day_strategy = strategy
+
         scheduled_count = 0
         for troop, rank in troops_wanting_delta:
             if self.troop_has_delta.get(troop.name, False):
@@ -1885,12 +2160,30 @@ class LegacyPart03Mixin:
                     sailing_day = entry.time_slot.day
                     break
 
-            # Commissioner priority: assigned day -> fill days -> other commissioner days.
-            preferred_days = self._reorder_days_with_commissioner_priority(
-                [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY],
-                troop,
-                "Delta",
-            )
+            if policy and policy.get("preferred_days"):
+                base_order = list(policy.get("preferred_days") or [])
+                for d in policy.get("allowed_days") or [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]:
+                    if d not in base_order:
+                        base_order.append(d)
+                for d in [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]:
+                    if d not in base_order:
+                        base_order.append(d)
+                preferred_days = base_order
+            elif strategy["mode"] == "consolidated":
+                # Low-volume path: pile onto the 1-2 chosen days first, then
+                # fall through to other weekdays as safety net.
+                base_order = list(strategy["preferred_days"])
+                for d in [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]:
+                    if d not in base_order:
+                        base_order.append(d)
+                preferred_days = base_order
+            else:
+                # Commissioner priority: assigned day -> fill days -> other commissioner days.
+                preferred_days = self._reorder_days_with_commissioner_priority(
+                    [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY],
+                    troop,
+                    "Delta",
+                )
 
             # Keep promoted pairing, but never overtake first-priority commissioner day.
             if sailing_day and sailing_day in preferred_days and sailing_day != preferred_days[0]:
@@ -1921,7 +2214,12 @@ class LegacyPart03Mixin:
 
 
     def _schedule_delta_sailing_pairs(self):
-        """Schedule Delta + Sailing together on the same day when both are requested."""
+        """Schedule Delta + Sailing together on the same day when both are requested.
+
+        ADAPTIVE STRATEGY: When low-volume Delta consolidation is active, the
+        pair scheduler front-loads the consolidated day(s) so Delta and Sailing
+        land on the same day as the rest of the week's Deltas.
+        """
         from ...models import Day, TimeSlot
 
         print("\n--- Scheduling Delta + Sailing Pairs ---")
@@ -1936,6 +2234,18 @@ class LegacyPart03Mixin:
             if entry.activity.name == "Sailing":
                 sailing_day_counts[entry.time_slot.day] += 1
 
+        # If the early Delta pass has already decided on a consolidation plan,
+        # respect it so Delta+Sailing pairs don't seed a fresh Delta day.
+        policy = self._ensure_delta_sailing_family_policy()
+        strategy = getattr(self, "_delta_day_strategy", None)
+        if strategy is None:
+            # Phase A.7 runs before B.4 — compute the plan here too.
+            strategy = self._plan_cluster_activity_day_strategy("Delta")
+            self._delta_day_strategy = strategy
+            print(
+                f"  [Delta Strategy] mode={strategy['mode']} — {strategy['reason']}"
+            )
+
         scheduled = 0
         for troop in self.troops:
             if "Delta" not in troop.preferences or "Sailing" not in troop.preferences:
@@ -1943,17 +2253,32 @@ class LegacyPart03Mixin:
             if self._troop_has_activity(troop, delta) or self._troop_has_activity(troop, sailing):
                 continue
 
-            preferred_days = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY]
-            # Sort: days with exactly 1 sail first (to get to 2), then days with 0, then days with 2 (full)
-            def day_priority(day):
-                count = sailing_day_counts.get(day, 0)
-                if count == 1:
-                    return 0  # Highest priority - can get to 2
-                elif count == 0:
-                    return 1  # Medium priority - can start a new pair
-                else:
-                    return 2  # Lowest priority - already at max (2) or over
-            preferred_days.sort(key=day_priority)
+            if policy and policy.get("preferred_days"):
+                preferred_days = [
+                    d for d in (policy.get("preferred_days") or [])
+                    if d in (Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY)
+                ]
+                for d in (Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY):
+                    if d not in preferred_days and self._family_policy_allows_day("Delta", d, strict=False):
+                        preferred_days.append(d)
+            elif strategy["mode"] == "consolidated" and strategy["preferred_days"]:
+                preferred_days = [d for d in strategy["preferred_days"]
+                                  if d in (Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY)]
+                for d in (Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY):
+                    if d not in preferred_days:
+                        preferred_days.append(d)
+            else:
+                preferred_days = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY]
+                # Sort: days with exactly 1 sail first (to get to 2), then days with 0, then days with 2 (full)
+                def day_priority(day):
+                    count = sailing_day_counts.get(day, 0)
+                    if count == 1:
+                        return 0  # Highest priority - can get to 2
+                    elif count == 0:
+                        return 1  # Medium priority - can start a new pair
+                    else:
+                        return 2  # Lowest priority - already at max (2) or over
+                preferred_days.sort(key=day_priority)
 
             paired = False
             for day in preferred_days:
@@ -2209,11 +2534,34 @@ class LegacyPart03Mixin:
 
 
     def _schedule_super_troop(self):
-        """Schedule Super Troop for ALL troops with flexible day selection based on scoring."""
+        """Schedule Super Troop for all troops using the legacy commissioner-first path.
+
+        The adaptive planner is still wired in for measurement and experiments,
+        but baseline behavior keeps that consolidation path off by default after
+        broader A/B runs showed score regressions on small weeks.
+        """
         print("\n--- Scheduling Super Troop (flexible commissioner preference) ---")
         super_troop = get_activity_by_name("Super Troop")
         if not super_troop:
             return
+
+        # Super Troop adaptive consolidation is OFF by default: empirical A/B
+        # across 10 weeks showed -3.3pts vs legacy (it monopolizes Mon/Tue on
+        # small-troop weeks and starves Top-5 placements). Flip the env var
+        # ``CLUSTER_CONSOLIDATE_SUPER_TROOP=auto`` to re-enable for experiments.
+        strategy = self._plan_cluster_activity_day_strategy(
+            "Super Troop",
+            per_day_capacity=3,
+            max_consolidated_days=2,
+            demand_is_all_troops=True,
+            exclude_days={Day.THURSDAY},
+            sailing_signal_weight=0,
+            default_mode="off",
+        )
+        self._super_troop_day_strategy = strategy
+        print(
+            f"  [Super Troop Strategy] mode={strategy['mode']} — {strategy['reason']}"
+        )
 
         # Schedule all troops with intelligent day selection
         for troop in self.troops:
@@ -2263,20 +2611,33 @@ class LegacyPart03Mixin:
                 # Calculate score for this slot
                 score = 0
 
-                # Commissioner day ownership priority:
-                # assigned day -> fill/overflow -> other commissioner day.
-                if assigned_day and slot.day == assigned_day:
-                    score += 500
-                elif slot.day in fill_days:
-                    # Super Troop should avoid Friday unless absolutely necessary.
-                    if slot.day == Day.FRIDAY:
+                if strategy["mode"] == "consolidated" and strategy["preferred_days"]:
+                    # Adaptive consolidation: pile onto 1-2 chosen days for
+                    # small-troop weeks, disregarding commissioner rotation.
+                    preferred = strategy["preferred_days"]
+                    if slot.day == preferred[0]:
+                        score += 500
+                    elif len(preferred) > 1 and slot.day == preferred[1]:
+                        score += 400
+                    elif slot.day == Day.FRIDAY:
                         score -= 400
                     else:
-                        score += 200
-                elif slot.day in other_comm_days:
-                    score += 25
-                elif assigned_day:
-                    score -= 150
+                        score -= 150
+                else:
+                    # Commissioner day ownership priority:
+                    # assigned day -> fill/overflow -> other commissioner day.
+                    if assigned_day and slot.day == assigned_day:
+                        score += 500
+                    elif slot.day in fill_days:
+                        # Super Troop should avoid Friday unless absolutely necessary.
+                        if slot.day == Day.FRIDAY:
+                            score -= 400
+                        else:
+                            score += 200
+                    elif slot.day in other_comm_days:
+                        score += 25
+                    elif assigned_day:
+                        score -= 150
 
                 # HIGH PRIORITY: Distribute evenly (-100 per existing ST on this day)
                 st_count_this_day = sum(1 for e in self.schedule.entries 

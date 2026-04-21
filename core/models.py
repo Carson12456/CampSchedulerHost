@@ -212,8 +212,10 @@ class Schedule(BaseModel):
     def add_entry(self, time_slot: TimeSlot, activity: Activity, troop: Troop) -> bool:
         """Add entry for activity with atomic validation."""
         if not self.is_troop_free(time_slot, troop):
+            print(f"add_entry FAIL: Troop {troop.name} not free in {time_slot}")
             return False
         if not self.is_activity_available(time_slot, activity, troop):
+            print(f"add_entry FAIL: Activity {activity.name} not available in {time_slot}")
             return False
 
         effective_slots = self._get_effective_slots(activity, troop)
@@ -223,17 +225,21 @@ class Schedule(BaseModel):
         try:
             start_idx = all_slots.index(time_slot)
         except ValueError:
+            print(f"add_entry FAIL: time_slot not found in all_slots")
             return False # Slot not found?
 
         # Check continuations
         for offset in range(slots_needed):
             if start_idx + offset >= len(all_slots):
+                print(f"add_entry FAIL: offset {offset} out of bounds")
                 return False
             next_slot = all_slots[start_idx + offset]
             # Must be same day
             if next_slot.day != time_slot.day:
+                print(f"add_entry FAIL: next_slot {next_slot.day} != {time_slot.day}")
                 return False
             if not self.is_troop_free(next_slot, troop):
+                print(f"add_entry FAIL: Troop {troop.name} not free in next_slot {next_slot}")
                 return False
         
         # Add entries

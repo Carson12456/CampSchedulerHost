@@ -297,5 +297,10 @@ class ValidatorMixin:
     # EXCESS DAY CHECK
     # =========================================================================
     
-    def _would_create_excess_day(self, activity_name: str, day: Day) -> bool:
-        return would_create_excess_day_for_entries(self.schedule.entries, activity_name, day)
+    def _would_create_excess_day(self, activity_name: str, day: Day, troop=None) -> bool:
+        # Per-troop when `troop` supplied (BRAIN §6 metric); otherwise global diagnostic.
+        if troop is not None:
+            entries = [e for e in self.schedule.entries if e.troop == troop]
+        else:
+            entries = self.schedule.entries
+        return would_create_excess_day_for_entries(entries, activity_name, day)

@@ -358,7 +358,8 @@ class LegacyPart01Mixin:
                 delta -= 1.2
 
         # Efficiency: avoid excess area spread; reward filling true 1,-,3 gaps.
-        if self._would_create_excess_day(activity.name, slot.day):
+        # Per-troop check — the BRAIN excess-day metric is per-troop.
+        if self._would_create_excess_day(activity.name, slot.day, troop=troop):
             delta -= 4.5
         if opens_new_area_day:
             delta -= 1.1

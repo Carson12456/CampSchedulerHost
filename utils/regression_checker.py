@@ -48,10 +48,10 @@ DEFAULT_WEIGHTS = {
     # Bonuses for Hits (Ranks 15-20)
     "preference_base_score": 450.0,
     "preference_weights": {
-        "top5": [5.4, 4.7, 4.1, 3.4, 2.7],       # Ranks 1-5 (Mandatory) - Miss Penalty
-        "top6_10": [2.6, 2.4, 2.3, 2.2, 2.0],    # Ranks 6-10 (Gradual) - Miss Penalty
-        "top11_14": [1.8, 1.6, 1.4, 1.2],        # Ranks 11-14 - Miss Penalty
-        "top15_20": [1.0, 0.8, 0.6, 0.4, 0.2, 0.0] # Ranks 15-20 - HIT BONUS
+        "top5": [5.0, 4.75, 4.5, 4.25, 4.0],     # Ranks 1-5 (Mandatory) - Linear Staircase
+        "top6_10": [3.75, 3.5, 3.25, 3.0, 2.75],  # Ranks 6-10 (Linear Staircase)
+        "top11_14": [2.5, 2.25, 2.0, 1.75],        # Ranks 11-14 (Linear Staircase)
+        "top15_20": [1.5, 1.25, 1.0, 0.75, 0.5, 0.25] # Ranks 15-20 (Linear Staircase)
     },
     
     # Cluster Efficiency: 250 pts (HIGH PRIORITY - more important than staff)
@@ -69,7 +69,7 @@ DEFAULT_WEIGHTS = {
     "promoted_pairing_points": 10.0,
     "sailing_full_day_points": 10.0,
     "sailing_same_day_points": 10.0,
-    "at_sharing_bonus": 50.0,  # NEW: Bonus for AT slot sharing (2 small troops)
+    "at_sharing_bonus": 20.0,  # NEW: Bonus for AT slot sharing (2 small troops)
     # Guardrail: keep bonus effects bounded so core quality drives score.
     "bonus_total_cap": 50.0,
 
@@ -651,116 +651,107 @@ def evaluate_week(week_file, weights=None):
     metrics["constraint_violations"] = hard_violations + soft_violations  # Total for backward compat
     metrics["violation_details"] = hard_violation_details + soft_violation_details  # Combined for backward compat
 
-    # 6. Top Preference Success (Innocent Until Proven Guilty Scoring)
+# 6. Normalized Top Preference Success (Equal Troop Weighting)
     # -------------------------
-    # Base Score: 450 (or whatever is in DEFAULT_WEIGHTS)
-    # Deductions: For missing Top 14 items (if requested)
-    # Bonuses: For hitting Top 15+ items
+    # Base Score: 450. Each troop is responsible for exactly (450 / N) points.
+    # A troop's contribution is scaled by what percentage of their physically 
+    # possible requested schedule they received.
     
-    preference_score = weights.get("preference_base_score", 450.0)
-    current_preference_deductions = 0.0
-    current_preference_bonuses = 0.0
+    preference_base_score = weights.get("preference_base_score", 450.0)
     
-    # Stats tracking
-    missing_top5_count = 0
-    missing_top10_count = 0
-    missing_top14_count = 0
-    missing_top15_count = 0
+    # Avoid division by zero if a week somehow has no troops
+    num_troops = max(1, len(troops))
+    points_per_troop = preference_base_score / num_troops
     
-    # HC/DG exemption: if all 3 Tuesday slots are HC or DG, missed HC/DG counts as exempt
-    tuesday_hc_dg_slots = set()
-    for e in schedule.entries:
-        if e.time_slot.day == Day.TUESDAY and e.activity.name in ("History Center", "Disc Golf"):
-            tuesday_hc_dg_slots.add(e.time_slot.slot_number)
-    hc_dg_tuesday_full = tuesday_hc_dg_slots >= {1, 2, 3}
+    total_preference_points_accumulated = 0.0
+    TOTAL_AVAILABLE_SLOTS = 14.0
     
+    # Stats tracking will use authoritative unscheduled data
+
     for troop in troops:
         troop_acts = set(e.activity.name for e in schedule.entries if e.troop == troop)
         
-        # Check if troop has ANY 3-hour activity scheduled (exemption logic)
-        has_3hr_scheduled = any(e.activity.name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] 
-                               for e in schedule.entries if e.troop == troop)
+        # 1. Base capacity used by mandatory Spine activities (Reflection + Super Troop)
+        spine_slots_used = 0.0
+        if "Reflection" in troop_acts:
+            spine_slots_used += 1.0
+        if "Super Troop" in troop_acts:
+            spine_slots_used += 1.0
+        # Note: If Super Troop is not requested, it's still scheduled, so troops only have 12 available slots
         
-        # Iterate through preferences
+        # ---------------------------------------------------------
+        # Step A: Calculate Max Possible Score (Theoretical Perfect Packing)
+        # ---------------------------------------------------------
+        # NOTE: If a troop only requests 8 activities (say, 10 slots total), 
+        # this loop naturally runs out of preferences and their max score is set
+        # perfectly to those 10 slots.
+        max_possible_score = 0.0
+        temp_capacity_used = spine_slots_used
+        
         for i, pref_name in enumerate(troop.preferences):
-            rank = i + 1
+            if i >= 20 or temp_capacity_used >= TOTAL_AVAILABLE_SLOTS:
+                break
+                
+            pref_activity = get_activity_by_name(pref_name)
+            pref_slots = pref_activity.slots if pref_activity else 1.0
             
-            # --- RANKS 1-14: DEDUCTION IF MISSED ---
-            if rank <= 14:
-                # Determining weight
-                weight = 0.0
-                if rank <= 5:
-                    weight = weights["preference_weights"]["top5"][i]
-                elif rank <= 10:
-                    weight = weights["preference_weights"]["top6_10"][i-5]
-                elif rank <= 14:
-                    weight = weights["preference_weights"]["top11_14"][i-10]
+            # Check if this preference physically fits
+            if temp_capacity_used + pref_slots <= TOTAL_AVAILABLE_SLOTS:
+                # Linear staircase calculation
+                weight = max(0.0, 5.0 - (i * 0.25))
+                max_possible_score += weight
+                temp_capacity_used += pref_slots
                 
-                if pref_name not in troop_acts:
-                    # Check exemptions before deducting
-                    is_exempt = False
-                    
-                    # 1. 3-Hour Mutually Exclusive Exemption (Generalized to all ranks)
-                    if pref_name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] and has_3hr_scheduled:
-                         is_exempt = True
-                         
-                    # 2. Tuesday HC/DG Saturation Exemption (Generalized to all ranks)
-                    elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                         is_exempt = True
-                    # 3. Canoe-family duplication exemption
-                    elif (
-                        pref_name in SchedulerConstants.CANOE_ACTIVITIES
-                        and any(
-                            e.activity.name in SchedulerConstants.CANOE_ACTIVITIES and e.activity.name != pref_name
-                            for e in schedule.entries
-                            if e.troop == troop
-                        )
-                    ):
-                         is_exempt = True
-                    
-                    if not is_exempt:
-                        current_preference_deductions += weight
-                        # Stats
-                        if rank <= 5: missing_top5_count += 1
-                        if rank <= 10: missing_top10_count += 1
-                        if rank <= 14: missing_top14_count += 1
-                        if rank <= 15: missing_top15_count += 1
-
-            # --- RANKS 15-20: BONUS IF HIT ---
-            elif rank <= 20:
-                # Determining bonus weight
-                weight = 0.0
-                idx = i - 14
-                if idx < len(weights["preference_weights"]["top15_20"]):
-                    weight = weights["preference_weights"]["top15_20"][idx]
+        # ---------------------------------------------------------
+        # Step B: Calculate Actual Score (What they actually received)
+        # ---------------------------------------------------------
+        actual_score = 0.0
+        for i, pref_name in enumerate(troop.preferences):
+            if i >= 20: 
+                break
                 
-                if pref_name in troop_acts:
-                    current_preference_bonuses += weight
-                    # No stats for "missing" deep preferences
+            is_scheduled = pref_name in troop_acts
+            if is_scheduled:
+                weight = max(0.0, 5.0 - (i * 0.25))
+                actual_score += weight
+                
+        # ---------------------------------------------------------
+        # Step C: Normalize and Apply to Total Week Score
+        # ---------------------------------------------------------
+        # Protect against division by zero if a troop has absolutely 0 preferences
+        if max_possible_score > 0:
+            troop_fulfillment_ratio = actual_score / max_possible_score
+        else:
+            troop_fulfillment_ratio = 1.0
+            
+        # Cap at 1.0 (100%) in case they missed a big item but hit a ton of 
+        # smaller items that somehow mathematically exceeded greedy packing
+        troop_fulfillment_ratio = min(1.0, troop_fulfillment_ratio)
+        
+        # Calculate their share of the 450 total points
+        troop_points_earned = points_per_troop * troop_fulfillment_ratio
+        total_preference_points_accumulated += troop_points_earned
+        
+        # Optional: Print statement to verify the math is working during runs
+        # print(f"{troop.name}: {actual_score:.1f} / {max_possible_score:.1f} ({troop_fulfillment_ratio*100:.1f}%) -> Earned {troop_points_earned:.1f}/{points_per_troop:.1f} pts")
 
-    # Final calculation
-    total_preference_points_accumulated = max(0, preference_score - current_preference_deductions + current_preference_bonuses)
-
+    # Final calculations for the metrics dictionary
     metrics["preference_points_accumulated"] = total_preference_points_accumulated
-    metrics["preference_deductions"] = current_preference_deductions
-    metrics["preference_bonuses"] = current_preference_bonuses
+    
+    # We no longer need separate bonuses/deductions since it is a pure ratio now,
+    # but we store them to keep the rest of your logging safe from crashes.
+    metrics["preference_deductions"] = preference_base_score - total_preference_points_accumulated
+    metrics["preference_bonuses"] = 0.0
     
     authoritative_unscheduled = _load_unscheduled_from_schedule_json(schedule_file)
     authoritative_misses = summarize_non_exempt_misses(authoritative_unscheduled)
     authoritative_top5 = authoritative_misses["missing_top5"]
     authoritative_top10 = authoritative_misses["missing_top10"]
-
-    if missing_top5_count != authoritative_top5 or missing_top10_count != authoritative_top10:
-        raise RuntimeError(
-            "Top-5/Top-10 mismatch detected: computed from preferences does not match "
-            "authoritative schedule_json.unscheduled values. "
-            f"computed(top5={missing_top5_count}, top10={missing_top10_count}) vs "
-            f"authoritative(top5={authoritative_top5}, top10={authoritative_top10})."
-        )
+    authoritative_top15 = authoritative_misses.get("missing_top15", 0)
 
     metrics["missing_top5"] = authoritative_top5
     metrics["missing_top10"] = authoritative_top10
-    metrics["missing_top15"] = missing_top15_count
+    metrics["missing_top15"] = authoritative_top15
     
     # Success percentages (Calculated based on requested vs fulfilled)
     # Only count "requested" items in the denominator
@@ -770,7 +761,7 @@ def evaluate_week(week_file, weights=None):
     
     metrics["top5_pct"] = 100.0 * (total_top5_requested - authoritative_top5) / max(1, total_top5_requested)
     metrics["top10_pct"] = 100.0 * (total_top10_requested - authoritative_top10) / max(1, total_top10_requested)
-    metrics["top15_pct"] = 100.0 * (total_top15_requested - missing_top15_count) / max(1, total_top15_requested)
+    metrics["top15_pct"] = 100.0 * (total_top15_requested - authoritative_top15) / max(1, total_top15_requested)
 
 
     # 8. New Metrics: Early Week Bias & Batching

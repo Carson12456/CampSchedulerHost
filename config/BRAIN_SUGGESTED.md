@@ -3,8 +3,8 @@
 
 | Metadata | Details |
 | :--- | :--- |
-| **Version** | 2.4.2 |
-| **Last Updated** | 2026-04-20 |
+| **Version** | 2.4.1 |
+| **Last Updated** | 2026-03-04 |
 
 This document defines the overarching "Laws of Physics" for the scheduling engine, dictating constraints, rotation logic, scoring systems, and phase behavior.
 
@@ -80,9 +80,6 @@ If a scheduling conflict arises, **pairing integrity** is prioritized over stric
 | **Rifle / Super Troop** | Wednesday | Thursday | Monday |
 | **Archery / Boats** | Thursday | Monday | Tuesday |
 
-> [!NOTE]
-> Current baseline behavior keeps the durable family-day policy envelope only for `Delta/Sailing`. `Tower/ODS`, `Rifle`, and `Super Troop` still use their legacy / commissioner-first placement shape by default unless explicitly re-enabled for A/B testing.
-
 ---
 
 ## ⚖️ 4. Constraint Dictionary
@@ -142,19 +139,19 @@ The `ConstrainedScheduler` executes from Phase A to Phase D. Every phase include
 **Goal:** Place mandatory anchors, then multi-slot structures (Rocks) before smaller items (Sand). Aggressively protect heavily-contested Top-5 resources before fragmentation occurs. All multi-slot constraints (3-hour, 2-hour, Sailing, Delta) are grouped here.
 
 *   **A.1: Friday Reflection** — Mandatory anchor. Reserves Friday slots first.
-*   **A.2: Super Troop** — Mandatory weekly placement for all troops. Baseline remains commissioner-first; adaptive consolidation is experimental and off by default.
 *   **A.3: HC/DG Tuesday** — Mandatory anchor. Tuesday is the only allowed day.
 *   **A.4: 3-Hour Activities (Rocks)** — Full-day blocks. Biggest contiguous constraint — placed before any single-slot activities to prevent fragmentation.
 *   **A.5: Top-10 2-Hour Activities (Rocks)** — Consecutive multi-slot requirements. Second-largest constraint.
 *   **A.6: Sailing Optimization** — 2-slot (90-min) capacity, high priority. Runs after Rocks to avoid fragmenting day blocks.
-*   **A.7: Delta + Sailing Pairing** — Pairs synchronized activities onto the same geographical day and seeds the retained durable `Delta/Sailing` family-day envelope.
-*   **A.8: Early Sailing Top 10** — Multi-slot structural placement for lower-rank Sailing requests.
-*   **A.9: Consolidate Sailing** — Clusters Sailing groups to 2 per day.
-*   **A.10: Early Aqua Trampoline (Top 5)** — Protects scarce beach slots for Top 5 requesters.
-*   **A.11: Guarantee Top 1 Beach** — Prevents missed Top-1 beach preferences.
-*   **A.12: Early Staff Area Clustering** — Pre-schedules Tower, ODS, and Rifle for setup efficiency using legacy day-shape behavior by default; broader staffed-family durable policy rollout is experimental only.
+*   **A.7: Delta + Sailing Pairing** — Checks for if each troop that has Sailing wants a Delta, and if they do, they are paired together on the same day.
+*   **A.2: Super Troop** — Mandatory weekly placement for all troops.
+*   **CUT, WHY NEEDED: A.8: Early Sailing Top 10** — Multi-slot structural placement for lower-rank Sailing requests.
+*   **CUT, WHY DO THIS?: A.9: Consolidate Sailing** — Clusters Sailing groups to 2 per day.
+*   **REMOVE, THIS IS JUST PROBLEMATIC: A.10: Early Aqua Trampoline (Top 5)** — Protects scarce beach slots for Top 5 requesters.
+*   **REMOVE, THIS IS JUST PROBLEMATIC: A.11: Guarantee Top 1 Beach** — Prevents missed Top-1 beach preferences.
+*   **A.12: Early Staff Area Clustering** — Pre-schedules Tower, ODS, and Rifle for setup efficiency.
 *   **A.13: Priority Limited Activities** — Targets Global Rank 0-4 constrained activities.
-*   **A.14: Sailing Pairs for Same-Day Bonus** — Syncs overlapping Sailing sessions.
+*   **CUT, WHY NEEDED: A.14: Sailing Pairs for Same-Day Bonus** — Syncs overlapping Sailing sessions.
 *   **Exit Gate A:** Immediate gap repair if a troop is missing placements for available slots.
 
 ### Phase B: Core Requests (The Meat)
@@ -163,25 +160,25 @@ The `ConstrainedScheduler` executes from Phase A to Phase D. Every phase include
 *   **B.1: Top 1 First / Force Top 1 / Top 2-5** — Secures primary rank preferences hierarchically.
 *   **B.2: Guarantee 100% Top 5** — Recovery loops to ensure Top 5 satisfaction.
 *   **B.3: Mandatory Top 5 Enforcement** — Strict compliance check.
-*   **B.4: Delta Scheduling** — Books requested Delta (non-mandatory placements) inside the same retained `Delta/Sailing` family-day envelope chosen earlier in Phase A.
+*   **CUT, WHY DO THIS? B.4: Delta Scheduling** — Books requested Delta (non-mandatory placements).
 *   **B.5: Commissioner Busy Map** — Diagnostic/tracking generation.
-*   **B.6: Enforce Delta + Sailing Pairing** — Day alignment check after Delta is placed, while preserving the retained `Delta/Sailing` family-day policy across early and late passes.
+*   **CUT, THIS IS PHASE A: B.6: Enforce Delta + Sailing Pairing** — Day alignment check after Delta is placed.
 *   **Exit Gate B:** Immediate gap check and repair.
-*   **B.7: Aqua Trampoline Sharing** — Consolidated single pass for Top 5 capacity sharing (no longer duplicated across phases).
+*   **RELOCATE TO SOMEWHERE SMARTER, MAYBE PART OF INITIAL PLACEMENT IN A:B.7: Aqua Trampoline Sharing** — Consolidated single pass for Top 5 capacity sharing (no longer duplicated across phases).
 
 ### Phase C: Remaining & Optimization
 **Goal:** Accommodate lower-tier preferences (6-20), protect the Top-10 baseline, and achieve a 100% filled schedule.
 
-*   **C.1: Day Specific Requests** — Overrides placement logic based on day hints.
-*   **C.2: Staff Optimization** — Clusters consecutive activities to lower staff teardown footprint, but baseline optimization does not enforce broader Tower/ODS or Rifle family-day policies.
+*   **RELOCATE TO START OF PHASE A: C.1: Day Specific Requests** — Overrides placement logic based on day hints.
+*   **C.2: Staff Optimization** — Clusters consecutive activities for lower staff teardown footprint.
 *   **C.3: Remaining Preferences (6-20)** — Places general requests.
-*   **C.4: Guarantee Minimum Top 10** — Assures each troop gets 2-3 Top 10 requests.
-*   **C.5: Guarantee Top 10 with Exceptions** — Reconciles lingering valuable requests.
-*   **C.6: Fill All Remaining Slots** — Fills available empty slots via Fill Priority Algorithm. Schedules balls activities during Sailing windows.
+*   **C.4: Guarantee Minimum Top 10** — Assures each troop gets 3-4 Top 10 requests.
+*   **WHY C.4 AND C.5, COMBINE: C.5: Guarantee Top 10 with Exceptions** — Reconciles lingering valuable requests.
+*   **FOCUS MORE ON ReQUESTED ACTIVITIES FIRST: C.6: Fill All Remaining Slots** — Fills available empty slots via Fill Priority Algorithm. Schedules balls activities during Sailing windows.
 *   **Exit Gate C:** Safety checks for Top 5 integrity. Ensure schedule is 100% populated.
 
 ### Phase D: Final Polish (The Shield — Strict Swap Phase)
-**Goal:** Execute localized swaps to resolve cluster gaps, reduce day variance, and optimize commissioner ownership. The schedule is 100% full entering Phase D — all optimization steps are wrapped in Top-5/Top-10 safety harnesses and will roll back if they degrade preference placements. No interleaved gap-fix calls; a single final cleanup pass handles residual gaps. Baseline Phase D respects the retained `Delta/Sailing` envelope but does not treat broader staffed-family durable policies as authoritative.
+**Goal:** Execute localized swaps to resolve cluster gaps, reduce day variance, and optimize commissioner ownership. The schedule is 100% full entering Phase D — all optimization steps are wrapped in Top-5/Top-10 safety harnesses and will roll back if they degrade preference placements. No interleaved gap-fix calls; a single final cleanup pass handles residual gaps.
 
 *   **D.1: Friday Reflection Optimization** — Swaps Reflection slots for improved clustering.
 *   **D.2: Comprehensive Clustering & Smart Swaps** — Cross-slot smart trades (guarded).
@@ -191,7 +188,7 @@ The `ConstrainedScheduler` executes from Phase A to Phase D. Every phase include
 *   **D.6: Flexible Reflection Optimization** — Maneuvers floating Reflections.
 *   **D.7: Commissioner Load Balancing** — Evens geographic load.
 *   **D.8: Setup Efficiency & Activity Clustering** — Smooths wet/dry transitions (guarded).
-*   **D.9: Outlier Activity & Commissioner Day Ownership** — Tweaks rogue placements and day ownership (guarded), while honoring any protected `Delta/Sailing` family envelope.
+*   **D.9: Outlier Activity & Commissioner Day Ownership** — Tweaks rogue placements and day ownership (guarded).
 *   **D.10: Post-Fill Cluster Gap Optimization** — Closes 1-0-1 area-level pattern gaps.
 *   **D.11: Comprehensive Final Cleanup** — Single gap-fill point for Phase D. Multi-layer validation, dedup, mandatory activity guarantee, gap filling.
 *   **Exit Gate D (Acceptance Gate):** Multi-slot integrity check + final comprehensive validation. Gate checks `non_exempt_top5_misses == 0`.
@@ -231,7 +228,6 @@ While optimization scoring is important, the **Top 5 non-exempt success rule rem
 * **Reflection Placement Detail:** Reflection scheduling uses Friday slot strategy plus smart-lock behavior when exactly one Friday slot remains.
 * **Top-10 Stability Layers:** In addition to Top-5 hard contract, implementation includes minimum Top-10 and Top-10 recovery passes as optimization safeguards.
 * **Delta Displacement Rule:** `Delta` is requested-but-not-mandatory and is treated as a regular displaceable preference in late optimization/recovery passes when hard constraints and Top-5 guarantees remain intact.
-* **Adaptive Day-Strategy Scope:** The durable family-day policy framework is retained only for `Delta/Sailing` in the default baseline. Wider staffed-family experiments must re-earn inclusion via fresh A/B regression wins.
 
 ### Scoring Exemptions (Deep Dive)
 * **Multi-Slot Consumption:** No penalty is applied for missing lower-ranked activities (e.g., Rank 14) if higher-ranked multi-slot activities (like Sailing) physically consumed all available time.
@@ -258,26 +254,3 @@ All official evaluations must be run as a fresh cycle so old artifacts cannot co
 ### Reporting Rule
 All authoritative Top 5/Top 10/etc miss metrics in the final report must come from `schedule_json.unscheduled`.
 Implementation note: scoring internals may compute provisional preference deltas, but Top-5/Top-10 reported values are cross-checked against and sourced from `unscheduled`.
-
----
-
-## 📝 9. Attempted Family-Day Strategy Rollout
-
-The scheduler recently tested a broader durable family-day policy framework that extended adaptive day selection beyond `Delta/Sailing` to additional staffed families.
-
-### What Was Attempted
-* Added persistent family-day policy state so early day-shape decisions could survive later optimization phases.
-* Extended adaptive / family-policy logic to `Tower/ODS`, `Rifle`, and evaluation-time quality acceptance.
-* Measured the rollout with fresh full-regression runs across the 10-week evaluation set.
-
-### Result
-* The broader rollout regressed the official score, especially on smaller and Voyageur-heavy weeks.
-* Main failure modes observed:
-  * increased excess cluster days and area gaps,
-  * staff-family day stacking on constrained days,
-  * late-phase optimization pressure drifting away from the legacy score shape.
-
-### Current Guidance
-* Keep the durable family-day policy framework only where it has the clearest value: `Delta/Sailing`.
-* Default `Tower/ODS`, `Rifle`, and `Super Troop` back to legacy / effectively-off adaptive behavior unless a fresh A/B run proves a specific family change is net-positive.
-* Treat broader staffed-family adaptive rollout as experimental, not baseline policy.

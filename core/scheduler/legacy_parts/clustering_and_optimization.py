@@ -1246,9 +1246,12 @@ class LegacyPart06Mixin:
                             fill_activities = ['Gaga Ball', '9 Square', 'Fishing', 'Shower House', 
                                               'Trading Post', 'Campsite Free Time'] + fill_activities
 
-                        # Score candidates to find BEST fill, not just first valid
+                        # Score candidates to find BEST fill, not just first valid.
+                        # Floor at -1000 rejects Pass 1 picks that were disqualified
+                        # (e.g., unrequested staffed activity that would create an
+                        # excess cluster day); those drop to Pass 2's harmless fills.
                         best_fill = None
-                        best_score = -999
+                        best_score = -1000
 
                         # PASS 1: Try activities troop doesn't already have
                         # CLUSTERING-AWARE PREFERENCE PRIORITY
@@ -1271,7 +1274,7 @@ class LegacyPart06Mixin:
                                 # Check clustering impact for lower-priority preferences
                                 would_create_excess = False
                                 if pref_rank >= 11:  # Top 11+ check clustering
-                                    would_create_excess = self._would_create_excess_day(activity_name, day)
+                                    would_create_excess = self._would_create_excess_day(activity_name, day, troop=troop)
 
                                 # Massive bonus inversely proportional to rank
                                 # Top 5-10: Always prioritize (even if slight excess)
@@ -1332,17 +1335,25 @@ class LegacyPart06Mixin:
                                     if day_area_count > 0:
                                         score += day_area_count * 20  # HUGE Bonus for clustering (consolidate)
                                     else:
-                                        # New area for this day - PENALIZE to avoid excess days
-                                        # This is especially important for unstaffed fills that troops didn't request
+                                        # New area for this day - PENALIZE to avoid excess days.
+                                        # Per BRAIN, clustering is a soft constraint, but an
+                                        # UNREQUESTED staff activity that creates an excess
+                                        # cluster day for this troop is strictly worse than a
+                                        # harmless unstaffed fill, since it burns a staff area
+                                        # AND inflates the troop's day spread. Hard-block via
+                                        # a disqualifying negative so Pass 1 only picks it when
+                                        # no other option exists.
+                                        creates_excess_for_troop = self._would_create_excess_day(activity_name, day, troop=troop)
                                         if not is_requested and is_staff_activity:
-                                            score -= 100  # Heavy penalty for unrequested staff activities creating excess days
+                                            if creates_excess_for_troop:
+                                                score -= 5000  # Disqualifying: never pick over unstaffed fill
+                                            else:
+                                                score -= 100
                                         else:
-                                            score -= 30  # Moderate penalty
+                                            score -= 30  # Moderate penalty for requested new-area
+                                            if creates_excess_for_troop:
+                                                score -= 50  # Additional penalty for excess
                                         is_cluster_consistent = False
-
-                                        # Check if this would create an excess day
-                                        if self._would_create_excess_day(activity_name, day):
-                                            score -= 50  # Additional penalty for creating excess day
                                     break
 
                             # MODERATE MODE: Heavily penalize but don't completely block unrequested staff activities
@@ -1365,38 +1376,65 @@ class LegacyPart06Mixin:
                                 filled = True
 
                         # PASS 2: If nothing worked, allow duplicates (better than gaps!)
+                        # Two sub-passes: first try fills that do NOT create a new
+                        # excess cluster day for this troop, then fall through to
+                        # ones that do. This ensures we never pick a staffed fill
+                        # that immediately inflates the troop's day spread when a
+                        # harmless alternative exists.
                         if not filled:
-                            for activity_name in fill_activities:
-                                activity = get_activity_by_name(activity_name)
-                                if activity and self._can_schedule(troop, activity, slot, day):
+                            for allow_excess in (False, True):
+                                if filled:
+                                    break
+                                for activity_name in fill_activities:
+                                    activity = get_activity_by_name(activity_name)
+                                    if not activity or not self._can_schedule(troop, activity, slot, day):
+                                        continue
+                                    if not allow_excess and self._would_create_excess_day(activity_name, day, troop=troop):
+                                        continue
                                     if self.schedule.add_entry(slot, activity, troop):
                                         troop_activities.add(activity_name)
-                                        print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity_name} [DUPLICATE]")
+                                        tag = "[DUPLICATE]" if not allow_excess else "[DUPLICATE-EXCESS]"
+                                        print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity_name} {tag}")
                                         filled = True
                                         break
 
-                        # PASS 3: Last resort - try ANY activity from the full list
+                        # PASS 3: Last resort - try ANY activity from the full list.
+                        # Same two-sub-pass excess-aware ordering.
                         if not filled:
-                            for activity in self.activities:
-                                if activity.name in ['Delta', 'Super Troop', 'Reflection']:
-                                    continue  # Skip mandatory/special activities
-                                if self._can_schedule(troop, activity, slot, day):
+                            for allow_excess in (False, True):
+                                if filled:
+                                    break
+                                for activity in self.activities:
+                                    if activity.name in ['Delta', 'Super Troop', 'Reflection']:
+                                        continue  # Skip mandatory/special activities
+                                    if not self._can_schedule(troop, activity, slot, day):
+                                        continue
+                                    if not allow_excess and self._would_create_excess_day(activity.name, day, troop=troop):
+                                        continue
                                     if self.schedule.add_entry(slot, activity, troop):
                                         troop_activities.add(activity.name)
-                                        print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity.name} [LAST RESORT]")
+                                        tag = "[LAST RESORT]" if not allow_excess else "[LAST RESORT-EXCESS]"
+                                        print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity.name} {tag}")
                                         filled = True
                                         break
 
                         # PASS 4: ABSOLUTE LAST RESORT - relax constraints (NO GAPS ALLOWED!)
+                        # Still prefer non-excess activities even when soft constraints relaxed.
                         if not filled:
-                            for activity in self.activities:
-                                if activity.name in ['Delta', 'Super Troop', 'Reflection']:
-                                    continue
-                                # Try with relaxed constraints
-                                if self._can_schedule(troop, activity, slot, day, relax_constraints=True):
+                            for allow_excess in (False, True):
+                                if filled:
+                                    break
+                                for activity in self.activities:
+                                    if activity.name in ['Delta', 'Super Troop', 'Reflection']:
+                                        continue
+                                    if not self._can_schedule(troop, activity, slot, day, relax_constraints=True):
+                                        continue
+                                    if not allow_excess and self._would_create_excess_day(activity.name, day, troop=troop):
+                                        continue
                                     if self.schedule.add_entry(slot, activity, troop):
                                         troop_activities.add(activity.name)
-                                        print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity.name} [RELAXED CONSTRAINTS]")
+                                        tag = "[RELAXED CONSTRAINTS]" if not allow_excess else "[RELAXED-EXCESS]"
+                                        print(f"  Filled {troop.name} @ {day.name} slot {slot_num} with {activity.name} {tag}")
                                         filled = True
                                         break
 
@@ -2266,6 +2304,12 @@ class LegacyPart06Mixin:
 
                             if not target_time_slot:
                                 continue
+                            if not self._family_policy_allows_day(
+                                source_entry.activity.name,
+                                target_day,
+                                strict=True,
+                            ):
+                                continue
 
                             # Check troop free, activity available, AND full constraint check
                             # (avoid creating violations that could cascade to Top 5 issues)
@@ -2362,6 +2406,10 @@ class LegacyPart06Mixin:
                     if i >= j:  # Avoid duplicates and self-swaps
                         continue
                     if entry1.troop == entry2.troop:  # Same troop, skip
+                        continue
+                    if not self._family_policy_allows_day(entry1.activity.name, entry2.time_slot.day, strict=True):
+                        continue
+                    if not self._family_policy_allows_day(entry2.activity.name, entry1.time_slot.day, strict=True):
                         continue
 
                     day1 = entry1.time_slot.day

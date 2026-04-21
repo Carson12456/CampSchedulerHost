@@ -317,8 +317,121 @@ def get_evaluation(week_id):
                     + score_components.get('at_sharing_bonus', 0)
                 ),
             },
+            'hard_violation_details': metrics.get('hard_violation_details', []),
+            'soft_violation_details': metrics.get('soft_violation_details', []),
         })
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/troop_scoring/<week_id>')
+def get_troop_scoring(week_id):
+    """Return detailed troop scoring for a week showing each troop's score out of possible activities."""
+    if week_id not in WEEK_METADATA:
+        return jsonify({'error': 'Week not found'}), 404
+        
+    try:
+        from core.io_handler import load_schedule_from_json
+        from core.activities import get_activity_by_name, get_all_activities
+        
+        meta = WEEK_METADATA[week_id]
+        troops_file = meta['file']
+        schedule_file = meta.get('schedule_file', SCHEDULES_DIR / f"{week_id}_schedule.json")
+        
+        # Load data
+        troops = load_troops_from_json(troops_file)
+        all_activities = get_all_activities()
+        schedule = load_schedule_from_json(schedule_file, troops, all_activities)
+        
+        TOTAL_AVAILABLE_SLOTS = 14.0
+        troop_scoring = []
+        
+        for troop in troops:
+            troop_acts = set(e.activity.name for e in schedule.entries if e.troop == troop)
+            
+            # 1. Base capacity used by mandatory spine activities (Reflection + Super Troop)
+            spine_slots_used = 0.0
+            if "Reflection" in troop_acts:
+                spine_slots_used += 1.0
+            if "Super Troop" in troop_acts:
+                spine_slots_used += 1.0
+            # Note: If Super Troop is not requested, it's still scheduled, so troops only have 12 available slots
+                
+            # ---------------------------------------------------------
+            # Part A: Calculate Actual Score (What they actually got)
+            # ---------------------------------------------------------
+            troop_score_hits = 0.0
+            preferences_scheduled = 0
+            
+            for i, pref_name in enumerate(troop.preferences):
+                if i >= 20: break  # Only score top 20
+                
+                if pref_name in troop_acts:
+                    # Check if this preference actually fits in available capacity
+                    pref_activity = get_activity_by_name(pref_name)
+                    pref_slots = schedule._get_effective_slots(pref_activity, troop) if pref_activity else 1.0
+                    
+                    # Only count if activity physically fits in remaining capacity
+                    # This mirrors the logic in Part B for max possible score
+                    temp_capacity_used = spine_slots_used
+                    for j, check_pref_name in enumerate(troop.preferences[:i]):  # Check higher preferences
+                        if j >= 20: break
+                        check_activity = get_activity_by_name(check_pref_name)
+                        check_slots = schedule._get_effective_slots(check_activity, troop) if check_activity else 1.0
+                        if temp_capacity_used + check_slots <= TOTAL_AVAILABLE_SLOTS and check_pref_name in troop_acts:
+                            temp_capacity_used += check_slots
+                    
+                    if temp_capacity_used + pref_slots <= TOTAL_AVAILABLE_SLOTS:
+                        # Continuous linear staircase: Rank 1 = 5.0, Rank 20 = 0.25
+                        weight = max(0.0, 5.0 - (i * 0.25))
+                        troop_score_hits += weight
+                        preferences_scheduled += 1
+
+            # ---------------------------------------------------------
+            # Part B: Calculate Max Possible Score (Theoretical Perfect Packing)
+            # ---------------------------------------------------------
+            max_possible_score = 0.0
+            temp_capacity_used = spine_slots_used
+            max_activities_fit = 0
+            
+            for i, pref_name in enumerate(troop.preferences):
+                if i >= 20 or temp_capacity_used >= TOTAL_AVAILABLE_SLOTS:
+                    break
+                    
+                # Look up how many physical slots this preference requires (use dynamic calculation)
+                pref_activity = get_activity_by_name(pref_name)
+                pref_slots = schedule._get_effective_slots(pref_activity, troop) if pref_activity else 1.0
+                
+                # Check if this preference physically fits in the remaining slots
+                if temp_capacity_used + pref_slots <= TOTAL_AVAILABLE_SLOTS:
+                    weight = max(0.0, 5.0 - (i * 0.25))
+                    max_possible_score += weight
+                    temp_capacity_used += pref_slots
+                    max_activities_fit += 1
+            
+            # Calculate available slots (14 total minus mandatory spine activities)
+            available_slots = TOTAL_AVAILABLE_SLOTS - (1.0 if "Reflection" in troop_acts else 0.0) - (1.0 if "Super Troop" in troop_acts else 0.0)
+            
+            # Append payload
+            troop_scoring.append({
+                'name': troop.name,
+                'score': round(troop_score_hits, 1),
+                'max_possible': round(max_possible_score, 1),
+                'available_slots': available_slots,
+                'activities_fit': max_activities_fit, # Fix: Now returns count of activities, not slot count
+                'scheduled_prefs': preferences_scheduled
+            })
+        
+        # Sort by score percentage (highest first)
+        troop_scoring.sort(key=lambda x: x['score'] / max(x['max_possible'], 1), reverse=True)
+        
+        return jsonify({
+            'troops': troop_scoring,
+            'week_name': meta['week_number']
+        })
+        
+    except Exception as e:
+        print(f"Error getting troop scoring for {week_id}: {e}")
         return jsonify({'error': str(e)}), 500
 
 
