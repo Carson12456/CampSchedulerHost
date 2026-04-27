@@ -43,13 +43,20 @@ def regenerate_all():
             # Generate schedule
             scheduler = ConstrainedScheduler(troops, all_activities, voyageur_mode=voyageur_mode)
             schedule = scheduler.schedule_all()
+            sailing_half_fills = getattr(scheduler, 'sailing_balls_fills', {}) or {}
             
             # Authoritative unscheduled payload for all Top-5/Top-10 miss reporting.
-            unscheduled_data = build_unscheduled_data(scheduler.troops, schedule)
+            unscheduled_data = build_unscheduled_data(scheduler.troops, schedule, sailing_half_fills)
             
             # Save
             output_file = schedules_dir / f"{week_name}_schedule.json"
-            save_schedule_to_json(schedule, troops, str(output_file), unscheduled_data)
+            save_schedule_to_json(
+                schedule,
+                scheduler.troops,
+                str(output_file),
+                unscheduled_data,
+                sailing_half_fills,
+            )
             
             print(f"  Saved to {output_file}")
             success_count += 1
@@ -60,6 +67,10 @@ def regenerate_all():
             traceback.print_exc(file=sys.stdout)
             
     print(f"\nSuccessfully regenerated {success_count}/{len(troop_files)} schedules.")
+    if success_count != len(troop_files):
+        raise RuntimeError(
+            f"Regeneration incomplete: {success_count}/{len(troop_files)} schedules succeeded"
+        )
 
 if __name__ == "__main__":
     regenerate_all()

@@ -353,26 +353,6 @@ class LegacyPart07Mixin:
         return MockActivity(activity_name)
 
 
-    def get_stats(self) -> dict:
-        """Get schedule statistics."""
-        stats = {'total_entries': len(self.schedule.entries), 'troops': {}}
-
-        for troop in self.troops:
-            entries = self.schedule.get_troop_schedule(troop)
-            top5_count = sum(1 for e in entries if troop.get_priority(e.activity.name) < 5)
-            top10_count = sum(1 for e in entries if troop.get_priority(e.activity.name) < 10)
-            has_reflection = any(e.activity.name == "Reflection" for e in entries)
-
-            stats['troops'][troop.name] = {
-                'total_activities': len(entries),
-                'top5_count': top5_count,
-                'top10_count': top10_count,
-                'has_reflection': has_reflection
-            }
-
-        return stats
-
-
     def _remove_continuations_helper(self, entry):
         """
         Helper method to remove continuation entries for multi-slot activities.
@@ -400,7 +380,7 @@ class LegacyPart07Mixin:
 
         print("    [Aggressive Excess Day Reduction] Starting targeted swaps...")
 
-        cluster_areas = ["Tower", "Rifle Range", "Outdoor Skills", "Handicrafts"]
+        cluster_areas = self._get_authoritative_gap_area_map()
         protected_activities = {
             "Reflection",
             "Super Troop",
@@ -428,8 +408,7 @@ class LegacyPart07Mixin:
         while improved and total_swaps < max_swaps:
             improved = False
 
-            for area_name in cluster_areas:
-                area_activities = EXCLUSIVE_AREAS.get(area_name, [])
+            for area_name, area_activities in cluster_areas.items():
                 if not area_activities:
                     continue
 
@@ -448,18 +427,18 @@ class LegacyPart07Mixin:
                 if excess_days <= 0:
                     continue
 
-                target_days = [
+                preferred_target_days = [
                     day for day, _ in sorted(
                         day_counts.items(),
                         key=lambda x: (-x[1], x[0].value)
-                    )[:required_days]
+                    )
                 ]
 
                 source_days = [
                     day for day, _ in sorted(
                         day_counts.items(),
                         key=lambda x: (x[1], x[0].value)
-                    ) if day not in target_days
+                    )
                 ]
 
                 swap_made_for_area = False
@@ -479,6 +458,9 @@ class LegacyPart07Mixin:
                         troop = source_entry.troop
                         source_slot = source_entry.time_slot
 
+                        target_days = [
+                            day for day in preferred_target_days if day != source_day
+                        ]
                         for target_day in target_days:
                             troop_target_entries = [
                                 e for e in self.schedule.entries
@@ -623,12 +605,9 @@ class LegacyPart07Mixin:
                 if len(day_counts) <= required_days:
                     continue
 
-                target_days = {
-                    day for day, _ in sorted(day_counts.items(), key=lambda x: (-x[1], x[0].value))[:required_days]
-                }
                 source_entries = [
                     e for e in area_entries
-                    if e.time_slot.day not in target_days and _is_single_slot_entry(e)
+                    if day_counts[e.time_slot.day] == 1 and _is_single_slot_entry(e)
                 ]
 
                 for source_entry in source_entries:
@@ -644,7 +623,8 @@ class LegacyPart07Mixin:
                         [
                             e for e in self.schedule.entries
                             if e.troop != source_troop
-                            and e.time_slot.day in target_days
+                            and e.time_slot.day != source_slot.day
+                            and e.time_slot.day in day_counts
                             and _is_swappable_target(e)
                             and e.activity.name not in area_activities
                         ],
@@ -763,11 +743,10 @@ class LegacyPart07Mixin:
 
         swaps_made = 0
 
-        # Target cluster areas
-        cluster_areas = ["Tower", "Rifle Range", "Outdoor Skills", "Handicrafts"]
+        # Target the same cluster areas used by official regression scoring.
+        cluster_areas = self._get_authoritative_gap_area_map()
 
-        for area in cluster_areas:
-            activities = EXCLUSIVE_AREAS.get(area, [])
+        for area, activities in cluster_areas.items():
             if not activities:
                 continue
 
@@ -877,15 +856,6 @@ class LegacyPart07Mixin:
             print(f"    [Cross Troop Swaps] Made {swaps_made} cross-troop swaps for better clustering")
 
         return swaps_made
-
-
-    def _is_exclusive_blocked(self, slot, activity_name, duration=1, ignore_troop=None):
-        """
-        Check if a slot is blocked by exclusive area constraints.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Is Exclusive Blocked] Skipping optimization (placeholder)")
-        return False
 
 
     def _optimize_commissioner_day_ownership(self):
@@ -1340,79 +1310,6 @@ class LegacyPart07Mixin:
         This is a placeholder to prevent AttributeError during regeneration.
         """
         print("    [Enforce Staff Limits] Skipping optimization (placeholder)")
-        return 0
-
-
-    def _aggressive_severe_underuse_fix(self):
-        """
-        Simple implementation of aggressive severe underuse fix.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Aggressive Severe Underuse Fix] Skipping optimization (placeholder)")
-        return 0
-
-
-    def _optimize_global_staffed_clustering(self):
-        """
-        Simple implementation of global staffed clustering.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Global Staffed Clustering] Skipping optimization (placeholder)")
-        return 0
-
-
-    def _final_sanitization(self):
-        """
-        Simple implementation of final sanitization.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Final Sanitization] Skipping optimization (placeholder)")
-        return 0
-
-
-    def _sanitize_broken_multislot(self):
-        """
-        Simple implementation of broken multi-slot sanitization.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Sanitize Broken Multislot] Skipping optimization (placeholder)")
-        return 0
-
-
-    def _resolve_day_conflicts(self):
-        """
-        Simple implementation of day conflict resolution.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Resolve Day Conflicts] Skipping optimization (placeholder)")
-        return 0
-
-
-    def _resolve_same_place_same_day(self):
-        """
-        Simple implementation of same place same day conflict resolution.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Resolve Same Place Same Day] Skipping optimization (placeholder)")
-        return 0
-
-
-    def _resolve_wet_dry_patterns(self):
-        """
-        Simple implementation of wet/dry pattern conflict resolution.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Resolve Wet Dry Patterns] Skipping optimization (placeholder)")
-        return 0
-
-
-    def _resolve_beach_slot_violations(self):
-        """
-        Simple implementation of beach slot violation resolution.
-        This is a placeholder to prevent AttributeError during regeneration.
-        """
-        print("    [Resolve Beach Slot Violations] Skipping optimization (placeholder)")
-        return 0
         return 0
 
 

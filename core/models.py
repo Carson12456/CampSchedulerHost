@@ -241,6 +241,17 @@ class Schedule(BaseModel):
             if not self.is_troop_free(next_slot, troop):
                 print(f"add_entry FAIL: Troop {troop.name} not free in next_slot {next_slot}")
                 return False
+            if offset > 0 and not self.is_activity_available(next_slot, activity, troop):
+                if activity.name == "Sailing":
+                    sailing_count = sum(
+                        1 for e in self.get_slot_activities(next_slot)
+                        if e.activity.name == "Sailing"
+                    )
+                    allowed = 2 if next_slot.day != Day.THURSDAY and next_slot.slot_number == 2 else 1
+                    if sailing_count < allowed:
+                        continue
+                print(f"add_entry FAIL: Activity {activity.name} not available in continuation {next_slot}")
+                return False
         
         # Add entries
         self.entries.append(ScheduleEntry(time_slot=time_slot, activity=activity, troop=troop))
@@ -282,17 +293,17 @@ class Schedule(BaseModel):
         for entry in slot_entries:
             # Shared Aqua Trampoline logic
             if activity.name == "Aqua Trampoline" and entry.activity.name == "Aqua Trampoline":
-                 # Load rules from config if possible, else generic logic
-                 # For now, duplicate logic but clean it up later with config
-                 existing_size = entry.troop.size
-                 requesting_size = requesting_troop.size if requesting_troop else 16
-                 aqua_count = sum(1 for e in slot_entries if e.activity.name == "Aqua Trampoline")
-                 
-                 # Hardcoded 16 threshold matching original
-                 if existing_size <= 16 and requesting_size <= 16 and aqua_count <= 1:
-                     continue
-                 else:
-                     return False
+                special = config_loader.get_special_activity_config("Aqua Trampoline")
+                rules = config_loader.get_aqua_trampoline_rules()
+                max_size = int(rules.get("small_troop_size", special.get("max_troop_size", 16)))
+                max_troops = int(rules.get("max_small_troops", 2))
+                existing_size = entry.troop.size
+                requesting_size = requesting_troop.size if requesting_troop else max_size
+                aqua_count = sum(1 for e in slot_entries if e.activity.name == "Aqua Trampoline")
+
+                if existing_size <= max_size and requesting_size <= max_size and aqua_count < max_troops:
+                    continue
+                return False
             
             # Name conflict
             if entry.activity.name == activity.name:
@@ -303,7 +314,9 @@ class Schedule(BaseModel):
 
                 # Water Polo Exception (2 allowed)
                 if activity.name == "Water Polo":
-                    if entry_activity_names.count("Water Polo") < 2:
+                    rules = config_loader.get_special_activity_config("Water Polo")
+                    max_troops = int(rules.get("max_troops_per_slot", 2))
+                    if entry_activity_names.count("Water Polo") < max_troops:
                         continue
 
                 # Sailing Exception (shared middle slot for staggered starts)
@@ -356,15 +369,20 @@ class Schedule(BaseModel):
         # This is safer and more data-driven than a hardcoded list name.
         
         if activity.zone == Zone.BEACH and activity.staff == "Beach Staff":
-             beach_staff_count = 0
-             for e in slot_entries:
-                 if e.activity.zone == Zone.BEACH and e.activity.staff == "Beach Staff":
-                     beach_staff_count += 1
-             
-             # Max 4 per slot (hardcoded in original models.py, should be in SKULL/constraints)
-             limit = config_loader.get_constraints().get("beach_staff_per_slot", 4)
-             if beach_staff_count >= limit:
-                 return False
+            constraints = config_loader.get_constraints()
+            beach_staff_limit = int(constraints.get("beach_staff_per_slot", 12))
+            beach_activity_limit = int(constraints.get("max_beach_staffed_activities", 4))
+            beach_staff_count = 0
+            beach_activity_count = 0
+            for e in slot_entries:
+                if e.activity.zone == Zone.BEACH and e.activity.staff == "Beach Staff":
+                    beach_staff_count += config_loader.get_staff_need(e.activity.name)
+                    beach_activity_count += 1
+
+            if beach_activity_count >= beach_activity_limit:
+                return False
+            if beach_staff_count + config_loader.get_staff_need(activity.name) > beach_staff_limit:
+                return False
 
         return True
 

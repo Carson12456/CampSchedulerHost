@@ -1,7 +1,6 @@
 """
 Web-based GUI for Summer Camp Scheduler using Flask.
 This generates an HTML interface that properly displays 1.5-slot activities.
-yaya
 """
 from flask import Flask, render_template, send_from_directory, request, jsonify, Response
 from pathlib import Path
@@ -16,6 +15,7 @@ from core.models import Day, TimeSlot, generate_time_slots, ScheduleEntry, Troop
 from core.activities import get_all_activities
 from core.io_handler import load_troops_from_json, save_schedule_to_json
 from core.constrained_scheduler import ConstrainedScheduler
+from core.services.sailing_half_fills import build_sailing_half_fills, get_request_credit_fill_activities, make_sailing_fill_key
 from core.services.unscheduled_source import build_unscheduled_data
 
 app = Flask(__name__)
@@ -40,6 +40,25 @@ SCHEDULES_DIR = SCRIPT_DIR.parent / "data/schedules"
 WEEK_DATA = {}
 activities = get_all_activities()
 time_slots = generate_time_slots()
+
+
+def _preference_ui_weight(rank_index):
+    """Continuous display weight: rank 1 = 5.0, rank 20 = 0.25."""
+    return max(0.0, 5.0 - (rank_index * 0.25))
+
+
+def _max_weighted_preference_score(preference_items, capacity_slots):
+    """Knapsack max for troop preference display scores using half-slot units."""
+    capacity_units = max(0, int(round(capacity_slots * 2)))
+    dp = [0.0] * (capacity_units + 1)
+    for slot_cost, weight in preference_items:
+        units = max(1, int(round(slot_cost * 2)))
+        if units > capacity_units:
+            continue
+        for cap in range(capacity_units, units - 1, -1):
+            dp[cap] = max(dp[cap], dp[cap - units] + weight)
+    return max(dp) if dp else 0.0
+
 
 def load_schedule_from_json(schedule_file):
     """Load a cached schedule from JSON with enhanced error handling."""
@@ -91,6 +110,14 @@ def load_schedule_from_json(schedule_file):
             troop = troop_map.get(entry_data['troop_name'])
             activity = activity_map.get(entry_data['activity_name'])
             time_slot = slot_map.get((entry_data['day'], entry_data['slot']))
+            if (
+                time_slot is None
+                and entry_data.get('day') == Day.THURSDAY.name
+                and entry_data.get('slot') == 3
+            ):
+                # Scheduler may serialize a virtual Thu-3 for approved 3-hour
+                # day-request opt-outs; it is not part of the visible grid.
+                time_slot = TimeSlot(day=Day.THURSDAY, slot_number=3)
             
             if not troop or not activity or not time_slot:
                 # If any data is invalid/missing, raise error to force regeneration
@@ -106,9 +133,14 @@ def load_schedule_from_json(schedule_file):
         except Exception as e:
             raise ValueError(f"Error processing schedule entry: {e}")
             
-    unscheduled = data.get('unscheduled', {})
+    sailing_half_fills = data.get('sailing_half_fills', {}) or {}
+    if not sailing_half_fills:
+        sailing_half_fills = build_sailing_half_fills(troops, schedule)
+    # Rebuild authoritative unscheduled payload on load so cached schedules
+    # always reflect the current request-credit semantics for Sailing half-fills.
+    unscheduled = build_unscheduled_data(troops, schedule, sailing_half_fills)
     
-    return troops, schedule, unscheduled
+    return troops, schedule, unscheduled, sailing_half_fills
 
 def generate_schedule(troops_file):
     """Generate schedule from troops file (fallback)."""
@@ -118,11 +150,14 @@ def generate_schedule(troops_file):
     scheduler = ConstrainedScheduler(troops, activities, voyageur_mode=voyageur_mode)
     schedule = scheduler.schedule_all()
     
+    sailing_half_fills = getattr(scheduler, 'sailing_balls_fills', {}) or {}
+    if not sailing_half_fills:
+        sailing_half_fills = build_sailing_half_fills(scheduler.troops, schedule)
     # Authoritative unscheduled payload for all Top-5/Top-10 miss reporting.
-    unscheduled_data = build_unscheduled_data(scheduler.troops, schedule)
+    unscheduled_data = build_unscheduled_data(scheduler.troops, schedule, sailing_half_fills)
             
     # vital: return scheduler.troops because they might have been split
-    return scheduler.troops, schedule, unscheduled_data
+    return scheduler.troops, schedule, unscheduled_data, sailing_half_fills
 
 # Auto-discover all troop files (LAZY LOADING - only get names, don't load yet)
 print("Discovering available weeks...")
@@ -183,13 +218,13 @@ def get_week_data(week_id):
     
     if schedule_file.exists():
         try:
-            troops, schedule, unscheduled_data = load_schedule_from_json(schedule_file)
+            troops, schedule, unscheduled_data, sailing_half_fills = load_schedule_from_json(schedule_file)
             schedule_mtime = schedule_file.stat().st_mtime
             print(f"  Loaded from cache")
         except Exception as e:
             print(f"  Cache failed: {e}, regenerating...")
             try:
-                troops, schedule, unscheduled_data = generate_schedule(troops_file)
+                troops, schedule, unscheduled_data, sailing_half_fills = generate_schedule(troops_file)
             except Exception as e2:
                 print(f"  Schedule generation failed: {e2}")
                 # Return empty data rather than crashing
@@ -197,6 +232,7 @@ def get_week_data(week_id):
                     'troops': [],
                     'schedule': Schedule(),
                     'unscheduled': {},
+                    'sailing_half_fills': {},
                     'week_number': meta['week_number'],
                     'file': troops_file.name,
                     '_mtime': 0,
@@ -205,7 +241,7 @@ def get_week_data(week_id):
     else:
         try:
             print(f"  Generating fresh schedule...")
-            troops, schedule, unscheduled_data = generate_schedule(troops_file)
+            troops, schedule, unscheduled_data, sailing_half_fills = generate_schedule(troops_file)
         except Exception as e:
             print(f"  Schedule generation failed: {e}")
             # Return empty data rather than crashing
@@ -213,6 +249,7 @@ def get_week_data(week_id):
                 'troops': [],
                 'schedule': Schedule(),
                 'unscheduled': {},
+                'sailing_half_fills': {},
                 'week_number': meta['week_number'],
                 'file': troops_file.name,
                 '_mtime': 0,
@@ -223,6 +260,7 @@ def get_week_data(week_id):
         'troops': troops,
         'schedule': schedule,
         'unscheduled': unscheduled_data,
+        'sailing_half_fills': sailing_half_fills,
         'week_number': meta['week_number'],
         'file': troops_file.name,
         '_mtime': schedule_mtime  # Track file modification time
@@ -281,6 +319,67 @@ def get_weeks():
     })
 
 
+def _build_soft_deductions(metrics, score_diagnostics):
+    """Return user-facing deduction rows matching the scorer's point losses."""
+    rows = []
+
+    def add_row(label, points, reason, details=None):
+        points = float(points or 0)
+        if points <= 0:
+            return
+        rows.append({
+            'label': label,
+            'points': round(points, 1),
+            'reason': reason,
+            'details': details or [],
+        })
+
+    add_row(
+        'Soft rule violations',
+        int(metrics.get('soft_violations', 0)) * 10.0,
+        'Each soft violation costs points because the schedule is workable but less comfortable.',
+        metrics.get('soft_violation_details', []),
+    )
+    add_row(
+        'Beach slot 2 usage',
+        int(metrics.get('beach_slot_2_uses', 0)) * 3.0,
+        'Beach activities in slot 2 are allowed in some cases, but slot 1 or 3 is preferred.',
+    )
+    add_row(
+        'Delta timing',
+        score_diagnostics.get('delta_timing_penalty', metrics.get('delta_timing_penalty', 0)),
+        'Delta is compared to the earliest capacity window needed for this week. Later days lose more only when they extend beyond that window.',
+        metrics.get('delta_timing_penalty_details', []),
+    )
+    add_row(
+        'Delta/Sailing pairing',
+        score_diagnostics.get('delta_sailing_pairing_penalty', metrics.get('delta_sailing_pairing_penalty', 0)),
+        'Troops that receive both Delta and Sailing should have them on the same day when possible.',
+    )
+    add_row(
+        'Aqua Trampoline sharing',
+        score_diagnostics.get('at_sharing_penalty', metrics.get('at_sharing_penalty', 0)),
+        'Small Aqua Trampoline troops are expected to share slots in pairs when capacity allows.',
+    )
+    add_row(
+        'Activity batching',
+        score_diagnostics.get('activity_batching_penalty', 0),
+        'Repeat setup activities score better when grouped back-to-back on the same day.',
+    )
+    add_row(
+        'Sailing day cleanliness',
+        score_diagnostics.get('sailing_full_day_penalty', 0),
+        'Sailing days score better when they avoid extra staffed activities for the same troop.',
+    )
+    add_row(
+        'Sailing same-day grouping',
+        score_diagnostics.get('sailing_same_day_penalty', 0),
+        'Sailing setup scores better when multiple troops can share the same sailing day.',
+    )
+
+    return rows
+
+
 @app.route('/api/evaluation/<week_id>')
 def get_evaluation(week_id):
     """Return evaluation metrics for a week (score, violations, exclusive double-book, beach slot 2, schedule invalid)."""
@@ -294,6 +393,8 @@ def get_evaluation(week_id):
         week_file_path = str(troops_file)
         metrics = evaluate_week(week_file_path)
         score_components = metrics.get('score_components', {}) or {}
+        score_diagnostics = metrics.get('score_component_diagnostics', {}) or {}
+        soft_deductions = _build_soft_deductions(metrics, score_diagnostics)
         return jsonify({
             'final_score': metrics.get('final_score', 0),
             'constraint_violations': metrics.get('constraint_violations', 0),
@@ -302,21 +403,24 @@ def get_evaluation(week_id):
             'schedule_invalid': metrics.get('schedule_invalid', False),
             'missing_top5': metrics.get('missing_top5', 0),
             'top5_pct': metrics.get('top5_pct', 0),
+            'staff_variance': metrics.get('staff_variance', 0),
+            'avg_staff_load': metrics.get('avg_staff_load', 0),
+            'staff_load_by_slot': metrics.get('staff_load_by_slot', {}),
+            'severe_underused_slots': metrics.get('severe_underused_slots', 0),
+            'over_target_staff_slots': metrics.get('over_target_staff_slots', 0),
+            'excessive_staff_slots': metrics.get('excessive_staff_slots', 0),
+            'delta_required_latest_day': metrics.get('delta_required_latest_day'),
+            'expectation_penalty': metrics.get('expectation_penalty', 0),
             'score_components': score_components,
+            'score_component_diagnostics': score_diagnostics,
             'component_summary': {
                 'preference_points': score_components.get('preference_points', 0),
                 'cluster_efficiency_points': score_components.get('cluster_efficiency_points', 0),
                 'soft_constraint_points': score_components.get('soft_constraint_points', 0),
                 'staff_balance_points': score_components.get('staff_balance_points', 0),
-                'bonuses_points': (
-                    score_components.get('early_week_points', 0)
-                    + score_components.get('promoted_pairing_points', 0)
-                    + score_components.get('activity_batching_points', 0)
-                    + score_components.get('sailing_full_day_points', 0)
-                    + score_components.get('sailing_same_day_points', 0)
-                    + score_components.get('at_sharing_bonus', 0)
-                ),
+                'expectation_penalties': score_diagnostics.get('total_expectation_penalties', 0),
             },
+            'soft_deductions': soft_deductions,
             'hard_violation_details': metrics.get('hard_violation_details', []),
             'soft_violation_details': metrics.get('soft_violation_details', []),
         })
@@ -331,83 +435,58 @@ def get_troop_scoring(week_id):
         return jsonify({'error': 'Week not found'}), 404
         
     try:
-        from core.io_handler import load_schedule_from_json
         from core.activities import get_activity_by_name, get_all_activities
-        
+
         meta = WEEK_METADATA[week_id]
-        troops_file = meta['file']
-        schedule_file = meta.get('schedule_file', SCHEDULES_DIR / f"{week_id}_schedule.json")
-        
-        # Load data
-        troops = load_troops_from_json(troops_file)
-        all_activities = get_all_activities()
-        schedule = load_schedule_from_json(schedule_file, troops, all_activities)
+        data = get_week_data(week_id)
+        if not data:
+            return jsonify({'error': 'Week data not available'}), 404
+
+        troops = data['troops']
+        schedule = data['schedule']
+        sailing_half_fills = data.get('sailing_half_fills', {}) or {}
         
         TOTAL_AVAILABLE_SLOTS = 14.0
         troop_scoring = []
         
         for troop in troops:
             troop_acts = set(e.activity.name for e in schedule.entries if e.troop == troop)
+            troop_acts |= get_request_credit_fill_activities(troop, sailing_half_fills)
             
-            # 1. Base capacity used by mandatory spine activities (Reflection + Super Troop)
-            spine_slots_used = 0.0
-            if "Reflection" in troop_acts:
-                spine_slots_used += 1.0
-            if "Super Troop" in troop_acts:
-                spine_slots_used += 1.0
-            # Note: If Super Troop is not requested, it's still scheduled, so troops only have 12 available slots
-                
             # ---------------------------------------------------------
             # Part A: Calculate Actual Score (What they actually got)
             # ---------------------------------------------------------
             troop_score_hits = 0.0
             preferences_scheduled = 0
+            preference_items = []
             
             for i, pref_name in enumerate(troop.preferences):
                 if i >= 20: break  # Only score top 20
+
+                pref_activity = get_activity_by_name(pref_name)
+                pref_slots = schedule._get_effective_slots(pref_activity, troop) if pref_activity else 1.0
+                weight = _preference_ui_weight(i)
+                preference_items.append((pref_slots, weight))
                 
                 if pref_name in troop_acts:
-                    # Check if this preference actually fits in available capacity
-                    pref_activity = get_activity_by_name(pref_name)
-                    pref_slots = schedule._get_effective_slots(pref_activity, troop) if pref_activity else 1.0
-                    
-                    # Only count if activity physically fits in remaining capacity
-                    # This mirrors the logic in Part B for max possible score
-                    temp_capacity_used = spine_slots_used
-                    for j, check_pref_name in enumerate(troop.preferences[:i]):  # Check higher preferences
-                        if j >= 20: break
-                        check_activity = get_activity_by_name(check_pref_name)
-                        check_slots = schedule._get_effective_slots(check_activity, troop) if check_activity else 1.0
-                        if temp_capacity_used + check_slots <= TOTAL_AVAILABLE_SLOTS and check_pref_name in troop_acts:
-                            temp_capacity_used += check_slots
-                    
-                    if temp_capacity_used + pref_slots <= TOTAL_AVAILABLE_SLOTS:
-                        # Continuous linear staircase: Rank 1 = 5.0, Rank 20 = 0.25
-                        weight = max(0.0, 5.0 - (i * 0.25))
-                        troop_score_hits += weight
-                        preferences_scheduled += 1
+                    troop_score_hits += weight
+                    preferences_scheduled += 1
 
             # ---------------------------------------------------------
             # Part B: Calculate Max Possible Score (Theoretical Perfect Packing)
             # ---------------------------------------------------------
-            max_possible_score = 0.0
-            temp_capacity_used = spine_slots_used
+            max_possible_score = _max_weighted_preference_score(preference_items, TOTAL_AVAILABLE_SLOTS)
+            # Defensive display guard: the actual scheduled subset should fit in
+            # 14 slots, but never show a troop above its denominator.
+            max_possible_score = max(max_possible_score, troop_score_hits)
             max_activities_fit = 0
-            
-            for i, pref_name in enumerate(troop.preferences):
-                if i >= 20 or temp_capacity_used >= TOTAL_AVAILABLE_SLOTS:
-                    break
-                    
-                # Look up how many physical slots this preference requires (use dynamic calculation)
-                pref_activity = get_activity_by_name(pref_name)
-                pref_slots = schedule._get_effective_slots(pref_activity, troop) if pref_activity else 1.0
-                
-                # Check if this preference physically fits in the remaining slots
-                if temp_capacity_used + pref_slots <= TOTAL_AVAILABLE_SLOTS:
-                    weight = max(0.0, 5.0 - (i * 0.25))
-                    max_possible_score += weight
-                    temp_capacity_used += pref_slots
-                    max_activities_fit += 1
+            temp_capacity_units = int(TOTAL_AVAILABLE_SLOTS * 2)
+            for pref_slots, _weight in sorted(preference_items, key=lambda item: item[0]):
+                units = max(1, int(round(pref_slots * 2)))
+                if temp_capacity_units - units < 0:
+                    continue
+                temp_capacity_units -= units
+                max_activities_fit += 1
             
             # Calculate available slots (14 total minus mandatory spine activities)
             available_slots = TOTAL_AVAILABLE_SLOTS - (1.0 if "Reflection" in troop_acts else 0.0) - (1.0 if "Super Troop" in troop_acts else 0.0)
@@ -499,7 +578,7 @@ def _build_success_report(week_id, week_name, metrics, data):
             'metric': 'Overall Week Score',
             'value': final_score,
             'status': health,
-            'why_it_matters': 'Single roll-up score that combines requests, constraints, staff balance, and bonuses.'
+            'why_it_matters': 'Single roll-up score that combines requests, efficiency, soft expectations, and staff balance.'
         },
         {
             'metric': 'Top 5 Request Success',
@@ -941,16 +1020,17 @@ def regenerate_week(week_id):
     
     # Regenerate schedule
     print(f"Regenerating schedule for {week_id}...")
-    troops, schedule, unscheduled_data = generate_schedule(troops_file)
+    troops, schedule, unscheduled_data, sailing_half_fills = generate_schedule(troops_file)
     
     # Save to cache using io_handler
-    save_schedule_to_json(schedule, troops, str(schedule_file), unscheduled_data)
+    save_schedule_to_json(schedule, troops, str(schedule_file), unscheduled_data, sailing_half_fills)
     
     # Update memory cache
     WEEK_DATA[week_id] = {
         'troops': troops,
         'schedule': schedule,
         'unscheduled': unscheduled_data,
+        'sailing_half_fills': sailing_half_fills,
         'week_number': meta['week_number'],
         'file': troops_file.name
     }
@@ -977,6 +1057,7 @@ def get_troop_schedule(troop_name):
         
         troops = data['troops']
         schedule = data['schedule']
+        sailing_half_fills = data.get('sailing_half_fills', {}) or {}
         
         troop = next((t for t in troops if t.name == troop_name), None)
         if not troop:
@@ -989,19 +1070,40 @@ def get_troop_schedule(troop_name):
         for day in Day:
             schedule_grid[day.name] = {1: None, 2: None, 3: None}
         
+        def _half_slot_position(effective_slots, start_slot, cell_slot, day_name=None):
+            """Layout helper for a 1.5-slot activity (Sailing).
+
+            Session 1 (start_slot=1): slot 1 is full, slot 2 is a split cell
+            with the activity in the TOP half (+30-min tail after slot 1).
+            Session 2 (start_slot=2): slot 2 is a split cell with the activity
+            in the BOTTOM half (30-min gap at the top), slot 3 is full.
+            Thursday has only 2 slots and its single Sailing block is awarded
+            to the biggest troop as a full 2-hour activity (no split).
+            Returns 'top' / 'bottom' / None.
+            """
+            if effective_slots != 1.5:
+                return None
+            if day_name == 'THURSDAY':
+                return None
+            if start_slot == 1 and cell_slot == 2:
+                return 'top'
+            if start_slot == 2 and cell_slot == 2:
+                return 'bottom'
+            return None
+
         for entry in entries:
             day_name = entry.time_slot.day.name
             slot_num = entry.time_slot.slot_number
-            
-            # Check if this is a continuation
-            is_continuation = False
-            for other_entry in entries:
-                if (other_entry.activity.name == entry.activity.name and 
-                    other_entry.time_slot.day == entry.time_slot.day and
-                    other_entry.time_slot.slot_number < slot_num):
-                    is_continuation = True
-                    break
-            
+
+            # Start slot = earliest slot this activity occupies for this troop on this day.
+            same_activity_slots = [
+                e.time_slot.slot_number for e in entries
+                if e.activity.name == entry.activity.name
+                and e.time_slot.day == entry.time_slot.day
+            ]
+            start_slot = min(same_activity_slots) if same_activity_slots else slot_num
+            is_continuation = slot_num > start_slot
+
             # Detect spillovers (Delta/Super Troop not on designated commissioner days)
             is_spillover = False
             if entry.activity.name in ['Delta', 'Super Troop']:
@@ -1026,9 +1128,30 @@ def get_troop_schedule(troop_name):
                         is_spillover = True
             
             effective_slots = schedule._get_effective_slots(entry.activity, troop)
+            # Thursday Sailing is awarded to the biggest troop as a full 2-hour
+            # block occupying both Thursday slots (no 30-min buffer / fill).
+            # Report 2.0 to the frontend so the duration shows "(2 hrs)".
+            if entry.activity.name == 'Sailing' and day_name == 'THURSDAY':
+                effective_slots = 2.0
+            # Half-slot layout for 1.5-slot activities (Sailing). The 30-min
+            # dead time in the split cell will eventually be filled by Phase
+            # C.6b (balls during Sailing) via `half_slot_fill`.
+            half_slot_position = _half_slot_position(effective_slots, start_slot, slot_num, day_name)
+            half_slot_fill = None
+            if half_slot_position is not None and entry.activity.name == 'Sailing':
+                fill_key = make_sailing_fill_key(day_name, slot_num, troop.name)
+                fill_info = sailing_half_fills.get(fill_key)
+                if fill_info:
+                    half_slot_fill = fill_info.get('activity_name')
             schedule_grid[day_name][slot_num] = {
                 'activity': entry.activity.name,
                 'is_continuation': is_continuation,
+                'is_half_slot': half_slot_position is not None,
+                'half_slot_position': half_slot_position,
+                # Preserved for any older consumer: true iff the Sailing tail
+                # sits in the TOP half of the cell (session 1 slot 2).
+                'is_half_slot_continuation': half_slot_position == 'top',
+                'half_slot_fill': half_slot_fill,
                 'is_spillover': is_spillover,
                 'priority': troop.get_priority(entry.activity.name),
                 'zone': entry.activity.zone.name if entry.activity.zone else None,
@@ -1043,9 +1166,20 @@ def get_troop_schedule(troop_name):
                     max_slot = 2 if day_name == 'THURSDAY' else 3
                     if next_slot_num <= max_slot:
                         if schedule_grid[day_name][next_slot_num] is None:
+                            inj_half = _half_slot_position(effective_slots, start_slot, next_slot_num, day_name)
+                            inj_fill = None
+                            if inj_half is not None and entry.activity.name == 'Sailing':
+                                fill_key = make_sailing_fill_key(day_name, next_slot_num, troop.name)
+                                fill_info = sailing_half_fills.get(fill_key)
+                                if fill_info:
+                                    inj_fill = fill_info.get('activity_name')
                             schedule_grid[day_name][next_slot_num] = {
                                 'activity': entry.activity.name,
                                 'is_continuation': True,
+                                'is_half_slot': inj_half is not None,
+                                'half_slot_position': inj_half,
+                                'is_half_slot_continuation': inj_half == 'top',
+                                'half_slot_fill': inj_fill,
                                 'is_spillover': is_spillover,
                                 'priority': troop.get_priority(entry.activity.name),
                                 'zone': entry.activity.zone.name if entry.activity.zone else None,
@@ -1058,6 +1192,7 @@ def get_troop_schedule(troop_name):
             'scouts': troop.scouts,
             'adults': troop.adults,
             'schedule': schedule_grid,
+            'credited_fill_activities': sorted(get_request_credit_fill_activities(troop, sailing_half_fills)),
             'preferences': troop.preferences,
             'exemptions': []  # TODO: Calculate exemptions if needed
         })
@@ -1073,10 +1208,13 @@ def get_area_schedule(area_name):
         week = current_week
     data = get_week_data(week)
     schedule = data['schedule']
+    sailing_half_fills = data.get('sailing_half_fills', {}) or {}
+    troops = data.get('troops', [])
     
     # Map area names to activity names
     area_to_activities = {
         'Boats': ['Troop Canoe', 'Troop Kayak', 'Canoe Snorkel', 'Nature Canoe', 'Float for Floats'],
+        'Balls': ['Gaga Ball', '9 Square'],
         'Sailing': ['Sailing'],
         'Handicrafts': ['Tie Dye', 'Hemp Craft', 'Woggle Neckerchief Slide', 'Monkey\'s Fist'],
         'Delta': ['Delta'],
@@ -1137,6 +1275,11 @@ def get_area_schedule(area_name):
         
         return sailing_grid
     
+    credited_fill_activities_by_troop = {
+        troop.name: get_request_credit_fill_activities(troop, sailing_half_fills)
+        for troop in troops
+    }
+
     # Regular area handling
     schedule_grid = {}
     for day in Day:
@@ -1153,6 +1296,7 @@ def get_area_schedule(area_name):
         troop = entry.troop
         troop_entries = [e for e in schedule.entries if e.troop == troop]
         scheduled_activities = {e.activity.name for e in troop_entries}
+        scheduled_activities |= credited_fill_activities_by_troop.get(troop.name, set())
         prefs_achieved = sum(1 for p in troop.preferences if p in scheduled_activities)
         prefs_total = len(troop.preferences)
         
@@ -1186,6 +1330,36 @@ def get_area_schedule(area_name):
                         next_existing = [item for item in schedule_grid[day_name][next_slot_num] if item['troop'] == troop.name and item['activity'] == entry.activity.name]
                         if not next_existing:
                             schedule_grid[day_name][next_slot_num].append(item_data)
+
+    troop_lookup = {troop.name: troop for troop in troops}
+    for fill in sailing_half_fills.values():
+        activity_name = fill.get('activity_name')
+        if activity_name not in area_activities:
+            continue
+        day_name = fill.get('day')
+        slot_num = fill.get('slot')
+        troop_name = fill.get('troop_name')
+        troop = troop_lookup.get(troop_name)
+        if not day_name or slot_num is None or troop is None:
+            continue
+
+        troop_entries = [e for e in schedule.entries if e.troop == troop]
+        scheduled_activities = {e.activity.name for e in troop_entries}
+        scheduled_activities |= credited_fill_activities_by_troop.get(troop.name, set())
+        prefs_achieved = sum(1 for p in troop.preferences if p in scheduled_activities)
+        prefs_total = len(troop.preferences)
+
+        schedule_grid[day_name][slot_num].append({
+            'troop': troop.name,
+            'activity': activity_name,
+            'priority': troop.get_priority(activity_name),
+            'scouts': troop.scouts,
+            'adults': troop.adults,
+            'prefs_achieved': prefs_achieved,
+            'prefs_total': prefs_total,
+            'fill_half': fill.get('fill_half'),
+            'is_half_fill': True,
+        })
     
     return schedule_grid
 
@@ -1583,16 +1757,21 @@ def get_beach_board():
 
 @app.route('/api/balls')
 def get_balls_schedule():
-    """Get Balls (Gaga Ball, 9 Square) schedule."""
+    """Get Balls (Gaga Ball, 9 Square) schedule, including Sailing half-fills."""
     week = request.args.get('week', current_week)
     if week not in WEEK_METADATA:
         week = current_week
     data = get_week_data(week)
     schedule = data['schedule']
+    troops = data['troops']
+    sailing_half_fills = data.get('sailing_half_fills', {}) or {}
     
     balls_activities = ['Gaga Ball', '9 Square']
     
-    # Create grid structure: {activity: {day: {slot: [troops]}}}
+    # Create grid structure:
+    # {activity: {day: {slot: [item, ...]}}}
+    # where each item is either a full scheduled occupancy or a 30-minute
+    # Sailing half-fill occupancy.
     balls_grid = {}
     for activity in balls_activities:
         balls_grid[activity] = {}
@@ -1616,7 +1795,30 @@ def get_balls_schedule():
             continue
         seen_entries.add(entry_key)
         
-        balls_grid[activity_name][day_name][slot_num].append(troop_name)
+        balls_grid[activity_name][day_name][slot_num].append({
+            'troop': troop_name,
+            'is_half_fill': False,
+            'fill_half': None,
+        })
+
+    troop_lookup = {troop.name: troop for troop in troops}
+    for fill in sailing_half_fills.values():
+        activity_name = fill.get('activity_name')
+        if activity_name not in balls_activities:
+            continue
+
+        day_name = fill.get('day')
+        slot_num = fill.get('slot')
+        troop_name = fill.get('troop_name')
+        troop = troop_lookup.get(troop_name)
+        if not day_name or slot_num is None or troop is None:
+            continue
+
+        balls_grid[activity_name][day_name][slot_num].append({
+            'troop': troop_name,
+            'is_half_fill': True,
+            'fill_half': fill.get('fill_half'),
+        })
     
     return balls_grid
 

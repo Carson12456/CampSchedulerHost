@@ -42,6 +42,11 @@ def get_exclusive_areas() -> Dict[str, List[str]]:
     return _load_skull().get("exclusive_areas", {})
 
 
+def get_activity_definitions() -> List[Dict[str, Any]]:
+    """Get configured activity definitions."""
+    return _load_skull().get("activities", [])
+
+
 def get_area_for_activity(activity_name: str) -> Optional[str]:
     """Get the exclusive area name for a given activity, or None if not exclusive."""
     for area, activities in get_exclusive_areas().items():
@@ -271,6 +276,12 @@ def are_activities_not_back_to_back(act1: str, act2: str) -> bool:
     
     Returns True if act1 and act2 should NOT be back-to-back.
     """
+    # Sailing has an intentional 30-minute travel buffer built into its split
+    # session, so adjacency restrictions should not block activities before or
+    # after Sailing (including Tower / ODS families).
+    if act1 == "Sailing" or act2 == "Sailing":
+        return False
+
     rules = get_not_back_to_back_rules()
     tags = get_activity_tags()
     
@@ -383,6 +394,36 @@ def get_area_pairs() -> Dict[str, str]:
     return get_constraints().get("optimization", {}).get("area_pairs", {})
 
 
+def get_batch_setup_activities() -> List[str]:
+    """Get activities that benefit from setup batching."""
+    return get_optimization_rules().get("batch_setup_activities", [])
+
+
+def get_swappable_fill_activities() -> List[str]:
+    """Get low-risk filler activities that can be swapped during optimization."""
+    return get_optimization_rules().get("swappable_fill_activities", [])
+
+
+def get_smart_balls_activities() -> List[str]:
+    """Get simple ball-game activities used by smart fill scheduling."""
+    return get_optimization_rules().get("smart_balls_activities", [])
+
+
+def get_final_audit_filler_activities() -> List[str]:
+    """Get generic fillers eligible for final preference replacement audit."""
+    return get_optimization_rules().get("final_audit_filler_activities", [])
+
+
+def get_emergency_fill_activities() -> List[str]:
+    """Get conservative emergency fills for last-resort gap closure."""
+    return get_optimization_rules().get("emergency_fill_activities", [])
+
+
+def get_movable_fill_activities() -> List[str]:
+    """Get filler activities that optimization can move freely."""
+    return get_optimization_rules().get("movable_fill_activities", [])
+
+
 def get_canoe_activities() -> List[str]:
     """Get canoe activities (using 'canoe' tag)."""
     return get_activities_with_tag("canoe")
@@ -418,15 +459,8 @@ def get_commissioner_activity_days(activity_name: str) -> Dict[str, Any]:
                 # Add for base commissioner (e.g. "Commissioner A")
                 if "Voyageur" not in comm:
                     result[comm] = day_map.get(day_str)
-                if "Voyageur" not in comm:
-                    result[comm] = day_map.get(day_str)
                     
     return result
-
-
-def get_zone_capacities() -> Dict[str, int]:
-    """Get zone capacity configuration."""
-    return _load_skull().get("constraints", {}).get("zone_capacities", {})
 
 
 def get_cluster_areas() -> List[str]:

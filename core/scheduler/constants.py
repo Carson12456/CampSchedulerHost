@@ -107,6 +107,12 @@ class SchedulerConstants:
     
     # Area Pairs
     AREA_PAIRS = config_loader.get_area_pairs()
+    BATCH_SETUP_ACTIVITIES = set(config_loader.get_batch_setup_activities())
+    SWAPPABLE_FILL_ACTIVITIES = set(config_loader.get_swappable_fill_activities())
+    SMART_BALLS_ACTIVITIES = list(config_loader.get_smart_balls_activities())
+    FINAL_AUDIT_FILLER_ACTIVITIES = set(config_loader.get_final_audit_filler_activities())
+    EMERGENCY_FILL_ACTIVITIES = list(config_loader.get_emergency_fill_activities())
+    MOVABLE_FILL_ACTIVITIES = set(config_loader.get_movable_fill_activities())
     
     # Spine Beach Prohibited Pair (set of beach activities that should not mix).
     # Derived from SKULL soft_prohibited_pairs + special_activities instead of hardcoding.

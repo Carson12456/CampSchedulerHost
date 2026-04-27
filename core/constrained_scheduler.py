@@ -134,6 +134,14 @@ class ConstrainedScheduler(
     AREA_PAIRS = SchedulerConstants.AREA_PAIRS
     
     # Non-exclusive areas (multiple activities can run): Beach, Campsite, Off-Camp
+    MANDATORY_ANCHORS = SchedulerConstants.MANDATORY_ANCHORS
+    BATCH_SETUP_ACTIVITIES = SchedulerConstants.BATCH_SETUP_ACTIVITIES
+    SWAPPABLE_FILL_ACTIVITIES = SchedulerConstants.SWAPPABLE_FILL_ACTIVITIES
+    SMART_BALLS_ACTIVITIES = SchedulerConstants.SMART_BALLS_ACTIVITIES
+    FINAL_AUDIT_FILLER_ACTIVITIES = SchedulerConstants.FINAL_AUDIT_FILLER_ACTIVITIES
+    EMERGENCY_FILL_ACTIVITIES = SchedulerConstants.EMERGENCY_FILL_ACTIVITIES
+    MOVABLE_FILL_ACTIVITIES = SchedulerConstants.MOVABLE_FILL_ACTIVITIES
+    STAFF_ROLE_MAP = SchedulerConstants.STAFF_ROLE_MAP
     
     def __init__(self, troops: list[Troop], activities: list[Activity] = None, voyageur_mode: bool = False):
         self._initialize_state(troops, activities, voyageur_mode)

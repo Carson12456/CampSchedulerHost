@@ -14,7 +14,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from models import Activity, Troop, Schedule, ScheduleEntry, TimeSlot, Day, Zone
-from activities import get_all_activities
+from activities import get_activity_by_name, get_all_activities
 from constrained_scheduler import ConstrainedScheduler
 
 
@@ -118,6 +118,97 @@ class TestSchedulingPhases:
         # This tests the enforcement logic exists
         assert hasattr(scheduler, '_enforce_mandatory_top5'), \
             "Scheduler should have mandatory Top 5 enforcement method"
+
+    def test_friday_gap_uses_first_available_default_fill(self):
+        """Default fill should respect SKULL fill priority for a Friday slot."""
+        troop = Troop("Test Troop", "Site A", [], 12, 2)
+        scheduler = ConstrainedScheduler([troop], get_all_activities())
+
+        occupied = [
+            (Day.MONDAY, 1, "Aqua Trampoline"),
+            (Day.MONDAY, 2, "Archery"),
+            (Day.MONDAY, 3, "Water Polo"),
+            (Day.TUESDAY, 1, "History Center"),
+            (Day.TUESDAY, 2, "Disc Golf"),
+            (Day.TUESDAY, 3, "Fishing"),
+            (Day.WEDNESDAY, 1, "Troop Swim"),
+            (Day.WEDNESDAY, 2, "Trading Post"),
+            (Day.WEDNESDAY, 3, "Dr. DNA"),
+            (Day.THURSDAY, 1, "Loon Lore"),
+            (Day.THURSDAY, 2, "9 Square"),
+            (Day.FRIDAY, 2, "Super Troop"),
+            (Day.FRIDAY, 3, "Reflection"),
+        ]
+        for day, slot_num, activity_name in occupied:
+            scheduler.schedule.entries.append(
+                ScheduleEntry(
+                    TimeSlot(day, slot_num),
+                    get_activity_by_name(activity_name),
+                    troop,
+                )
+            )
+
+        scheduler._fill_all_remaining()
+
+        friday_slot_one = [
+            e.activity.name
+            for e in scheduler.schedule.entries
+            if e.troop == troop
+            and e.time_slot.day == Day.FRIDAY
+            and e.time_slot.slot_number == 1
+        ]
+        assert friday_slot_one == ["Campsite Free Time"]
+
+    def test_water_games_same_day_pair_is_soft_violation(self):
+        """Water Games pairs should be avoided in strict placement and counted as soft."""
+        troop = Troop(
+            "Test Troop",
+            "Site A",
+            ["Aqua Trampoline", "Water Polo", "Greased Watermelon"],
+            12,
+            2,
+        )
+        scheduler = ConstrainedScheduler([troop], get_all_activities())
+
+        scheduler.schedule.entries.append(
+            ScheduleEntry(
+                TimeSlot(Day.THURSDAY, 1),
+                get_activity_by_name("Aqua Trampoline"),
+                troop,
+            )
+        )
+        water_polo = get_activity_by_name("Water Polo")
+
+        assert not scheduler._can_schedule(
+            troop,
+            water_polo,
+            TimeSlot(Day.THURSDAY, 2),
+            Day.THURSDAY,
+            relax_constraints=False,
+        )
+        assert scheduler._can_schedule(
+            troop,
+            water_polo,
+            TimeSlot(Day.THURSDAY, 2),
+            Day.THURSDAY,
+            relax_constraints=True,
+        )
+
+        scheduler.schedule.entries = [
+            ScheduleEntry(
+                TimeSlot(Day.MONDAY, 1),
+                get_activity_by_name("Aqua Trampoline"),
+                troop,
+            ),
+            ScheduleEntry(TimeSlot(Day.MONDAY, 2), water_polo, troop),
+            ScheduleEntry(
+                TimeSlot(Day.MONDAY, 3),
+                get_activity_by_name("Greased Watermelon"),
+                troop,
+            ),
+        ]
+
+        assert scheduler._count_global_water_games_pair_violations() == 3
     
     # ========== PHASE C: INTEGRATED OPTIMIZATION ==========
     
@@ -256,6 +347,15 @@ class TestBatchProcessing:
                 if activity_name == "Aqua Trampoline":
                     # Aqua Trampoline can have up to 2 small troops
                     assert len(troops) <= 2, f"{activity_name} at {slot} has {len(troops)} troops"
+                elif activity_name == "Sailing":
+                    # Sailing is a 90-minute activity (2-slot). Per BRAIN §4:
+                    #   Slot 1: max 1 troop, Slot 2: max 2 (30-min overlap window),
+                    #   Slot 3: max 1. See utils/regression_checker.py for the same rule.
+                    slot_num = getattr(slot, "slot_number", None)
+                    max_cap = 2 if slot_num == 2 else 1
+                    assert len(troops) <= max_cap, (
+                        f"{activity_name} at {slot} has {len(troops)} troops (cap {max_cap})"
+                    )
                 else:
                     # Others should be exclusive
                     assert len(troops) == 1, f"{activity_name} at {slot} has {len(troops)} troops"

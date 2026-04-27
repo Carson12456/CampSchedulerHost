@@ -161,6 +161,52 @@
             font-style: italic;
         }
 
+        /* A 1.5-slot activity (Sailing) shares a cell with a 30-min gap.
+           Session 1: Sailing tail in TOP half of slot 2, gap in BOTTOM.
+           Session 2: gap in TOP half of slot 2, Sailing start in BOTTOM. */
+        .grid-cell.continuation.half-slot-split {
+            padding: 0;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
+            align-items: stretch;
+            font-style: normal;
+        }
+
+        .half-slot-piece {
+            flex: 1 1 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2px 4px;
+            min-height: 0;
+            box-sizing: border-box;
+            background: #1d3d0d;
+            color: #fff;
+        }
+
+        .half-slot-piece.sailing-half {
+            font-style: italic;
+        }
+
+        /* Empty half matches the Sailing color so the cell reads as one
+           unified block; a subtle dashed rule marks the 30-min boundary. */
+        .half-slot-piece.empty-half {
+            color: #cde6b0;
+            font-style: italic;
+            font-size: 7px;
+        }
+
+        .half-slot-piece.fill {
+            background: #2a3a16;
+        }
+
+        .grid-cell.continuation.half-slot-split .half-slot-piece + .half-slot-piece {
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
         .activity-name {
             font-weight: bold;
             margin-bottom: 2px;
@@ -274,6 +320,26 @@
         const currentWeek = urlParams.get('week') || '{{ current_week }}';
 
         let currentView = 'troop';
+        let latestEvaluationData = null;
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        async function getEvaluationData() {
+            if (latestEvaluationData) {
+                return latestEvaluationData;
+            }
+            const weekId = document.getElementById('weekSelect').value;
+            const response = await fetch(`/api/evaluation/${weekId}`);
+            latestEvaluationData = await response.json();
+            return latestEvaluationData;
+        }
 
         // Change week by reloading page with new week parameter
         function changeWeek(week) {
@@ -351,6 +417,7 @@
                 const weekId = document.getElementById('weekSelect').value;
                 const response = await fetch(`/api/evaluation/${weekId}`);
                 const data = await response.json();
+                latestEvaluationData = data;
                 if (data.error) {
                     metricsEl.textContent = 'Evaluation: ' + data.error;
                     banner.style.display = 'none';
@@ -371,7 +438,7 @@
                 const cluster = Number(components.cluster_efficiency_points || 0).toFixed(1);
                 const soft = Number(components.soft_constraint_points || 0).toFixed(1);
                 const staff = Number(components.staff_balance_points || 0).toFixed(1);
-                const bonus = Number(components.bonuses_points || 0).toFixed(1);
+                const expectationPenalty = Number(components.expectation_penalties || 0).toFixed(1);
                 // Build violation details
                 let violationDetails = '';
                 const hardDetails = data.hard_violation_details || [];
@@ -388,7 +455,7 @@
                     violationDetails = '<br>Violations: ' + data.constraint_violations + ' (none)';
                 }
                 
-                metricsEl.innerHTML = `Score: ${data.final_score}/1000  |  Top 5: ${data.top5_pct.toFixed(1)}% (${data.missing_top5} missed)  |  Components: Pref ${pref}/450, Cluster ${cluster}/250, Soft ${soft}/150, Staff ${staff}/100, Bonus ${bonus}/50${violationDetails}`;
+                metricsEl.innerHTML = `Score: ${data.final_score}/1000  |  Top 5: ${data.top5_pct.toFixed(1)}% (${data.missing_top5} missed)  |  Components: Pref ${pref}/450, Cluster ${cluster}/250, Soft ${soft}/200, Staff ${staff}/100  |  Expectations -${expectationPenalty}${violationDetails}`;
             } catch (e) {
                 metricsEl.textContent = 'Evaluation: could not load';
                 banner.style.display = 'none';
@@ -451,6 +518,18 @@
         staffNeedsButton.textContent = 'All Staff Needs';
         staffNeedsButton.onclick = () => loadStaffRequirements();
         staffTabsContainer.appendChild(staffNeedsButton);
+
+        const staffDistributionButton = document.createElement('button');
+        staffDistributionButton.className = 'tab-button';
+        staffDistributionButton.textContent = 'Staff Distribution';
+        staffDistributionButton.onclick = (event) => loadStaffDistribution(event);
+        staffTabsContainer.appendChild(staffDistributionButton);
+
+        const softDeductionsButton = document.createElement('button');
+        softDeductionsButton.className = 'tab-button';
+        softDeductionsButton.textContent = 'Soft Deductions';
+        softDeductionsButton.onclick = (event) => loadSoftDeductions(event);
+        staffTabsContainer.appendChild(softDeductionsButton);
 
         function clearActiveTabs() {
             document.querySelectorAll('.tab-button').forEach(btn => {
@@ -697,20 +776,43 @@
                     cell.className = 'grid-cell';
 
                     if (cellData) {
-                        if (cellData.is_continuation) {
+                        if (cellData.is_half_slot) {
+                            // 1.5-slot activity (Sailing) sharing a cell with a
+                            // 30-min gap. Position determines which half holds
+                            // the activity:
+                            //   - 'top'    = session 1 slot 2 (Sailing tail above, gap below)
+                            //   - 'bottom' = session 2 slot 2 (gap above, Sailing start below)
+                            // The gap will later be filled by `half_slot_fill`
+                            // (Phase C.6b: balls during Sailing).
+                            cell.classList.add('continuation', 'half-slot-split');
+                            const atTop = cellData.half_slot_position === 'top';
+
+                            const priorityVal = (cellData.priority !== undefined && cellData.priority !== null) ? cellData.priority : 999;
+                            const priorityLabel = (priorityVal < 999)
+                                ? ` <span style="color: #ffd700; font-weight: bold;">#${priorityVal + 1}</span>`
+                                : '';
+
+                            const activityHtml = `
+                                <div class="half-slot-piece sailing-half">
+                                    <div class="activity-name">${atTop ? '<span class="continuation-arrow">↳</span> ' : ''}${cellData.activity}${priorityLabel}</div>
+                                    <div class="activity-duration">${atTop ? '(+30 min)' : '(90 min)'}</div>
+                                </div>`;
+                            const fillHtml = cellData.half_slot_fill
+                                ? `<div class="half-slot-piece fill">
+                                       <div class="activity-name">${cellData.half_slot_fill}</div>
+                                       <div class="activity-duration">(30 min)</div>
+                                   </div>`
+                                : `<div class="half-slot-piece empty-half">
+                                       <small>Open&nbsp;(30&nbsp;min)</small>
+                                   </div>`;
+
+                            cell.innerHTML = atTop ? (activityHtml + fillHtml) : (fillHtml + activityHtml);
+                        } else if (cellData.is_continuation) {
                             cell.classList.add('continuation');
-                            if (cellData.slots === 1.5) {
-                                cell.innerHTML = `
-                                    <span class="continuation-arrow">↳</span>
-                                    <div class="activity-name">${cellData.activity}</div>
-                                    <div class="activity-duration">(+30 min)</div>
-                                `;
-                            } else {
-                                cell.innerHTML = `
-                                    <span class="continuation-arrow">↳</span>
-                                    <div class="activity-name">${cellData.activity}</div>
-                                `;
-                            }
+                            cell.innerHTML = `
+                                <span class="continuation-arrow">↳</span>
+                                <div class="activity-name">${cellData.activity}</div>
+                            `;
                         } else {
                             cell.classList.add('activity');
 
@@ -797,6 +899,9 @@
                             scheduledActivities.add(slot.activity);
                         }
                     });
+                });
+                (data.credited_fill_activities || []).forEach(activity => {
+                    scheduledActivities.add(activity);
                 });
 
                 data.preferences.forEach(pref => {
@@ -914,7 +1019,9 @@
                         let html = '';
                         Object.keys(activityGroups).forEach(activity => {
                             const items = activityGroups[activity];
-                            const troopList = items.map(item => {
+                            const halfFillItems = items.filter(item => item.is_half_fill);
+                            const fullItems = items.filter(item => !item.is_half_fill);
+                            const formatTroop = item => {
                                 // Show troop name with scouts/adults and preference satisfaction
                                 let prefsInfo = '';
                                 if (item.prefs_achieved !== undefined && item.prefs_total !== undefined) {
@@ -926,11 +1033,25 @@
                                     priorityLabel = ` #${item.priority + 1}`;
                                 }
                                 return `${item.troop} (${item.scouts}/${item.adults})${prefsInfo}${priorityLabel}`;
-                            }).join(', ');
+                            };
+
+                            let body = '';
+                            if (fullItems.length > 0) {
+                                body += `<small style="font-size: 8px;">${fullItems.map(formatTroop).join(', ')}</small>`;
+                            }
+                            if (halfFillItems.length > 0) {
+                                const topHalf = halfFillItems.filter(item => item.fill_half === 'top').map(formatTroop).join(', ');
+                                const bottomHalf = halfFillItems.filter(item => item.fill_half === 'bottom').map(formatTroop).join(', ');
+                                const halfLabel = `${topHalf || ''} / ${bottomHalf || ''}`.replace(/\s+$/, '');
+                                if (body) {
+                                    body += '<br>';
+                                }
+                                body += `<small style="font-size: 8px;">${halfLabel}</small>`;
+                            }
 
                             html += `<div style="margin-bottom: 3px;">
                                 <strong style="font-size: 9px;">${activity}</strong><br>
-                                <small style="font-size: 8px;">${troopList}</small>
+                                ${body}
                             </div>`;
                         });
 
@@ -1156,7 +1277,37 @@
                         if (troops.length > 0) {
                             cell.classList.add('activity');
                             cell.style.background = '#3d5016';
-                            cell.innerHTML = `<div style="font-size: 9px; line-height: 1.2;">${troops.join('<br>')}</div>`;
+                            const normalizeItem = item => {
+                                if (typeof item === 'string') {
+                                    return {
+                                        troop: item,
+                                        is_half_fill: false,
+                                        fill_half: null
+                                    };
+                                }
+                                return item;
+                            };
+                            const normalized = troops.map(normalizeItem);
+                            const fullItems = normalized.filter(item => !item.is_half_fill);
+                            const halfItems = normalized.filter(item => item.is_half_fill);
+                            const lines = [];
+
+                            if (fullItems.length > 0) {
+                                lines.push(fullItems.map(item => item.troop).join('<br>'));
+                            }
+                            if (halfItems.length > 0) {
+                                const topHalf = halfItems
+                                    .filter(item => item.fill_half === 'top')
+                                    .map(item => item.troop)
+                                    .join(', ');
+                                const bottomHalf = halfItems
+                                    .filter(item => item.fill_half === 'bottom')
+                                    .map(item => item.troop)
+                                    .join(', ');
+                                lines.push(`${topHalf || ''} / ${bottomHalf || ''}`.replace(/\s+$/, ''));
+                            }
+
+                            cell.innerHTML = `<div style="font-size: 9px; line-height: 1.2;">${lines.join('<br>')}</div>`;
                         } else {
                             cell.textContent = '-';
                         }
@@ -1395,6 +1546,135 @@
 
             document.getElementById('scheduleContent').innerHTML = '';
             document.getElementById('scheduleContent').appendChild(grid);
+        }
+
+        async function loadStaffDistribution(evt) {
+            currentView = 'staff-distribution';
+            clearActiveTabs();
+            if (evt && evt.target) evt.target.classList.add('active');
+
+            document.getElementById('scheduleTitle').textContent = 'Staff Distribution Scoring';
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const data = await getEvaluationData();
+                renderStaffDistribution(data);
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="error">Error loading staff distribution</div>';
+            }
+        }
+
+        function renderStaffDistribution(data) {
+            const loadBySlot = data.staff_load_by_slot || {};
+            const avgLoad = Number(data.avg_staff_load || 0);
+            const variance = Number(data.staff_variance || 0);
+            const entries = Object.entries(loadBySlot);
+
+            const container = document.createElement('div');
+            container.style.padding = '20px';
+            container.style.background = '#252526';
+            container.style.borderRadius = '8px';
+
+            let html = `
+                <div style="margin-bottom: 16px; color: #ccc; line-height: 1.5;">
+                    <strong>What this tab means:</strong> Staff distribution uses the configured staff need for each staffed activity,
+                    including multi-slot continuations. A lower variance means staff demand is spread more evenly across the 14 real slots.
+                    The score loses points for variance, severely light slots, slots over the target staff load, and slots over the hard guidance.
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 18px;">
+                    <div style="background: #1e1e1e; padding: 12px; border-radius: 6px;"><strong>Staff Score</strong><br>${Number((data.component_summary || {}).staff_balance_points || 0).toFixed(1)} / 100</div>
+                    <div style="background: #1e1e1e; padding: 12px; border-radius: 6px;"><strong>Average Load</strong><br>${avgLoad.toFixed(2)} staff</div>
+                    <div style="background: #1e1e1e; padding: 12px; border-radius: 6px;"><strong>Variance</strong><br>${variance.toFixed(2)}</div>
+                    <div style="background: #1e1e1e; padding: 12px; border-radius: 6px;"><strong>Problem Slots</strong><br>${data.severe_underused_slots || 0} light, ${data.over_target_staff_slots || 0} over target, ${data.excessive_staff_slots || 0} excessive</div>
+                </div>
+            `;
+
+            if (entries.length === 0) {
+                html += '<div style="color: #aaa;">No staff load data available.</div>';
+            } else {
+                html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px;">';
+                entries.forEach(([slot, count]) => {
+                    const load = Number(count || 0);
+                    const delta = load - avgLoad;
+                    let bg = '#1e1e1e';
+                    let label = 'near avg';
+                    if (delta <= -avgLoad * 0.35) {
+                        bg = '#183047';
+                        label = 'light';
+                    } else if (delta >= avgLoad * 0.35) {
+                        bg = '#4a2b16';
+                        label = 'heavy';
+                    }
+                    html += `
+                        <div style="background: ${bg}; padding: 10px; border-radius: 6px; text-align: center;">
+                            <div style="font-weight: bold;">${escapeHtml(slot)}</div>
+                            <div style="font-size: 1.2em;">${load}</div>
+                            <div style="font-size: 0.8em; color: #aaa;">${label}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(container);
+        }
+
+        async function loadSoftDeductions(evt) {
+            currentView = 'soft-deductions';
+            clearActiveTabs();
+            if (evt && evt.target) evt.target.classList.add('active');
+
+            document.getElementById('scheduleTitle').textContent = 'Soft & Expectation Deductions';
+            document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                const data = await getEvaluationData();
+                renderSoftDeductions(data);
+            } catch (error) {
+                document.getElementById('scheduleContent').innerHTML = '<div class="error">Error loading soft deductions</div>';
+            }
+        }
+
+        function renderSoftDeductions(data) {
+            const deductions = data.soft_deductions || [];
+            const container = document.createElement('div');
+            container.style.padding = '20px';
+            container.style.background = '#252526';
+            container.style.borderRadius = '8px';
+
+            let html = `
+                <div style="margin-bottom: 16px; color: #ccc; line-height: 1.5;">
+                    <strong>Soft score:</strong> ${Number((data.component_summary || {}).soft_constraint_points || 0).toFixed(1)} / 200.
+                    These are not hard failures; they are the reasons the scorer says the week is less than perfect.
+                    Delta timing is demand-aware: ${data.delta_required_latest_day ? `this week's Delta demand should fit by ${escapeHtml(data.delta_required_latest_day)} before late-day penalties start.` : 'no Delta timing window was reported.'}
+                </div>
+            `;
+
+            if (deductions.length === 0) {
+                html += '<div style="color: #9f9;">No soft or expectation deductions were reported.</div>';
+            } else {
+                html += '<div style="display: grid; gap: 10px;">';
+                deductions.forEach(row => {
+                    const details = row.details || [];
+                    html += `
+                        <div style="background: #1e1e1e; border-left: 4px solid #d19a66; padding: 12px; border-radius: 6px;">
+                            <div style="display: flex; justify-content: space-between; gap: 12px;">
+                                <strong>${escapeHtml(row.label)}</strong>
+                                <span style="color: #ffb86c;">-${Number(row.points || 0).toFixed(1)} pts</span>
+                            </div>
+                            <div style="color: #bbb; margin-top: 6px;">${escapeHtml(row.reason)}</div>
+                            ${details.length ? `<ul style="margin: 8px 0 0 18px; color: #aaa;">${details.slice(0, 8).map(detail => `<li>${escapeHtml(detail)}</li>`).join('')}${details.length > 8 ? `<li>... and ${details.length - 8} more</li>` : ''}</ul>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+            document.getElementById('scheduleContent').innerHTML = '';
+            document.getElementById('scheduleContent').appendChild(container);
         }
 
         async function loadUnscheduledActivities() {

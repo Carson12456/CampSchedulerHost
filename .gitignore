@@ -45,3 +45,33 @@ analytics_db.json
 # Project specific
 tmp/
 *.bak
+
+# Local agent/worktree scratch
+.claude/worktrees/
+
+# Test/type-check caches
+.pytest_cache/
+.mypy_cache/
+
+# Generated scheduler artifacts
+artifacts/*
+!artifacts/README.md
+!artifacts/logs/
+!artifacts/logs/README.md
+!artifacts/reports/
+!artifacts/reports/README.md
+!artifacts/schedules/
+!artifacts/schedules/README.md
+
+# One-off scheduler outputs and reports
+analysis_results*.json
+output*.json
+*_debug.txt
+debug_output.txt
+detailed_analysis.txt
+regression_results.txt
+tc_week*.txt
+regen_analysis.txt
+regen_log.txt
+regen_output.txt
+violation_details.txt

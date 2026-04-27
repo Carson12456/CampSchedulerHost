@@ -26,7 +26,7 @@ class LegacyPart04Mixin:
         IMPORTANT: Try to schedule Rifles consecutively, then Shotguns consecutively
         (instead of alternating) to reduce staff switching.
         """
-        rifle_activities = ['Troop Rifle', 'Troop Shotgun']
+        rifle_activities = EXCLUSIVE_AREAS.get("Rifle Range", [])
 
         # Find all troops who want rifle range activities
         troops_wanting_rifle = []
@@ -128,8 +128,6 @@ class LegacyPart04Mixin:
                     if activity_staff > 0 and current_staff_load + activity_staff > 14:
                         continue  # Skip staffed activity in heavy slot
 
-                    if self._is_exclusive_blocked(slot, activity.name, duration=activity.slots, ignore_troop=troop):
-                        continue
                     if self._can_schedule(troop, activity, slot, Day.FRIDAY, relax_constraints=True):
                         self.schedule.add_entry(slot, activity, troop)
                         self._update_progress(troop, activity.name)
@@ -140,21 +138,9 @@ class LegacyPart04Mixin:
 
                 # If still empty, use default fill priority
                 if not scheduled:
-                    # Sort fills by staff cost for heavy slots
-                    fill_candidates = []
                     for fill_name in self.DEFAULT_FILL_PRIORITY:
                         activity = get_activity_by_name(fill_name)
                         if not activity or self._troop_has_activity(troop, activity):
-                            continue
-                        staff_cost = self._get_activity_staff_count(activity.name)
-                        fill_candidates.append((staff_cost, fill_name, activity))
-
-                    # Sort: unstaffed first for heavy slots
-                    if current_staff_load > 12:
-                        fill_candidates.sort(key=lambda x: x[0])  # Ascending by staff cost
-
-                    for _, fill_name, activity in fill_candidates:
-                        if self._is_exclusive_blocked(slot, activity.name, duration=activity.slots, ignore_troop=troop):
                             continue
                         if self._can_schedule(troop, activity, slot, Day.FRIDAY, relax_constraints=True):
                             self.schedule.add_entry(slot, activity, troop)
@@ -217,11 +203,10 @@ class LegacyPart04Mixin:
         print("\n--- Early Staff Area Clustering (Top 8) ---")
 
         STAFF_AREAS = {
-            'Tower': ['Climbing Tower'],
-            'Rifle': ['Troop Rifle', 'Troop Shotgun'],
-            'ODS': ['Knots and Lashings', 'Orienteering', 'GPS & Geocaching',
-                   'Ultimate Survivor', "What's Cooking", 'Chopped!'],
-            'Handicrafts': ['Tie Dye', 'Hemp Craft', 'Woggle Neckerchief Slide', "Monkey's Fist"],
+            "Tower": EXCLUSIVE_AREAS.get("Tower", []),
+            "Rifle": EXCLUSIVE_AREAS.get("Rifle Range", []),
+            "ODS": EXCLUSIVE_AREAS.get("Outdoor Skills", []),
+            "Handicrafts": EXCLUSIVE_AREAS.get("Handicrafts", []),
         }
 
         # Commissioner-rotation lookup key for each staff area (some areas
@@ -448,24 +433,10 @@ class LegacyPart04Mixin:
                     continue
                 break  # Slot filled, move to next slot
             else:
-                # Second pass: try to assign even if not in preferences (fill activity)
-                # DISABLED: This blocks Top 5 recovery by filling slots with unwanted activities
-                # for troop in self.troops:
-                #     if not self.schedule.is_troop_free(target_slot, troop):
-                #         continue
-                #     
-                #     for activity_name in area_activities:
-                #         activity = get_activity_by_name(activity_name)
-                #         if not activity or self._troop_has_activity(troop, activity):
-                #             continue
-                #         
-                #         if self._can_schedule(troop, activity, target_slot, day, relax_constraints=True):
-                #             self.schedule.add_entry(target_slot, activity, troop)
-                #             print(f"  [Staff Fill] {troop.name}: {activity.name} -> {target_slot}")
-                #             break
-                #     else:
-                #         continue
-                pass  # Slot filled
+                # Strategy 2 (non-preference fallback fill) was deleted: it
+                # filled slots with non-preferred activities and blocked Top 5
+                # recovery. If needed, revive via the Preference Enforcer path.
+                pass
 
 
     def _schedule_day(self, day: Day):
@@ -547,7 +518,7 @@ class LegacyPart04Mixin:
 
             # PASS 1: Schedule 3-hour activities FIRST (they are hardest to fit)
             # ------------------------------------------------------------------
-            three_hour_acts = ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"]
+            three_hour_acts = self.THREE_HOUR_ACTIVITIES
 
             for pref_index in pref_range:
                 if pref_index >= len(troop.preferences):
@@ -605,9 +576,6 @@ class LegacyPart04Mixin:
 
         ENHANCED: Prioritize filling underused slots (< 5 staff) to reduce severe underuse penalty.
         """
-        if day == Day.TUESDAY:
-             print(f"DEBUG: _fill_remaining_slots called for TUESDAY")
-
         # ENHANCEMENT: Sort slots by staff count (underused first) to prioritize filling them
         slot_staff_counts = [(slot, self._count_all_staff_in_slot(slot)) for slot in day_slots]
         slot_staff_counts.sort(key=lambda x: x[1])  # Ascending: underused slots first
@@ -617,9 +585,6 @@ class LegacyPart04Mixin:
             for slot in sorted_slots:  # Process underused slots first
                 if not self.schedule.is_troop_free(slot, troop):
                     continue
-                if troop.name == "Tecumseh" and day == Day.TUESDAY:
-                     print(f"DEBUG: Processing Tecumseh Tue slot {slot.slot_number}")
-
                 # First try troop preferences
                 scheduled = False
                 current_staff_load = self._count_all_staff_in_slot(slot)
@@ -645,22 +610,10 @@ class LegacyPart04Mixin:
 
                 # If still empty, use default fill priority
                 if not scheduled:
-                    # Sort fills by staff cost for heavy slots
-                    fill_candidates = []
                     for fill_name in self.DEFAULT_FILL_PRIORITY:
                         activity = get_activity_by_name(fill_name)
                         if not activity or self._troop_has_activity(troop, activity):
                             continue
-                        staff_cost = self._get_activity_staff_count(activity.name)
-                        fill_candidates.append((staff_cost, fill_name, activity))
-
-                    # Sort: unstaffed first for heavy slots, staffed first for underused slots
-                    if current_staff_load > 12:
-                        fill_candidates.sort(key=lambda x: x[0])  # Ascending by staff cost
-                    elif prefer_staffed:
-                        fill_candidates.sort(key=lambda x: -x[0])  # Descending by staff cost (staffed first)
-
-                    for _, fill_name, activity in fill_candidates:
                         # Use relax_constraints=True to allow same-area activities if needed
                         if self._can_schedule(troop, activity, slot, day, relax_constraints=True):
                             self.schedule.add_entry(slot, activity, troop)
@@ -748,12 +701,40 @@ class LegacyPart04Mixin:
         return False
 
 
+    def _is_day_request_thursday_3slot(self, troop, activity) -> bool:
+        """True if troop day-requested this 3-slot activity on Thursday.
+
+        BRAIN rule: a day-requested 3-hour activity on Thursday is allowed
+        (the troop opts out of the mandatory 3rd-slot camp event to do the
+        3-hour activity for their full Thursday). Used by boundary-fix and
+        multi-slot integrity validators to preserve the opt-out slot triple.
+        """
+        if not hasattr(troop, "day_requests") or not troop.day_requests:
+            return False
+        try:
+            slots_needed = int(float(getattr(activity, "slots", 1.0)) + 0.5)
+        except (TypeError, ValueError):
+            return False
+        if slots_needed < 3:
+            return False
+        for day_name, acts in troop.day_requests.items():
+            if str(day_name).upper() == "THURSDAY" and activity.name in acts:
+                return True
+        return False
+
     def _can_schedule(self, *args, **kwargs):
         """
         Check if activity can be scheduled in this slot.
         Supports both signatures:
         - _can_schedule(troop, activity, slot, day, ...)
         - _can_schedule(timeslot, activity, troop, day=None, ...)
+
+        Special flag:
+        - force_day_request=True: activity is being placed to honor a troop
+          day request (MUST-HONOR per BRAIN). Bypasses soft constraints
+          (duplicate prevention, staff limit, back-to-back, beach slot rule,
+          beach staff cap) while still enforcing physical invariants
+          (troop free in slot, multi-slot boundary, request-only).
         """
         # Handle the test signature: _can_schedule(timeslot, activity, troop, day=None)
         if len(args) == 3 and 'troop' not in kwargs and 'activity' not in kwargs and 'slot' not in kwargs and 'day' not in kwargs:
@@ -765,6 +746,7 @@ class LegacyPart04Mixin:
             ignore_day_requests = kwargs.get('ignore_day_requests', False)
             allow_top1_beach_slot2 = kwargs.get('allow_top1_beach_slot2', False)
             enforce_beach_slot1_preference = kwargs.get('enforce_beach_slot1_preference', True)
+            force_day_request = kwargs.get('force_day_request', False)
         else:
             # Original signature
             if len(args) >= 4:
@@ -773,6 +755,7 @@ class LegacyPart04Mixin:
                 ignore_day_requests = kwargs.get('ignore_day_requests', False)
                 allow_top1_beach_slot2 = kwargs.get('allow_top1_beach_slot2', False)
                 enforce_beach_slot1_preference = kwargs.get('enforce_beach_slot1_preference', True)
+                force_day_request = kwargs.get('force_day_request', False)
             else:
                 raise ValueError("Insufficient arguments for _can_schedule")
 
@@ -809,11 +792,12 @@ class LegacyPart04Mixin:
                     adjacent_slots.append(existing_slot)
                     break
 
-        for adj_slot in adjacent_slots:
-            for entry in self.schedule.entries:
-                if entry.time_slot == adj_slot and entry.troop == troop:
-                    if config_loader.are_activities_not_back_to_back(activity.name, entry.activity.name):
-                        return False  # Would violate not-back-to-back rule
+        if not force_day_request:
+            for adj_slot in adjacent_slots:
+                for entry in self.schedule.entries:
+                    if entry.time_slot == adj_slot and entry.troop == troop:
+                        if config_loader.are_activities_not_back_to_back(activity.name, entry.activity.name):
+                            return False  # Would violate not-back-to-back rule
 
         # ENHANCED: Dynamic staff limit with clustering optimization
         # For staff clustering activities, allow higher limits to improve efficiency
@@ -838,7 +822,7 @@ class LegacyPart04Mixin:
         # Allow adding unstaffed activities (staff=0) even if slot is already full/overfull
         # They don't increase the staff burden.
         activity_staff = self._get_activity_staff_count(activity.name)
-        if activity_staff > 0:
+        if activity_staff > 0 and not force_day_request:
             if current_staff + activity_staff > staff_limit:
                 return False  # Would exceed staff limit
 
@@ -853,8 +837,9 @@ class LegacyPart04Mixin:
 
         # DUPLICATE PREVENTION: Ensure troop doesn't already have this activity
         # Exception: Troop Shotgun allows duplicates for large troops (>15 people)
+        # Exception: force_day_request=True (MUST-HONOR day requests, e.g. Shower House Thu+Fri)
         # This is handled by special logic below
-        if activity.name != "Troop Shotgun":
+        if activity.name != "Troop Shotgun" and not force_day_request:
             if self._troop_has_activity(troop, activity):
                 return False  # Prevent duplicate activities
 
@@ -862,21 +847,22 @@ class LegacyPart04Mixin:
         # If troop has requested specific days for this activity, generic scheduling must respect it.
         # This prevents optimization phases from moving activities to invalid days.
         if not ignore_day_requests and hasattr(troop, 'day_requests') and troop.day_requests:
+            requested_days_for_activity = set()
             for req_day_name, req_activities in troop.day_requests.items():
                 if activity.name in req_activities:
-                    # Found a restriction for this activity. Current day MUST match.
-                    # normalize case (FRIDAY vs Friday)
-                    if day.name.upper() != req_day_name.upper():
-                        return False
+                    requested_days_for_activity.add(str(req_day_name).upper())
+            if requested_days_for_activity and day.name.upper() not in requested_days_for_activity:
+                return False
 
 
         # Concurrent activities (Reflection, Campsite Time) can have multiple troops
-        if activity.name not in self.CONCURRENT_ACTIVITIES:
+        if activity.name not in self.CONCURRENT_ACTIVITIES and not force_day_request:
             # BEACH SLOT RULE: Beach activities only in Slot 1 or 3 (Exception: Thu-2)
             # Exception: Sailing is allowed in Slot 2 (due to 1.5 slot duration) - handled separately
             # Exception: 2-slot beach activities (Canoe Snorkel, Float for Floats) can start at slot 2
             #            because they span into slot 3 which is valid
             # ENHANCED: Stricter enforcement to reduce violations
+            # Exception: force_day_request bypasses beach slot/staff caps to honor day requests.
             if activity.name in self.BEACH_SLOT_ACTIVITIES:
                 # Special handling for 2-slot beach activities
                 is_2slot_beach = activity.slots >= 2
@@ -917,12 +903,12 @@ class LegacyPart04Mixin:
                         slot.slot_number == 3 or
                         (day == Day.THURSDAY and slot.slot_number == 2)
                     )
-                    # Top 1 beach override: allow slot 2 when Top 1 beach cannot be placed in 1/3
+                    # Top-5 beach override: the Top-5 contract outranks the
+                    # soft slot-2 beach preference when slots 1/3 are blocked.
                     if not is_valid_beach_slot and slot.slot_number == 2 and day != Day.THURSDAY:
                         pref_rank = troop.get_priority(activity.name) if hasattr(troop, 'get_priority') else None
-                        is_top1 = pref_rank == 0
-                        # STRicter: Only allow slot 2 for Top 1 beach if explicitly enabled AND it's truly Top 1
-                        if allow_top1_beach_slot2 and is_top1 and relax_constraints:
+                        is_top5 = pref_rank is not None and pref_rank < 5
+                        if is_top5 and relax_constraints:
                             # Additional check: verify slots 1 and 3 are actually unavailable
                             slot1_available = self.schedule.is_troop_free(
                                 next(ts for ts in self.time_slots if ts.day == day and ts.slot_number == 1), troop)
@@ -1059,7 +1045,7 @@ class LegacyPart04Mixin:
             if slot.slot_number < max_slot: neighbors.append(slot.slot_number + 1)
 
             day_entries = [e for e in self.schedule.entries if e.troop == troop and e.time_slot.day == day]
-            balls_reserve = {"Gaga Ball", "9 Square", "Campsite Free Time"} | set(self.TUESDAY_ONLY_ACTIVITIES)
+            balls_reserve = self._get_swappable_fill_names() | set(self.TUESDAY_ONLY_ACTIVITIES)
 
             has_good_neighbor = False
             has_free_neighbor = False
@@ -1107,7 +1093,7 @@ class LegacyPart04Mixin:
         # VOYAGEUR SPECIFIC RULES (other than HC/DG)
         if self.voyageur_mode:
             # Rule: Fond Du Lac and Hibbing shouldn't have rifle or shotgun as their first activity any day
-            if activity.name in ["Troop Rifle", "Troop Shotgun"] and slot.slot_number == 1:
+            if activity.name in EXCLUSIVE_AREAS.get("Rifle Range", []) and slot.slot_number == 1:
                 if "Fond Du Lac" in troop.name or "Hibbing" in troop.name:
                     return False
 
@@ -1355,53 +1341,20 @@ class LegacyPart04Mixin:
 
         # Check day-level constraints
         can = self._can_schedule_on_day(troop, activity, day if slot.day == day else slot.day, slot.slot_number, relax_constraints)
-        if not can and relax_constraints and troop.name == "Tecumseh":
-             print(f"  DEBUG: {troop.name} cannot schedule {activity.name} on {day} even with relax_constraints")
 
         return can
 
 
     def _get_all_staffed_activities(self):
         """Get list of all activities that require staff."""
-        return (self.BEACH_STAFFED_ACTIVITIES + 
-                ['Sailing', 'Troop Rifle', 'Troop Shotgun', 'Archery',
-                 'Climbing Tower', 'Orienteering', 'GPS & Geocaching', 'Knots and Lashings',
-                'Ultimate Survivor', 'Back of the Moon', 'Loon Lore', 'Dr. DNA', 'Nature Canoe',
-                 'Tie Dye', 'Hemp Craft', 'Woggle Neckerchief Slide', "Monkey's Fist",
-                 'Reflection', 'Delta', 'Super Troop'])
+        return list(self.ACTIVITY_STAFF_COUNT.keys())
 
 
     def _get_activity_staff_count(self, activity_name: str) -> int:
         """
         Get the staff count for an activity - matches GUI's activity_to_staff mapping.
         """
-        # Match gui_web.py activity_to_staff exactly
-        ACTIVITY_TO_STAFF_COUNT = {
-            # Beach Staff (2 staff each)
-            'Aqua Trampoline': 2, 'Greased Watermelon': 2, 'Underwater Obstacle Course': 2,
-            'Troop Swim': 2, 'Water Polo': 2,
-            # Boats Staff (2-3 staff)
-            'Troop Canoe': 2, 'Troop Kayak': 2, 'Canoe Snorkel': 3, 
-            'Float for Floats': 3, 'Nature Canoe': 2,
-            # Ass. Aquatics (1)
-            'Sailing': 1,
-            # Shooting Sports Director (1)
-            'Troop Rifle': 1, 'Troop Shotgun': 1,
-            # Archery Director (1)
-            'Archery': 1,
-            # Tower Director (2)
-            'Climbing Tower': 2,
-            # Outdoor Skills Director (1)
-            'Orienteering': 1, 'GPS & Geocaching': 1, 'Knots and Lashings': 1,
-            'Ultimate Survivor': 1, 'Back of the Moon': 1, "What's Cooking": 1, 'Chopped!': 1,
-            # Nature Director (1)
-            'Loon Lore': 1, 'Dr. DNA': 1,
-            # Handicrafts Director (1)
-            'Tie Dye': 1, 'Hemp Craft': 1, 'Woggle Neckerchief Slide': 1, "Monkey's Fist": 1,
-            # Commissioner Activities (1)
-            'Reflection': 1, 'Delta': 1, 'Super Troop': 1,
-        }
-        return ACTIVITY_TO_STAFF_COUNT.get(activity_name, 0)
+        return self.ACTIVITY_STAFF_COUNT.get(activity_name, 0)
 
 
     def _count_all_staff_in_slot(self, slot: TimeSlot) -> int:
@@ -1936,10 +1889,6 @@ class LegacyPart04Mixin:
             if day == Day.FRIDAY:
                 return False
 
-        # Campsite Free Time: NOT on Monday or Friday
-        if activity.name == "Campsite Free Time" and day in [Day.MONDAY, Day.FRIDAY]:
-            return False
-
         # Trading Post: NOT on Monday
         if activity.name == "Trading Post" and day == Day.MONDAY:
             return False
@@ -1953,7 +1902,7 @@ class LegacyPart04Mixin:
                 return False
 
         # Rifle/Shotgun should NOT be immediately before or after Delta
-        if activity.name in ["Troop Rifle", "Troop Shotgun"]:
+        if activity.name in EXCLUSIVE_AREAS.get("Rifle Range", []):
             if self._is_adjacent_to_delta(troop, day, slot_num):
                 return False
 

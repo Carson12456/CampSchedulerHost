@@ -9,31 +9,32 @@ Contains methods for validating schedule constraints:
 """
 
 import math
-from collections import defaultdict
 from ..models import Day
-from .constants import SchedulerConstants
 from . import config_loader
 
 
-CLUSTER_AREAS = {
-    "Tower": ["Climbing Tower"],
-    "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-    "Outdoor Skills": [
-        "Knots and Lashings",
-        "Orienteering",
-        "GPS & Geocaching",
-        "Ultimate Survivor",
-        "What's Cooking",
-        "Chopped!",
-    ],
-    "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"],
-}
+def _get_cluster_area_map() -> dict[str, list[str]]:
+    """Return cluster areas from SKULL optimization/exclusive-area config."""
+    exclusive_areas = config_loader.get_exclusive_areas()
+    priority = config_loader.get_constraints().get("optimization", {}).get("area_clustering_priority", [])
+    area_names = [area for area in priority if area in exclusive_areas]
+    area_names.extend(
+        area for area, activities in exclusive_areas.items()
+        if len(activities) >= 3 and area not in area_names
+    )
+    return {area: exclusive_areas.get(area, []) for area in area_names}
+
+
+# Compatibility export for legacy split modules; behavior-sensitive checks call
+# _get_cluster_area_map() so they still see current SKULL values.
+CLUSTER_AREAS = _get_cluster_area_map()
 
 
 def would_create_excess_day_for_entries(entries, activity_name: str, day: Day) -> bool:
     """Single source-of-truth excess-day rule aligned with BRAIN/regression checker."""
+    cluster_areas = _get_cluster_area_map()
     activity_area = None
-    for area_name, activities in CLUSTER_AREAS.items():
+    for area_name, activities in cluster_areas.items():
         if activity_name in activities:
             activity_area = area_name
             break
@@ -41,7 +42,7 @@ def would_create_excess_day_for_entries(entries, activity_name: str, day: Day) -
     if not activity_area:
         return False
 
-    area_activities = CLUSTER_AREAS[activity_area]
+    area_activities = cluster_areas[activity_area]
     area_entries = [e for e in entries if e.activity.name in area_activities]
     if not area_entries:
         return False

@@ -36,8 +36,8 @@ def _contains_required_brain_clauses(brain: str) -> List[str]:
     required = [
         "non_exempt_top5_misses == 0",
         "100% non-exempt Top 5 success",
-        "3-hour duplication rule",
-        "Tuesday HC/DG saturation rule",
+        "3-Hour Duplication",
+        "Tuesday HC/DG Saturation",
     ]
     missing = [clause for clause in required if clause not in brain]
     return missing
@@ -55,11 +55,11 @@ def check_consistency() -> Tuple[List[str], List[str]]:
         errors.append("SKULL missing constraints block")
         return errors, warnings
 
-    expected_canoe = _extract_int(r"Canoes max\s+(\d+)\s+people", brain, "canoe capacity")
-    expected_global_staff = _extract_int(r"Global staff max\s+(\d+)\s+per slot", brain, "global staff")
-    expected_beach_staff = _extract_int(r"Beach staff max\s+(\d+)\s+per slot", brain, "beach staff")
+    expected_canoe = _extract_int(r"Canoes:\s*Max\s+(\d+)\s+people", brain, "canoe capacity")
+    expected_global_staff = _extract_int(r"Global Staff:\s*Base max\s+(\d+)\s+per slot", brain, "global staff")
+    expected_beach_staff = _extract_int(r"Beach Staff:\s*Max\s+(\d+)\s+per slot", brain, "beach staff")
     expected_beach_sat = _extract_int(
-        r"Beach saturation max\s+(\d+)\s+staffed beach activities per slot",
+        r"Beach Saturation:\s*Max\s+(\d+)\s+staffed beach activities per slot",
         brain,
         "beach saturation",
     )

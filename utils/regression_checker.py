@@ -13,6 +13,7 @@ import os
 import math
 import subprocess
 import hashlib
+from datetime import datetime, timezone
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Any
@@ -24,10 +25,13 @@ from core.services.unscheduled_analyzer import UnscheduledAnalyzer
 from core.constrained_scheduler import ConstrainedScheduler
 from core.activities import get_all_activities, get_activity_by_name
 from core.io_handler import load_troops_from_json, load_schedule_from_json
-from core.models import Day, TimeSlot, generate_time_slots
+from core.models import Day, Schedule, TimeSlot, generate_time_slots
 from core.scheduler.constants import SchedulerConstants
 from core.scheduler import config_loader
 from core.services.unscheduled_source import summarize_non_exempt_misses
+from core.services.sailing_half_fills import build_sailing_half_fills, get_request_credit_fill_activities
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # Alias for backward compatibility if used in this file
 EXCLUSIVE_AREAS = SchedulerConstants.EXCLUSIVE_ACTIVITIES # Wait, EXCLUSIVE_AREAS was a dict in models.py?
@@ -37,9 +41,73 @@ EXCLUSIVE_AREAS = SchedulerConstants.EXCLUSIVE_ACTIVITIES # Wait, EXCLUSIVE_AREA
 # config_loader.get_exclusive_areas() returns the dict.
 EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
 
+FREE_TIME_SOFT_ACTIVITIES = {"Trading Post", "Shower House", "Campsite Free Time"}
+FREE_TIME_SOFT_CONFLICTS = tuple(
+    tuple(pair)
+    for pair in SchedulerConstants.SOFT_SAME_DAY_CONFLICTS
+    if len(pair) == 2 and set(pair).issubset(FREE_TIME_SOFT_ACTIVITIES)
+)
+WATER_GAMES_SOFT_ACTIVITIES = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
+WATER_GAMES_SOFT_CONFLICTS = tuple(
+    tuple(pair)
+    for pair in SchedulerConstants.SOFT_SAME_DAY_CONFLICTS
+    if len(pair) == 2 and set(pair).issubset(WATER_GAMES_SOFT_ACTIVITIES)
+)
+
+
+def _utc_timestamp() -> str:
+    """Return an ISO-8601 UTC timestamp."""
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _resolve_schedules_dir(schedules_dir: str | Path | None = None) -> Path:
+    """Resolve a schedules directory relative to project root when needed."""
+    if schedules_dir is None:
+        return PROJECT_ROOT / "data" / "schedules"
+    path = Path(schedules_dir)
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+    return path
+
+
+def _candidate_troop_files(week_name: str, schedules_dir: str | Path | None = None) -> List[Path]:
+    """Return candidate troop-file locations for a given week."""
+    schedules_path = _resolve_schedules_dir(schedules_dir)
+    return [
+        schedules_path.parent / f"{week_name}.json",
+        schedules_path.parent / "troops" / f"{week_name}.json",
+        PROJECT_ROOT / "data" / "troops" / f"{week_name}.json",
+    ]
+
+
+def _resolve_troop_file(week_name: str, schedules_dir: str | Path | None = None) -> Path:
+    """Resolve the troop JSON file for a given week."""
+    for candidate in _candidate_troop_files(week_name, schedules_dir):
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError(f"Troop JSON not found for week '{week_name}'")
+
+
+def _get_free_time_same_day_conflicts(day_activities: set[str]) -> List[tuple[str, str]]:
+    """Return configured free-time soft conflict pairs present on a day."""
+    violations = []
+    for pair in FREE_TIME_SOFT_CONFLICTS:
+        if set(pair).issubset(day_activities):
+            violations.append(pair)
+    return violations
+
+
+def _get_water_games_same_day_conflicts(day_activities: set[str]) -> List[tuple[str, str]]:
+    """Return configured Water Games soft conflict pairs present on a day."""
+    violations = []
+    for pair in WATER_GAMES_SOFT_CONFLICTS:
+        if set(pair).issubset(day_activities):
+            violations.append(pair)
+    return violations
+
 # --- Configuration for Scoring (0-1000 perfect, can go negative) ---
 # Target: 1000 = perfect schedule
-# Components: Preferences (450) + Cluster (250) + Soft Constraints (150) + Staff (100) + Bonuses (50)
+# Components: Preferences (450) + Cluster/Efficiency (250) + Soft/Expectations (200) + Staff (100)
 DEFAULT_WEIGHTS = {
     "max_score": 1000.0,
 
@@ -48,38 +116,45 @@ DEFAULT_WEIGHTS = {
     # Bonuses for Hits (Ranks 15-20)
     "preference_base_score": 450.0,
     "preference_weights": {
-        "top5": [5.0, 4.75, 4.5, 4.25, 4.0],     # Ranks 1-5 (Mandatory) - Linear Staircase
-        "top6_10": [3.75, 3.5, 3.25, 3.0, 2.75],  # Ranks 6-10 (Linear Staircase)
-        "top11_14": [2.5, 2.25, 2.0, 1.75],        # Ranks 11-14 (Linear Staircase)
-        "top15_20": [1.5, 1.25, 1.0, 0.75, 0.5, 0.25] # Ranks 15-20 (Linear Staircase)
+        "top5": [5.4, 4.7, 4.1, 3.4, 2.7],       # Ranks 1-5 (Mandatory) - Miss Penalty
+        "top6_10": [2.6, 2.4, 2.3, 2.2, 2.0],    # Ranks 6-10 (Gradual) - Miss Penalty
+        "top11_14": [1.8, 1.6, 1.4, 1.2],        # Ranks 11-14 - Miss Penalty
+        "top15_20": [1.0, 0.8, 0.6, 0.4, 0.2, 0.0] # Ranks 15-20 - HIT BONUS
     },
-    
+
     # Cluster Efficiency: 250 pts (HIGH PRIORITY - more important than staff)
     "cluster_efficiency_points": 250.0,
-    
-    # Soft Constraint Compliance: 150 pts (budget for soft violations)
-    "soft_constraint_points": 150.0,
-    
+
+    # Soft Constraint + Expectation Compliance: 200 pts (budget for soft violations and expected behaviors)
+    "soft_constraint_points": 200.0,
+
     # Staff Balance: 100 pts (secondary to clustering)
     "staff_balance_points": 100.0,
-    
-    # Bonuses: ~50 pts
-    "early_week_points": 10.0,
-    "activity_batching_points": 10.0,
-    "promoted_pairing_points": 10.0,
-    "sailing_full_day_points": 10.0,
-    "sailing_same_day_points": 10.0,
-    "at_sharing_bonus": 20.0,  # NEW: Bonus for AT slot sharing (2 small troops)
-    # Guardrail: keep bonus effects bounded so core quality drives score.
-    "bonus_total_cap": 50.0,
+
+    # Legacy bonus knobs retained for backward-compatible custom weight dicts.
+    # They are diagnostic only; additive bonuses no longer contribute to final_score.
+    "early_week_points": 0.0,
+    "activity_batching_points": 0.0,
+    "promoted_pairing_points": 0.0,
+    "sailing_full_day_points": 0.0,
+    "sailing_same_day_points": 0.0,
+    "at_sharing_bonus": 0.0,
+    "bonus_total_cap": 0.0,
 
     # Penalties
     "excess_cluster_day_penalty": 25.0,   # INCREASED: Each excess cluster day costs significantly
-    "cluster_gap_penalty": 15.0,          # INCREASED: Cluster gaps (1-x-3 pattern) 
+    "cluster_gap_penalty": 15.0,          # INCREASED: Cluster gaps (1-x-3 pattern)
+    "activity_batching_miss_penalty": 2.0,
+    "sailing_full_day_miss_penalty": 2.0,
+    "sailing_same_day_miss_penalty": 2.0,
     "staff_variance_penalty": 5.0,        # Per point of variance
     "severe_underuse_penalty": 3.0,       # Per severely underused slot
-    "excessive_staff_penalty": 2.0,       # Per excessive staff slot
+    "over_target_staff_penalty": 2.0,     # Per slot above target staff load
+    "excessive_staff_penalty": 5.0,       # Per slot above hard staff guidance
     "soft_violation_penalty": 10.0,       # NEW: Per soft constraint violation
+    "delta_late_day_penalty": 2.0,        # Per day Delta extends beyond the earliest needed capacity window
+    "delta_sailing_pairing_miss_penalty": 6.0,
+    "at_sharing_miss_penalty": 8.0,
     "top5_miss_penalty": 5.0,             # Per missed Top 5 activity
     "beach_slot_2_penalty": 3.0           # Per beach activity in slot 2 (non-Thursday)
 }
@@ -91,6 +166,87 @@ STAFF_MAP = SchedulerConstants.STAFF_ROLE_MAP
 ALL_STAFF_ACTIVITIES = set()
 for acts in STAFF_MAP.values():
     ALL_STAFF_ACTIVITIES.update(acts)
+
+
+SCORING_DAY_ORDER = [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY]
+SCORING_DAY_INDEX = {day: idx for idx, day in enumerate(SCORING_DAY_ORDER)}
+DELTA_DAY_CAPACITY = {
+    Day.MONDAY: 3,
+    Day.TUESDAY: 3,
+    Day.WEDNESDAY: 3,
+    Day.THURSDAY: 2,
+    Day.FRIDAY: 3,
+}
+
+
+def _bounded_points(value: float, max_points: float) -> float:
+    """Clamp a point-bearing component to its 0..max budget."""
+    return min(max_points, max(0.0, value))
+
+
+def _delta_required_day_index(delta_demand: int) -> int:
+    """Return the latest day index needed if Delta uses earliest available slots first."""
+    if delta_demand <= 0:
+        return 0
+    running_capacity = 0
+    for idx, day in enumerate(SCORING_DAY_ORDER):
+        running_capacity += DELTA_DAY_CAPACITY[day]
+        if delta_demand <= running_capacity:
+            return idx
+    return len(SCORING_DAY_ORDER) - 1
+
+
+def _calculate_delta_timing_penalty(schedule, troops, weights) -> tuple[float, list[str], int]:
+    """
+    Penalize Delta only when it extends beyond the earliest capacity window needed.
+
+    Example: if three troops request Delta, Monday's three slots are the target
+    window. Tuesday is one day late, Wednesday two days late, and so on. If six
+    troops request Delta, Monday+Tuesday are free of timing penalty.
+    """
+    delta_entries = [e for e in schedule.entries if e.activity.name == "Delta"]
+    delta_demand = max(
+        len(delta_entries),
+        sum(1 for troop in troops if "Delta" in getattr(troop, "preferences", [])),
+    )
+    required_day_idx = _delta_required_day_index(delta_demand)
+    penalty_per_day = float(weights.get("delta_late_day_penalty", 2.0))
+    total_penalty = 0.0
+    details = []
+
+    for entry in delta_entries:
+        day_idx = SCORING_DAY_INDEX.get(entry.time_slot.day, required_day_idx)
+        days_late = max(0, day_idx - required_day_idx)
+        if days_late <= 0:
+            continue
+        penalty = days_late * penalty_per_day
+        total_penalty += penalty
+        target_day = SCORING_DAY_ORDER[required_day_idx].value
+        details.append(
+            f"{entry.troop.name}: Delta on {entry.time_slot.day.value} "
+            f"({days_late} day(s) after needed {target_day} window, -{penalty:.1f})"
+        )
+
+    return total_penalty, details, required_day_idx
+
+
+def _calculate_at_sharing_misses(schedule) -> int:
+    """Count avoidable Aqua Trampoline small-troop pairings that were not shared."""
+    at_slot_small_counts = defaultdict(int)
+    small_at_total = 0
+    for entry in schedule.entries:
+        if entry.activity.name != "Aqua Trampoline":
+            continue
+        troop_size = entry.troop.scouts + entry.troop.adults
+        if troop_size > 16:
+            continue
+        small_at_total += 1
+        key = (entry.time_slot.day, entry.time_slot.slot_number)
+        at_slot_small_counts[key] += 1
+
+    expected_pairs = small_at_total // 2
+    actual_pairs = sum(count // 2 for count in at_slot_small_counts.values())
+    return max(0, expected_pairs - actual_pairs)
 
 
 def _load_unscheduled_from_schedule_json(schedule_file: str) -> Dict[str, Any]:
@@ -112,53 +268,88 @@ def _load_unscheduled_from_schedule_json(schedule_file: str) -> Dict[str, Any]:
     return unscheduled
 
 
-def evaluate_week(week_file, weights=None):
+def _load_sailing_half_fills_from_schedule_json(schedule_file: str) -> Dict[str, Any]:
+    """Load Sailing half-slot sidecar payload from schedule JSON."""
+    if not os.path.exists(schedule_file):
+        return {}
+    with open(schedule_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    fills = data.get("sailing_half_fills", {}) or {}
+    if not isinstance(fills, dict):
+        raise ValueError(f"Invalid sailing_half_fills payload in {schedule_file}: expected object/dict")
+    return fills
+
+
+def _day_request_displaces_preference(troop, missing_activity_name: str, missing_rank: int, honored_names: set[str]) -> bool:
+    """Mirror core.services.unscheduled_source day-request displacement semantics."""
+    for activity_name in honored_names:
+        if activity_name == missing_activity_name:
+            continue
+        priority = troop.get_priority(activity_name) if hasattr(troop, "get_priority") else 999
+        honored_rank = priority + 1 if priority != 999 else 999
+        if honored_rank > missing_rank:
+            return True
+    return False
+
+
+def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = None):
     if weights is None:
         weights = DEFAULT_WEIGHTS
 
     troops = load_troops_from_json(week_file)
     all_activities = get_all_activities()
-    
+
     # Try to load existing schedule from disk
     week_basename = os.path.splitext(os.path.basename(week_file))[0]
-    # Update path to look in data/schedules/ relative to root
-    schedule_file = os.path.join("data", "schedules", f"{week_basename}_schedule.json")
-    
-    if os.path.exists(schedule_file):
+    schedule_file = _resolve_schedules_dir(schedules_dir) / f"{week_basename}_schedule.json"
+    sailing_half_fills: Dict[str, Any] = {}
+
+    if schedule_file.exists():
         #print(f"Loading existing schedule from {schedule_file}...")
         try:
-            schedule = load_schedule_from_json(schedule_file, troops, all_activities)
+            schedule = load_schedule_from_json(str(schedule_file), troops, all_activities)
+            sailing_half_fills = _load_sailing_half_fills_from_schedule_json(str(schedule_file))
             # Re-link schedule to valid objects if needed, but the loader handles mapping.
         except Exception as e:
             print(f"Error loading schedule: {e}")
             print("Falling back to fresh scheduling...")
             scheduler = ConstrainedScheduler(troops, all_activities)
             schedule = scheduler.schedule_all()
+            sailing_half_fills = getattr(scheduler, "sailing_balls_fills", {}) or {}
     else:
         print(f"No existing schedule found at {schedule_file}. Running fresh scheduler...")
         scheduler = ConstrainedScheduler(troops, all_activities)
         schedule = scheduler.schedule_all()
-    
+        sailing_half_fills = getattr(scheduler, "sailing_balls_fills", {}) or {}
+
+    if not sailing_half_fills:
+        sailing_half_fills = build_sailing_half_fills(troops, schedule)
+
     metrics = {}
-    
+
     # 1. Excess Days for Clustered Activities
     # ---------------------------------------
     # Definition: required_days = ceil(total_activities / 3).
     # Excess days = max(0, days_used - required_days).
-    cluster_areas = ["Tower", "Rifle Range", "Outdoor Skills", "Handicrafts"]
+    area_priority = config_loader.get_constraints().get("optimization", {}).get("area_clustering_priority", [])
+    cluster_areas = [area for area in area_priority if area in EXCLUSIVE_AREAS]
+    cluster_areas.extend(
+        area for area, activities in EXCLUSIVE_AREAS.items()
+        if len(activities) >= 3 and area not in cluster_areas
+    )
     total_excess_days = 0
     area_details = {}
-    
+
     for area in cluster_areas:
         acts = EXCLUSIVE_AREAS.get(area, [])
         area_entries = [e for e in schedule.entries if e.activity.name in acts]
         if not area_entries:
             continue
-            
+
         days_used = set(e.time_slot.day for e in area_entries)
         num_activities = len(area_entries)
         required_days = math.ceil(num_activities / 3.0)
-        
+
         excess = max(0, len(days_used) - required_days)
         total_excess_days += excess
         area_details[area] = {
@@ -169,33 +360,27 @@ def evaluate_week(week_file, weights=None):
         }
 
     metrics["excess_cluster_days"] = total_excess_days
-    
+
     # 2. Cluster Gaps (authoritative gap definition)
     # ---------------------------------------------------
     gap_1_3_count = 0
-    
+
     # Define slots per day
     slots_per_day = {
         Day.MONDAY: 3, Day.TUESDAY: 3, Day.WEDNESDAY: 3,
         Day.THURSDAY: 2, Day.FRIDAY: 3
     }
-    
+
     # Define cluster areas from SPINE/SKULL sources.
-    area_priority = config_loader.get_constraints().get("optimization", {}).get("area_clustering_priority", [])
-    cluster_area_names = [a for a in area_priority if a in EXCLUSIVE_AREAS]
-    cluster_area_names.extend(
-        a for a, acts in EXCLUSIVE_AREAS.items()
-        if len(acts) >= 3 and a not in cluster_area_names
-    )
-    CLUSTER_AREAS = {area_name: EXCLUSIVE_AREAS.get(area_name, []) for area_name in cluster_area_names}
+    CLUSTER_AREAS = {area_name: EXCLUSIVE_AREAS.get(area_name, []) for area_name in cluster_areas}
     cluster_activity_names = set()
     for acts in CLUSTER_AREAS.values():
         cluster_activity_names.update(acts)
-    
+
     # Build slot lookup once for gap checks
     all_time_slots = list(generate_time_slots())
     slot_lookup = {(s.day, s.slot_number): s for s in all_time_slots}
-    
+
     # Cluster gaps: AREA-level pattern.
     # For a given day+cluster area, if slot 1 and slot 3 are used by that area,
     # but slot 2 has no activity from that same area, count one gap.
@@ -216,7 +401,7 @@ def evaluate_week(week_file, weights=None):
                         "pattern": "1,-,3",
                     }
                 )
-    
+
     # Gap definition is strictly the cluster 1,-,3 pattern.
     gap_1_3_count = cluster_gap_count
     metrics["unnecessary_gaps"] = gap_1_3_count
@@ -291,9 +476,34 @@ def evaluate_week(week_file, weights=None):
     # --------------------------------
     slot_counts = defaultdict(int)
     for e in schedule.entries:
-        if e.activity.name in ALL_STAFF_ACTIVITIES:
-            slot_counts[(e.time_slot.day, e.time_slot.slot_number)] += 1
-    
+        staff_need = config_loader.get_staff_need(e.activity.name)
+        if staff_need <= 0:
+            continue
+
+        is_multislot_continuation = any(
+            other.troop == e.troop
+            and other.activity.name == e.activity.name
+            and other.time_slot.day == e.time_slot.day
+            and other.time_slot.slot_number == e.time_slot.slot_number - 1
+            for other in schedule.entries
+        )
+        if is_multislot_continuation:
+            continue
+
+        effective_slots = int(schedule._get_effective_slots(e.activity, e.troop) + 0.5)
+        try:
+            start_idx = all_time_slots.index(e.time_slot)
+        except ValueError:
+            continue
+
+        for offset in range(effective_slots):
+            if start_idx + offset >= len(all_time_slots):
+                break
+            occupied_slot = all_time_slots[start_idx + offset]
+            if occupied_slot.day != e.time_slot.day:
+                break
+            slot_counts[(occupied_slot.day, occupied_slot.slot_number)] += staff_need
+
     # Ensure all 14 slots are counted (even if 0)
     counts_list = []
     slots_list = [] # For debugging
@@ -303,17 +513,18 @@ def evaluate_week(week_file, weights=None):
             c = slot_counts[(day, s)]
             counts_list.append(c)
             slots_list.append(f"{day.value[:3]}-{s}")
-            
+
     avg_load = sum(counts_list) / len(counts_list)
     variance = sum((c - avg_load) ** 2 for c in counts_list) / len(counts_list)
     metrics["staff_variance"] = variance
     metrics["avg_staff_load"] = avg_load
+    metrics["staff_load_by_slot"] = dict(zip(slots_list, counts_list))
 
     # 4. Underused & Excessive Staff Slots
     # ------------------------------------
     # Severe Underuse: Dynamic Threshold (Mean * 0.5, min floor based on troop count)
-    # Excessive Staff: > 14
-    
+    # Over target / excessive staff use actual SKULL staff counts, not entry counts.
+
     # FIX 2026-01-30: Scale the severe underuse floor based on troop count
     # Small weeks (3-4 troops) naturally have lower slot utilization
     # and shouldn't be penalized for this structural limitation
@@ -326,15 +537,19 @@ def evaluate_week(week_file, weights=None):
         SEVERE_FLOOR = 2.5  # Medium weeks
     else:
         SEVERE_FLOOR = 3.0  # Normal threshold for larger weeks
-    
+
     severe_threshold = max(SEVERE_FLOOR, avg_load * 0.5)
-    
+
+    target_staff = config_loader.get_target_staff_global()
+    max_staff = config_loader.get_max_staff_global()
     severe_underused = sum(1 for c in counts_list if c < severe_threshold)
-    excessive_staff = sum(1 for c in counts_list if c > 14)
-    
+    over_target_staff = sum(1 for c in counts_list if c > target_staff)
+    excessive_staff = sum(1 for c in counts_list if c > max_staff)
+
     metrics["severe_underused_slots"] = severe_underused
+    metrics["over_target_staff_slots"] = over_target_staff
     metrics["excessive_staff_slots"] = excessive_staff
-    
+
     # 5. Constraint Violations (HARD vs SOFT)
     # ----------------------------------------
     # HARD = Schedule Invalid (-1000): Empty slots, exclusive double-book, missing mandatory
@@ -382,7 +597,7 @@ def evaluate_week(week_file, weights=None):
             )
     metrics["empty_slot_count"] = empty_slots_total
     metrics["troops_with_empty_slots"] = troops_with_empty_slots
-    
+
     # Beach Slot Rule - full list; Top 5 relaxation: slot 2 allowed when 1/3/Thu-2 full (AT: exclusive only)
     # Also track beach_slot_2_uses for score penalty (slot 2 is worse than 1/3 but better than missing Top 5)
     BEACH_SLOT_ACTS = set(SchedulerConstants.BEACH_SLOT_ACTIVITIES) - {"Sailing"}
@@ -414,7 +629,7 @@ def evaluate_week(week_file, weights=None):
                     soft_violations += 1  # SOFT: Not Top 5 - penalize but not invalid
                     soft_violation_details.append(f"{troop.name}: Beach activity '{e.activity.name}' in Slot 2 (not Top 5) on {e.time_slot.day.value}")
     metrics["beach_slot_2_uses"] = beach_slot_2_uses
-    
+
     # Delta vs Tower/ODS - Spine: "can be same day but not back to back" (adjacent slots only)
     TOWER_ODS_ACTS = set(EXCLUSIVE_AREAS.get("Tower", [])) | set(EXCLUSIVE_AREAS.get("Outdoor Skills", []))
     for troop in troops:
@@ -437,28 +652,48 @@ def evaluate_week(week_file, weights=None):
 
     # Friday Reflection Missing
     for t in troops:
-        has_ref = any(e.activity.name == "Reflection" and e.time_slot.day == Day.FRIDAY 
+        has_ref = any(e.activity.name == "Reflection" and e.time_slot.day == Day.FRIDAY
                      for e in schedule.entries if e.troop == t)
         if not has_ref:
             hard_violations += 1  # HARD: Mandatory spine activity
             hard_violation_details.append(f"{t.name}: Missing Friday Reflection")
-    
-    # Trading Post + Campsite Free Time / Shower House (Same Day)
+        has_super = any(e.activity.name == "Super Troop" for e in schedule.entries if e.troop == t)
+        if not has_super:
+            hard_violations += 1
+            hard_violation_details.append(f"{t.name}: Missing Super Troop")
+
+    # Free-time soft same-day conflicts from SKULL.
+    # Count each configured pair separately, so a day with all three
+    # activities records all pairwise conflicts instead of just one.
     for troop in troops:
         troop_entries = [e for e in schedule.entries if e.troop == troop]
         by_day = defaultdict(set)
         for e in troop_entries:
             by_day[e.time_slot.day].add(e.activity.name)
-        
+
         for day, acts in by_day.items():
-            has_trading = "Trading Post" in acts
-            has_campsite = "Campsite Free Time" in acts
-            has_shower = "Shower House" in acts
-            if has_trading and (has_campsite or has_shower):
-                soft_violations += 1  # SOFT: Same-day pair recommendation
-                other = 'Campsite Free Time' if has_campsite else 'Shower House'
-                soft_violation_details.append(f"{troop.name}: Trading Post + {other} on same day ({day.value})")
-    
+            for act_a, act_b in _get_free_time_same_day_conflicts(acts):
+                soft_violations += 1
+                soft_violation_details.append(
+                    f"{troop.name}: {act_a} + {act_b} on same day ({day.value})"
+                )
+
+    # Water Games soft same-day conflicts from SKULL.
+    # Any pair among Aqua Trampoline, Water Polo, and Greased Watermelon is a
+    # soft violation: avoid it when possible, but do not invalidate schedules.
+    for troop in troops:
+        troop_entries = [e for e in schedule.entries if e.troop == troop]
+        by_day = defaultdict(set)
+        for e in troop_entries:
+            by_day[e.time_slot.day].add(e.activity.name)
+
+        for day, acts in by_day.items():
+            for act_a, act_b in _get_water_games_same_day_conflicts(acts):
+                soft_violations += 1
+                soft_violation_details.append(
+                    f"{troop.name}: Water Games same-day pair {act_a} + {act_b} on {day.value}"
+                )
+
     # NEW: Canoe Pairing Conflicts (any 2 of these on same day)
     CANOE_ACTIVITIES = list(SchedulerConstants.CANOE_ACTIVITIES)
     for troop in troops:
@@ -467,12 +702,12 @@ def evaluate_week(week_file, weights=None):
         for e in troop_entries:
             if e.activity.name in CANOE_ACTIVITIES:
                 by_day[e.time_slot.day].add(e.activity.name)
-        
+
         for day, acts in by_day.items():
             if len(acts) >= 2:
                 soft_violations += 1  # SOFT: Same-day boat pair
                 soft_violation_details.append(f"{troop.name}: Multiple canoe activities on {day.value} ({', '.join(acts)})")
-    
+
     # NEW: Wet-Dry-Wet Pattern (Slot 1 wet, Slot 2 dry, Slot 3 wet)
     WET_ACTIVITIES = SchedulerConstants.WET_ACTIVITIES
     for troop in troops:
@@ -480,7 +715,7 @@ def evaluate_week(week_file, weights=None):
         by_day_slot = defaultdict(dict)
         for e in troop_entries:
             by_day_slot[e.time_slot.day][e.time_slot.slot_number] = e.activity.name
-        
+
         for day in [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.FRIDAY]:
             slots = by_day_slot[day]
             if 1 in slots and 2 in slots and 3 in slots:
@@ -490,7 +725,7 @@ def evaluate_week(week_file, weights=None):
                 if s1_wet and not s2_wet and s3_wet:
                     soft_violations += 1  # SOFT: Wet pattern
                     soft_violation_details.append(f"{troop.name}: Wet-Dry-Wet pattern on {day.value}")
-    
+
     # NEW: Tower/ODS after wet or wet after Tower/ODS
     TOWER_ODS_ALL = EXCLUSIVE_AREAS.get("Tower", []) + EXCLUSIVE_AREAS.get("Outdoor Skills", [])
     for troop in troops:
@@ -498,7 +733,7 @@ def evaluate_week(week_file, weights=None):
         by_day_slot = defaultdict(dict)
         for e in troop_entries:
             by_day_slot[e.time_slot.day][e.time_slot.slot_number] = e.activity.name
-        
+
         for day in [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.FRIDAY]:
             slots = by_day_slot[day]
             for slot_num in [1, 2]:
@@ -513,14 +748,14 @@ def evaluate_week(week_file, weights=None):
                     if curr_act in TOWER_ODS_ALL and next_act in WET_ACTIVITIES:
                         soft_violations += 1  # SOFT: Strenuous transition
                         soft_violation_details.append(f"{troop.name}: Tower/ODS->Wet transition on {day.value} (Slot {slot_num}->{slot_num+1})")
-    
+
     # NEW: Same Place Same Day - A troop should never do two activities from the same exclusive area on the same day
     for troop in troops:
         troop_entries = [e for e in schedule.entries if e.troop == troop]
         by_day = defaultdict(set)
         for e in troop_entries:
             by_day[e.time_slot.day].add(e.activity.name)
-        
+
         for day, acts in by_day.items():
             # Check each exclusive area
             for area_name, area_activities in EXCLUSIVE_AREAS.items():
@@ -530,14 +765,14 @@ def evaluate_week(week_file, weights=None):
                     soft_violations += 1
                     soft_violation_details.append(f"{troop.name}: Same area '{area_name}' twice on {day.value}")
                     break  # Count once per day per area
-    
+
     # NEW: Showerhouse before Super Troop or wet activity (same day)
     for troop in troops:
         troop_entries = [e for e in schedule.entries if e.troop == troop]
         by_day_slot = defaultdict(dict)
         for e in troop_entries:
             by_day_slot[e.time_slot.day][e.time_slot.slot_number] = e.activity.name
-        
+
         for day, slots in by_day_slot.items():
             # Check if Showerhouse is in an earlier slot than Super Troop or wet activity
             for slot_num in sorted(slots.keys()):
@@ -550,7 +785,7 @@ def evaluate_week(week_file, weights=None):
                                 soft_violations += 1  # SOFT: Shower timing
                                 soft_violation_details.append(f"{troop.name}: Shower House before {later_act} on {day.value}")
                                 break  # Count once per violation
-    
+
     # Accuracy limit: max 1 per day (Rifle, Shotgun, Archery) - includes Rifle+Shotgun
     ACCURACY_ACTIVITIES = list(SchedulerConstants.ACCURACY_ACTIVITIES)
     for troop in troops:
@@ -602,22 +837,22 @@ def evaluate_week(week_file, weights=None):
                     )
     hard_violations += exclusive_double_book
     metrics["exclusive_double_book"] = exclusive_double_book
-    
+
     # NEW: Max Beach Staff & Count
     # ----------------------------
     # Max 12 Beach Staff per Slot
     # Max 4 Staffed Beach Activities per Slot
-    
+
     beach_staff_max = config_loader.get_constraints().get("beach_staff_per_slot", 12)
     beach_acts_max = config_loader.get_constraints().get("max_beach_staffed_activities", 4)
-    
+
     beach_staff_violations = 0
     beach_acts_violations = 0
-    
+
     # We need to calculate this per slot
     slot_beach_staff = defaultdict(int)
     slot_beach_acts = defaultdict(int)
-    
+
     for e in schedule.entries:
         if e.activity.name in SchedulerConstants.BEACH_STAFFED_ACTIVITIES:
              # Add staff count
@@ -642,7 +877,7 @@ def evaluate_week(week_file, weights=None):
 
     metrics["beach_staff_violations"] = beach_staff_violations
     metrics["beach_acts_violations"] = beach_acts_violations
-    
+
     # Store hard/soft violation counts and details
     metrics["hard_violations"] = hard_violations
     metrics["soft_violations"] = soft_violations
@@ -651,117 +886,149 @@ def evaluate_week(week_file, weights=None):
     metrics["constraint_violations"] = hard_violations + soft_violations  # Total for backward compat
     metrics["violation_details"] = hard_violation_details + soft_violation_details  # Combined for backward compat
 
-# 6. Normalized Top Preference Success (Equal Troop Weighting)
+    # 6. Top Preference Success (Innocent Until Proven Guilty Scoring)
     # -------------------------
-    # Base Score: 450. Each troop is responsible for exactly (450 / N) points.
-    # A troop's contribution is scaled by what percentage of their physically 
-    # possible requested schedule they received.
-    
-    preference_base_score = weights.get("preference_base_score", 450.0)
-    
-    # Avoid division by zero if a week somehow has no troops
-    num_troops = max(1, len(troops))
-    points_per_troop = preference_base_score / num_troops
-    
-    total_preference_points_accumulated = 0.0
-    TOTAL_AVAILABLE_SLOTS = 14.0
-    
-    # Stats tracking will use authoritative unscheduled data
+    # Base Score: 450 (or whatever is in DEFAULT_WEIGHTS)
+    # Deductions: For missing Top 14 items (if requested)
+    # Bonuses: For hitting Top 15+ items
+
+    preference_score = weights.get("preference_base_score", 450.0)
+    current_preference_deductions = 0.0
+    current_preference_bonuses = 0.0
+
+    # Stats tracking
+    missing_top5_count = 0
+    missing_top10_count = 0
+    missing_top14_count = 0
+    missing_top15_count = 0
+
+    # HC/DG exemption: if all 3 Tuesday slots are HC or DG, missed HC/DG counts as exempt
+    tuesday_hc_dg_slots = set()
+    for e in schedule.entries:
+        if e.time_slot.day == Day.TUESDAY and e.activity.name in ("History Center", "Disc Golf"):
+            tuesday_hc_dg_slots.add(e.time_slot.slot_number)
+    hc_dg_tuesday_full = tuesday_hc_dg_slots >= {1, 2, 3}
 
     for troop in troops:
         troop_acts = set(e.activity.name for e in schedule.entries if e.troop == troop)
-        
-        # 1. Base capacity used by mandatory Spine activities (Reflection + Super Troop)
-        spine_slots_used = 0.0
-        if "Reflection" in troop_acts:
-            spine_slots_used += 1.0
-        if "Super Troop" in troop_acts:
-            spine_slots_used += 1.0
-        # Note: If Super Troop is not requested, it's still scheduled, so troops only have 12 available slots
-        
-        # ---------------------------------------------------------
-        # Step A: Calculate Max Possible Score (Theoretical Perfect Packing)
-        # ---------------------------------------------------------
-        # NOTE: If a troop only requests 8 activities (say, 10 slots total), 
-        # this loop naturally runs out of preferences and their max score is set
-        # perfectly to those 10 slots.
-        max_possible_score = 0.0
-        temp_capacity_used = spine_slots_used
-        
-        for i, pref_name in enumerate(troop.preferences):
-            if i >= 20 or temp_capacity_used >= TOTAL_AVAILABLE_SLOTS:
-                break
-                
-            pref_activity = get_activity_by_name(pref_name)
-            pref_slots = pref_activity.slots if pref_activity else 1.0
-            
-            # Check if this preference physically fits
-            if temp_capacity_used + pref_slots <= TOTAL_AVAILABLE_SLOTS:
-                # Linear staircase calculation
-                weight = max(0.0, 5.0 - (i * 0.25))
-                max_possible_score += weight
-                temp_capacity_used += pref_slots
-                
-        # ---------------------------------------------------------
-        # Step B: Calculate Actual Score (What they actually received)
-        # ---------------------------------------------------------
-        actual_score = 0.0
-        for i, pref_name in enumerate(troop.preferences):
-            if i >= 20: 
-                break
-                
-            is_scheduled = pref_name in troop_acts
-            if is_scheduled:
-                weight = max(0.0, 5.0 - (i * 0.25))
-                actual_score += weight
-                
-        # ---------------------------------------------------------
-        # Step C: Normalize and Apply to Total Week Score
-        # ---------------------------------------------------------
-        # Protect against division by zero if a troop has absolutely 0 preferences
-        if max_possible_score > 0:
-            troop_fulfillment_ratio = actual_score / max_possible_score
-        else:
-            troop_fulfillment_ratio = 1.0
-            
-        # Cap at 1.0 (100%) in case they missed a big item but hit a ton of 
-        # smaller items that somehow mathematically exceeded greedy packing
-        troop_fulfillment_ratio = min(1.0, troop_fulfillment_ratio)
-        
-        # Calculate their share of the 450 total points
-        troop_points_earned = points_per_troop * troop_fulfillment_ratio
-        total_preference_points_accumulated += troop_points_earned
-        
-        # Optional: Print statement to verify the math is working during runs
-        # print(f"{troop.name}: {actual_score:.1f} / {max_possible_score:.1f} ({troop_fulfillment_ratio*100:.1f}%) -> Earned {troop_points_earned:.1f}/{points_per_troop:.1f} pts")
+        troop_acts |= get_request_credit_fill_activities(troop, sailing_half_fills)
+        troop_entries = [e for e in schedule.entries if e.troop == troop]
+        day_requested_names = set()
+        honored_day_request_names = set()
+        for day_name, activities in (getattr(troop, "day_requests", None) or {}).items():
+            day_key = str(day_name).upper()
+            for activity_name in activities:
+                day_requested_names.add(activity_name)
+                if any(
+                    e.activity.name == activity_name
+                    and e.time_slot.day.name.upper() == day_key
+                    for e in troop_entries
+                ):
+                    honored_day_request_names.add(activity_name)
 
-    # Final calculations for the metrics dictionary
+        # Check if troop has ANY 3-hour activity scheduled (exemption logic)
+        has_3hr_scheduled = any(e.activity.name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"]
+                               for e in schedule.entries if e.troop == troop)
+
+        # Iterate through preferences
+        for i, pref_name in enumerate(troop.preferences):
+            rank = i + 1
+
+            # --- RANKS 1-14: DEDUCTION IF MISSED; rank 15 is counted for pct only ---
+            if rank <= 15:
+                # Determining weight
+                weight = 0.0
+                if rank <= 5:
+                    weight = weights["preference_weights"]["top5"][i]
+                elif rank <= 10:
+                    weight = weights["preference_weights"]["top6_10"][i-5]
+                elif rank <= 14:
+                    weight = weights["preference_weights"]["top11_14"][i-10]
+
+                if pref_name not in troop_acts:
+                    # Check exemptions before deducting
+                    is_exempt = False
+
+                    # 1. 3-Hour Mutually Exclusive Exemption (Generalized to all ranks)
+                    if pref_name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] and has_3hr_scheduled:
+                         is_exempt = True
+
+                    # 2. Tuesday HC/DG Saturation Exemption (Generalized to all ranks)
+                    elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
+                         is_exempt = True
+                    # 3. Canoe-family duplication exemption
+                    elif (
+                        pref_name in SchedulerConstants.CANOE_ACTIVITIES
+                        and any(
+                            e.activity.name in SchedulerConstants.CANOE_ACTIVITIES and e.activity.name != pref_name
+                            for e in schedule.entries
+                            if e.troop == troop
+                        )
+                    ):
+                         is_exempt = True
+                    # 4. MUST-HONOR day-request displacement exemption.
+                    elif pref_name in day_requested_names:
+                         is_exempt = True
+                    elif _day_request_displaces_preference(troop, pref_name, rank, honored_day_request_names):
+                         is_exempt = True
+
+                    if not is_exempt:
+                        current_preference_deductions += weight
+                        # Stats
+                        if rank <= 5: missing_top5_count += 1
+                        if rank <= 10: missing_top10_count += 1
+                        if rank <= 14: missing_top14_count += 1
+                        if rank <= 15: missing_top15_count += 1
+
+            # --- RANKS 15-20: BONUS IF HIT ---
+            elif rank <= 20:
+                # Determining bonus weight
+                weight = 0.0
+                idx = i - 14
+                if idx < len(weights["preference_weights"]["top15_20"]):
+                    weight = weights["preference_weights"]["top15_20"][idx]
+
+                if pref_name in troop_acts:
+                    current_preference_bonuses += weight
+                    # No stats for "missing" deep preferences
+
+    # Final calculation. Deep-preference hits are tracked as diagnostics, but
+    # the preference component cannot exceed its configured budget.
+    total_preference_points_accumulated = _bounded_points(
+        preference_score - current_preference_deductions + current_preference_bonuses,
+        preference_score,
+    )
+
     metrics["preference_points_accumulated"] = total_preference_points_accumulated
-    
-    # We no longer need separate bonuses/deductions since it is a pure ratio now,
-    # but we store them to keep the rest of your logging safe from crashes.
-    metrics["preference_deductions"] = preference_base_score - total_preference_points_accumulated
-    metrics["preference_bonuses"] = 0.0
-    
+    metrics["preference_deductions"] = current_preference_deductions
+    metrics["preference_bonuses"] = current_preference_bonuses
+
     authoritative_unscheduled = _load_unscheduled_from_schedule_json(schedule_file)
     authoritative_misses = summarize_non_exempt_misses(authoritative_unscheduled)
     authoritative_top5 = authoritative_misses["missing_top5"]
     authoritative_top10 = authoritative_misses["missing_top10"]
-    authoritative_top15 = authoritative_misses.get("missing_top15", 0)
+
+    if missing_top5_count != authoritative_top5 or missing_top10_count != authoritative_top10:
+        raise RuntimeError(
+            "Top-5/Top-10 mismatch detected: computed from preferences does not match "
+            "authoritative schedule_json.unscheduled values. "
+            f"computed(top5={missing_top5_count}, top10={missing_top10_count}) vs "
+            f"authoritative(top5={authoritative_top5}, top10={authoritative_top10})."
+        )
 
     metrics["missing_top5"] = authoritative_top5
     metrics["missing_top10"] = authoritative_top10
-    metrics["missing_top15"] = authoritative_top15
-    
+    metrics["missing_top15"] = missing_top15_count
+
     # Success percentages (Calculated based on requested vs fulfilled)
     # Only count "requested" items in the denominator
     total_top5_requested = sum(min(5, len(t.preferences)) for t in troops)
     total_top10_requested = sum(min(10, len(t.preferences)) for t in troops)
     total_top15_requested = sum(min(15, len(t.preferences)) for t in troops)
-    
+
     metrics["top5_pct"] = 100.0 * (total_top5_requested - authoritative_top5) / max(1, total_top5_requested)
     metrics["top10_pct"] = 100.0 * (total_top10_requested - authoritative_top10) / max(1, total_top10_requested)
-    metrics["top15_pct"] = 100.0 * (total_top15_requested - authoritative_top15) / max(1, total_top15_requested)
+    metrics["top15_pct"] = 100.0 * (total_top15_requested - missing_top15_count) / max(1, total_top15_requested)
 
 
     # 8. New Metrics: Early Week Bias & Batching
@@ -774,57 +1041,66 @@ def evaluate_week(week_file, weights=None):
             if e.time_slot.day in [Day.MONDAY, Day.TUESDAY]:
                 early_week_count += 1
     metrics["early_week_bias"] = early_week_count
-    
+
     # 9. Promoted Pairings Reward (Commissioner/Easy Schedule Days)
     # -------------------------------------------------------------
     # Reward for:
     # - Sailing on same day as Delta (Mon/Tue/Wed)
     # - Rifle on same day as Super Troop (Mon/Tue/Wed)
     promoted_pairing_hits = 0
-    
+    delta_sailing_pairing_misses = 0
+
     # Check Delta + Sailing Pairing (Same Day)
     for troop in troops:
         troop_entries = [e for e in schedule.entries if e.troop == troop]
         by_day = defaultdict(set)
         for e in troop_entries:
             by_day[e.time_slot.day].add(e.activity.name)
-        
+
+        scheduled_acts = set().union(*by_day.values()) if by_day else set()
+        has_delta_sailing_pair = False
+
         for day, acts in by_day.items():
             # Pairing 1: Delta + Sailing
             if "Delta" in acts and "Sailing" in acts:
                 promoted_pairing_hits += 1
+                has_delta_sailing_pair = True
             # Pairing 2: Super Troop + Rifle
             if "Super Troop" in acts and ("Troop Rifle" in acts or "Troop Shotgun" in acts):
                 promoted_pairing_hits += 1
-                
+
+        if {"Delta", "Sailing"}.issubset(scheduled_acts) and not has_delta_sailing_pair:
+            delta_sailing_pairing_misses += 1
+
     metrics["promoted_pairings"] = promoted_pairing_hits
+    metrics["delta_sailing_pairing_misses"] = delta_sailing_pairing_misses
 
     # Batching: Back-to-back Tie Dye, Rifle, Shotgun (Global Schedule)
     # Check if slot N and N+1 have the same activity (any troop)
     BATCH_TARGETS = ["Tie Dye", "Troop Rifle", "Troop Shotgun"]
     batch_hits = 0
-    
+
     # Organize by activity -> day -> slots
     day_order = {Day.MONDAY: 0, Day.TUESDAY: 1, Day.WEDNESDAY: 2, Day.THURSDAY: 3, Day.FRIDAY: 4}
-    
+
     activity_slots = defaultdict(set)
     for e in schedule.entries:
         if e.activity.name in BATCH_TARGETS:
             activity_slots[e.activity.name].add((e.time_slot.day, e.time_slot.slot_number))
-            
+
     for act_name, slots in activity_slots.items():
         # Sort by day, then slot using explicit order
         slots = sorted(slots, key=lambda x: (day_order.get(x[0], 99), x[1]))
-        
+
         # Check consecutive slots
         for i in range(len(slots) - 1):
             d1, s1 = slots[i]
             d2, s2 = slots[i+1]
             if d1 == d2 and s2 == s1 + 1:
                 batch_hits += 1
-                
+
     metrics["activity_batching"] = batch_hits
-    
+
     # Estimate possible batching opportunities based on per-day counts
     batch_possible = 0
     activity_day_slots = defaultdict(lambda: defaultdict(set))
@@ -836,7 +1112,8 @@ def evaluate_week(week_file, weights=None):
             if len(slots) >= 2:
                 batch_possible += len(slots) - 1
     metrics["activity_batching_possible"] = batch_possible
-    
+    metrics["activity_batching_misses"] = max(0, batch_possible - batch_hits)
+
     # Sailing Full-Day or Empty-Day Bonus
     # Bonus if a troop's sailing day has no other staffed activities
     sailing_full_day = 0
@@ -859,7 +1136,8 @@ def evaluate_week(week_file, weights=None):
                 sailing_full_day += 1
     metrics["sailing_full_day_hits"] = sailing_full_day
     metrics["sailing_full_day_total"] = sailing_days
-    
+    metrics["sailing_full_day_misses"] = max(0, sailing_days - sailing_full_day)
+
     # Sailing Same-Day Pairing Bonus (2 sails on same day)
     sailing_day_counts = defaultdict(set)
     for e in schedule.entries:
@@ -869,12 +1147,14 @@ def evaluate_week(week_file, weights=None):
     sailing_days_two = sum(1 for troops_set in sailing_day_counts.values() if len(troops_set) >= 2)
     metrics["sailing_same_day_hits"] = sailing_days_two
     metrics["sailing_same_day_total"] = sailing_days_total
+    metrics["sailing_same_day_misses"] = max(0, sailing_days_total - sailing_days_two)
 
     # 7. Calculate Score (Target: 1000 = perfect)
     # -------------------------------------------
-    # Components: Preferences (450) + Cluster (250) + Soft Constraints (150) + Staff (100) + Bonuses (50)
+    # Components: Preferences (450) + Cluster/Efficiency (250) + Soft/Expectations (200) + Staff (100)
     score_components = {}
-    
+    score_diagnostics = {}
+
     # === HARD CONSTRAINT CHECK: Any hard violation = INVALID (-1000) ===
     if metrics.get("hard_violations", 0) > 0:
         score = -1000
@@ -882,116 +1162,128 @@ def evaluate_week(week_file, weights=None):
         metrics["invalid_reason"] = "Hard constraint violation"
         score_components["hard_violation_penalty"] = -1000
         metrics["score_components"] = score_components
+        metrics["score_component_diagnostics"] = score_diagnostics
         metrics["final_score"] = int(round(score))
         return metrics
-    
+
     # === Valid schedule - calculate component scores ===
     # Cluster gaps are scored as quality penalties (not hard invalidation).
     metrics["schedule_invalid"] = False
-    
-    # 1. Preferences: ~450 pts (already calculated with new deduction/bonus logic)
+
+    # 1. Preferences: 450 pts. Diagnostics are not point-bearing.
     pref_points = metrics.get("preference_points_accumulated", 0.0)
     score_components["preference_points"] = pref_points
-    score_components["preference_deductions"] = metrics.get("preference_deductions", 0.0)
-    score_components["preference_bonuses"] = metrics.get("preference_bonuses", 0.0)
+    score_diagnostics["preference_deductions"] = metrics.get("preference_deductions", 0.0)
+    score_diagnostics["preference_bonuses"] = metrics.get("preference_bonuses", 0.0)
 
-    
+
     # 2. Cluster Efficiency: 250 pts (HIGH PRIORITY)
+    activity_batching_penalty = (
+        metrics.get("activity_batching_misses", 0)
+        * weights.get("activity_batching_miss_penalty", 2.0)
+    )
+    sailing_full_day_penalty = (
+        metrics.get("sailing_full_day_misses", 0)
+        * weights.get("sailing_full_day_miss_penalty", 2.0)
+    )
+    sailing_same_day_penalty = (
+        metrics.get("sailing_same_day_misses", 0)
+        * weights.get("sailing_same_day_miss_penalty", 2.0)
+    )
     cluster_points = (
         weights["cluster_efficiency_points"]
         - metrics["excess_cluster_days"] * weights["excess_cluster_day_penalty"]
         - metrics.get("cluster_gaps", 0) * weights["cluster_gap_penalty"]
+        - activity_batching_penalty
+        - sailing_full_day_penalty
+        - sailing_same_day_penalty
     )
-    score_components["cluster_efficiency_points"] = max(0, cluster_points)
-    
-    # 3. Soft Constraint Compliance: 150 pts (budget)
+    score_components["cluster_efficiency_points"] = _bounded_points(
+        cluster_points,
+        weights["cluster_efficiency_points"],
+    )
+    score_diagnostics["activity_batching_penalty"] = activity_batching_penalty
+    score_diagnostics["sailing_full_day_penalty"] = sailing_full_day_penalty
+    score_diagnostics["sailing_same_day_penalty"] = sailing_same_day_penalty
+
+    # 3. Soft Constraint + Expectation Compliance: 200 pts (budget)
+    delta_timing_penalty, delta_timing_details, delta_required_idx = _calculate_delta_timing_penalty(
+        schedule,
+        troops,
+        weights,
+    )
+    delta_sailing_pairing_penalty = (
+        metrics.get("delta_sailing_pairing_misses", 0)
+        * weights.get("delta_sailing_pairing_miss_penalty", 6.0)
+    )
+    at_sharing_misses = _calculate_at_sharing_misses(schedule)
+    at_sharing_penalty = at_sharing_misses * weights.get("at_sharing_miss_penalty", 8.0)
+    expectation_penalty = (
+        delta_timing_penalty
+        + delta_sailing_pairing_penalty
+        + at_sharing_penalty
+    )
+    metrics["delta_required_latest_day"] = SCORING_DAY_ORDER[delta_required_idx].value
+    metrics["delta_timing_penalty"] = delta_timing_penalty
+    metrics["delta_timing_penalty_details"] = delta_timing_details
+    metrics["delta_sailing_pairing_penalty"] = delta_sailing_pairing_penalty
+    metrics["at_sharing_misses"] = at_sharing_misses
+    metrics["at_sharing_penalty"] = at_sharing_penalty
+    metrics["expectation_penalty"] = expectation_penalty
+
     soft_points = (
         weights["soft_constraint_points"]
         - metrics.get("soft_violations", 0) * weights["soft_violation_penalty"]
         - metrics.get("beach_slot_2_uses", 0) * weights["beach_slot_2_penalty"]
+        - expectation_penalty
     )
-    score_components["soft_constraint_points"] = max(0, soft_points)
-    
+    score_components["soft_constraint_points"] = _bounded_points(
+        soft_points,
+        weights["soft_constraint_points"],
+    )
+    score_diagnostics["delta_timing_penalty"] = delta_timing_penalty
+    score_diagnostics["delta_sailing_pairing_penalty"] = delta_sailing_pairing_penalty
+    score_diagnostics["at_sharing_penalty"] = at_sharing_penalty
+    score_diagnostics["total_expectation_penalties"] = expectation_penalty
+
     # 4. Staff Balance: 100 pts
     staff_balance_points = weights["staff_balance_points"]
     staff_balance_points -= metrics["staff_variance"] * weights["staff_variance_penalty"]
     staff_balance_points -= metrics["severe_underused_slots"] * weights["severe_underuse_penalty"]
+    staff_balance_points -= metrics.get("over_target_staff_slots", 0) * weights.get("over_target_staff_penalty", 2.0)
     staff_balance_points -= metrics["excessive_staff_slots"] * weights["excessive_staff_penalty"]
-    score_components["staff_balance_points"] = max(0, staff_balance_points)
-    
-    # 5. Bonuses: ~50 pts total
-    # Early week bias (normalized)
+    score_components["staff_balance_points"] = _bounded_points(
+        staff_balance_points,
+        weights["staff_balance_points"],
+    )
+
+    # Legacy bonus metrics are retained for old reports but no longer add points.
     total_target_early = sum(1 for e in schedule.entries if e.activity.name in TARGET_EARLY_ACTIVITIES)
     metrics["early_week_total"] = total_target_early
-    early_week_ratio = (metrics["early_week_bias"] / total_target_early) if total_target_early > 0 else 0
-    score_components["early_week_points"] = early_week_ratio * weights["early_week_points"]
-    
-    # Promoted pairings (normalized)
+
     max_pairings = len(troops) * 2
     metrics["promoted_pairings_possible"] = max_pairings
-    pairing_ratio = (metrics["promoted_pairings"] / max_pairings) if max_pairings > 0 else 0
-    score_components["promoted_pairing_points"] = pairing_ratio * weights["promoted_pairing_points"]
-    
-    # Activity batching (normalized)
-    batch_possible = metrics.get("activity_batching_possible", 0)
-    batching_ratio = (metrics["activity_batching"] / batch_possible) if batch_possible > 0 else 0
-    score_components["activity_batching_points"] = batching_ratio * weights["activity_batching_points"]
-    
-    # Sailing bonuses (normalized)
-    sailing_total = metrics.get("sailing_full_day_total", 0)
-    sailing_ratio = (metrics.get("sailing_full_day_hits", 0) / sailing_total) if sailing_total > 0 else 0
-    score_components["sailing_full_day_points"] = sailing_ratio * weights["sailing_full_day_points"]
-    
-    same_day_total = metrics.get("sailing_same_day_total", 0)
-    same_day_ratio = (metrics.get("sailing_same_day_hits", 0) / same_day_total) if same_day_total > 0 else 0
-    score_components["sailing_same_day_points"] = same_day_ratio * weights["sailing_same_day_points"]
-    
-    # AT Sharing Bonus: +50 pts if 2 small troops share AT slot
-    at_sharing_bonus = 0
-    at_slot_troops = defaultdict(list)
-    for e in schedule.entries:
-        if e.activity.name == "Aqua Trampoline":
-            key = (e.time_slot.day, e.time_slot.slot_number)
-            troop_size = e.troop.scouts + e.troop.adults
-            at_slot_troops[key].append(troop_size)
-    for key, sizes in at_slot_troops.items():
-        if len(sizes) >= 2 and all(s <= 16 for s in sizes):
-            at_sharing_bonus += weights.get("at_sharing_bonus", 50.0)
-    score_components["at_sharing_bonus"] = at_sharing_bonus
-    metrics["at_sharing_bonus"] = at_sharing_bonus
+    metrics["at_sharing_bonus"] = 0.0
+    metrics["raw_bonus_total"] = 0.0
+    metrics["effective_bonus_total"] = 0.0
+    metrics["bonus_cap"] = 0.0
 
-    # Bonus guardrail:
-    # Prevent low-priority bonus swings from dominating final score/regression signals.
-    bonus_component_names = [
-        "early_week_points",
-        "promoted_pairing_points",
-        "activity_batching_points",
-        "sailing_full_day_points",
-        "sailing_same_day_points",
-        "at_sharing_bonus",
+    point_component_names = [
+        "preference_points",
+        "cluster_efficiency_points",
+        "soft_constraint_points",
+        "staff_balance_points",
     ]
-    raw_bonus_total = sum(score_components.get(name, 0.0) for name in bonus_component_names)
-    bonus_cap = float(weights.get("bonus_total_cap", 50.0))
-    effective_bonus_total = min(raw_bonus_total, bonus_cap)
-    bonus_cap_adjustment = effective_bonus_total - raw_bonus_total
-    if bonus_cap_adjustment != 0:
-        score_components["bonus_cap_adjustment"] = bonus_cap_adjustment
-    metrics["raw_bonus_total"] = raw_bonus_total
-    metrics["effective_bonus_total"] = effective_bonus_total
-    metrics["bonus_cap"] = bonus_cap
+    metrics["point_component_names"] = point_component_names
 
-    # Core quality score (preferences + cluster + soft + staff) before bonus layer.
-    core_goal_score = (
-        score_components.get("preference_points", 0.0)
-        + score_components.get("cluster_efficiency_points", 0.0)
-        + score_components.get("soft_constraint_points", 0.0)
-        + score_components.get("staff_balance_points", 0.0)
-    )
+    # Core quality score is the full score now that additive bonuses are gone.
+    core_goal_score = sum(score_components.get(name, 0.0) for name in point_component_names)
     metrics["core_goal_score"] = core_goal_score
-    
+
     # Final score
-    score = sum(score_components.values())
+    score = _bounded_points(core_goal_score, weights["max_score"])
     metrics["score_components"] = score_components
+    metrics["score_component_diagnostics"] = score_diagnostics
     metrics["final_score"] = int(round(score))
 
     return metrics
@@ -1000,7 +1292,7 @@ def evaluate_week(week_file, weights=None):
 class EnhancedRegressionChecker:
     """
     ENHANCED Automated regression checker for Summer Camp Scheduler.
-    
+
     This version analyzes the 10 actual week files with comprehensive metrics:
     - Top 5 satisfaction (original)
     - Average week quality scores (NEW)
@@ -1008,7 +1300,7 @@ class EnhancedRegressionChecker:
     - Staff efficiency (NEW)
     - Clustering quality (NEW)
     - Beach slot compliance (NEW)
-    
+
     Target files:
     - tc_week1_troops through tc_week8_troops
     - voyageur_week1_troops, voyageur_week3_troops
@@ -1020,12 +1312,12 @@ class EnhancedRegressionChecker:
       Generated by running the scheduler with latest improvements. New changes are compared
       against this to detect regressions. Use --fresh-eval --set-comparison-baseline to update.
     """
-    
+
     # Reference Baseline (Prime): original state before improvements; historical record
     BASELINE_PRIME_FILE = Path("baseline_prime_10weeks.json")
     # Comparison Baseline: used for regression checks; updated after improvements
     BASELINE_COMPARISON_FILE = Path("baseline_metrics_10weeks.json")
-    
+
     def __init__(self):
         self.analyzer = UnscheduledAnalyzer()
         self.baseline_file = self.BASELINE_COMPARISON_FILE  # backward compat; regression uses this
@@ -1033,11 +1325,11 @@ class EnhancedRegressionChecker:
         self.baseline_results = {}
         self.regressions_detected = []
         self._baseline_comparable = True
-        
+
         # Only the 10 actual week files
         self.target_weeks = [
             "tc_week1_troops",
-            "tc_week2_troops", 
+            "tc_week2_troops",
             "tc_week3_troops",
             "tc_week4_troops",
             "tc_week5_troops",
@@ -1047,62 +1339,63 @@ class EnhancedRegressionChecker:
             "voyageur_week1_troops",
             "voyageur_week3_troops"
         ]
-    
+
+    @staticmethod
+    def _get_non_exempt_top5_misses(results: Dict[str, Any]) -> int:
+        """Read the authoritative non-exempt Top-5 miss count from summary results."""
+        return int(results.get("non_exempt_top5_misses", results.get("total_counted_misses", 0)))
+
     def run_full_check(self, schedules_dir: str = "data/schedules") -> Dict[str, Any]:
         """
         Run comprehensive regression check on 10 actual weeks only.
-        
+
         Args:
             schedules_dir: Directory containing schedule JSON files
-            
+
         Returns:
             Complete regression report with comprehensive metrics
         """
         print("ENHANCED Regression Checker - Analyzing 10 Actual Weeks")
         print("=" * 60)
-        
+
         # Analyze current state for target weeks only
         print("Analyzing current schedules...")
         self._analyze_target_weeks(schedules_dir)
         self.current_results = self.analyzer.get_season_summary()
         self._reconcile_demand_metrics_from_troops(schedules_dir)
-        self.current_results["input_fingerprint"] = self._compute_input_fingerprint()
-        
+        self.current_results["non_exempt_top5_misses"] = self._get_non_exempt_top5_misses(self.current_results)
+        self.current_results["input_fingerprint"] = self._compute_input_fingerprint(schedules_dir)
+
         # Add comprehensive quality metrics
         if evaluate_week:
             print("Calculating comprehensive quality metrics...")
             self._add_quality_metrics(schedules_dir)
-        
+
         # Load Comparison Baseline (used for regression checks)
         if self.baseline_file.exists():
             print("Loading comparison baseline...")
             with open(self.baseline_file, 'r') as f:
                 self.baseline_results = json.load(f)
-        
+
         # Check for regressions
         print("Checking for regressions...")
         self._check_input_drift()
         self._check_top5_regressions()
         self._check_quality_regressions()
         self._check_multislot_activities(schedules_dir)
-        self._check_data_consistency()
-        
+        self._check_data_consistency(schedules_dir)
+
         # Generate report
         report = self._generate_regression_report()
-        
-        # Save current results as new Comparison Baseline if no regressions
-        if not self.regressions_detected:
-            print("No regressions detected - updating comparison baseline...")
-            self._save_baseline()
-        
+
         return report
-    
+
     def _analyze_target_weeks(self, schedules_dir: str):
         """Analyze only the 10 target week files."""
-        schedules_path = Path(schedules_dir)
+        schedules_path = _resolve_schedules_dir(schedules_dir)
         if not schedules_path.exists():
             raise FileNotFoundError(f"Schedules directory not found: {schedules_dir}")
-        
+
         # Find the schedule files for target weeks
         target_schedule_files = []
         for week_name in self.target_weeks:
@@ -1112,9 +1405,9 @@ class EnhancedRegressionChecker:
                 target_schedule_files.append(schedule_file)
             else:
                 print(f"WARNING: Schedule file not found: {schedule_file}")
-        
+
         print(f"Found {len(target_schedule_files)} target week files")
-        
+
         # Analyze each target week
         for schedule_file in target_schedule_files:
             try:
@@ -1127,15 +1420,14 @@ class EnhancedRegressionChecker:
         """
         Normalize demand counters using troop files (source of truth), not unscheduled payload.
         """
-        schedules_path = Path(schedules_dir)
+        schedules_path = _resolve_schedules_dir(schedules_dir)
         total_top5_slots = 0
         total_troops = 0
 
         for week_name in self.target_weeks:
-            troop_file = schedules_path.parent / f"{week_name}.json"
-            if not troop_file.exists():
-                troop_file = schedules_path.parent / "troops" / f"{week_name}.json"
-            if not troop_file.exists():
+            try:
+                troop_file = _resolve_troop_file(week_name, schedules_path)
+            except FileNotFoundError:
                 continue
 
             troops = load_troops_from_json(str(troop_file))
@@ -1151,19 +1443,33 @@ class EnhancedRegressionChecker:
 
         self.current_results["total_top5_slots"] = total_top5_slots
         self.current_results["total_troops"] = total_troops
-    
+
     def _check_top5_regressions(self):
         """Check for Top 5 satisfaction regressions."""
+        current_misses = self._get_non_exempt_top5_misses(self.current_results)
+        if current_misses != 0:
+            self.regressions_detected.append({
+                "type": "Top 5 Contract",
+                "severity": "HIGH",
+                "current": current_misses,
+                "baseline": 0,
+                "change": current_misses,
+                "description": (
+                    "BRAIN hard contract violated: non_exempt_top5_misses must be 0, "
+                    f"found {current_misses}."
+                ),
+            })
+
         if not self.baseline_results:
             print("No baseline found - will create new baseline")
             return
         if not self._baseline_comparable:
             print("Skipping Top-5 regression comparison due to input dataset drift.")
             return
-        
+
         current_success = self.current_results.get("season_success_rate", 0)
         baseline_success = self.baseline_results.get("season_success_rate", 0)
-        
+
         # Check for significant drop in Top 5 success rate
         if current_success < baseline_success - 1.0:  # 1% tolerance
             self.regressions_detected.append({
@@ -1174,11 +1480,10 @@ class EnhancedRegressionChecker:
                 "change": current_success - baseline_success,
                 "description": f"Top 5 success rate dropped from {baseline_success:.1f}% to {current_success:.1f}%"
             })
-        
+
         # Check for increase in counted misses
-        current_misses = self.current_results.get("total_counted_misses", 0)
-        baseline_misses = self.baseline_results.get("total_counted_misses", 0)
-        
+        baseline_misses = self._get_non_exempt_top5_misses(self.baseline_results)
+
         if current_misses > baseline_misses:
             self.regressions_detected.append({
                 "type": "Top 5 Missed Activities",
@@ -1188,11 +1493,11 @@ class EnhancedRegressionChecker:
                 "change": current_misses - baseline_misses,
                 "description": f"Top 5 misses increased from {baseline_misses} to {current_misses}"
             })
-        
+
         # Check for new problem weeks
         current_problem_weeks = self.current_results.get("weeks_with_issues", 0)
         baseline_problem_weeks = self.baseline_results.get("weeks_with_issues", 0)
-        
+
         if current_problem_weeks > baseline_problem_weeks:
             self.regressions_detected.append({
                 "type": "Problem Weeks",
@@ -1202,50 +1507,57 @@ class EnhancedRegressionChecker:
                 "change": current_problem_weeks - baseline_problem_weeks,
                 "description": f"Weeks with Top 5 issues increased from {baseline_problem_weeks} to {current_problem_weeks}"
             })
-    
+
     def _add_quality_metrics(self, schedules_dir: str):
         """Add comprehensive quality metrics using evaluate_week_success."""
-        schedules_path = Path(schedules_dir)
+        schedules_path = _resolve_schedules_dir(schedules_dir)
         quality_metrics = []
-        
+        evaluation_failures = []
+
         for week_name in self.target_weeks:
-            # Find the corresponding troop file
-            troop_file = schedules_path.parent / f"{week_name}.json"
-            if not troop_file.exists():
-                troop_file = schedules_path.parent / "troops" / f"{week_name}.json"
-            
-            if troop_file.exists():
-                try:
-                    # Evaluate the week
-                    week_result = evaluate_week(str(troop_file))
-                    
-                    if week_result:
-                        quality_metrics.append({
-                            "week_name": week_name,
-                            "total_score": week_result.get("final_score", 0),
-                            "core_goal_score": week_result.get("core_goal_score", 0),
-                            "raw_bonus_total": week_result.get("raw_bonus_total", 0),
-                            "effective_bonus_total": week_result.get("effective_bonus_total", 0),
-                            "preference_score": week_result.get("score_components", {}).get("preference_points", 0),
-                            "constraint_violations": week_result.get("constraint_violations", 0),
-                            "staff_variance": week_result.get("staff_variance", 0),
-                            "clustering_efficiency": week_result.get("excess_cluster_days", 0),
-                            "cluster_gaps": week_result.get("cluster_gaps", 0),
-                            "commissioner_day_compliance_pct": week_result.get("commissioner_day_compliance_pct", 0),
-                            "commissioner_day_misses": week_result.get("commissioner_day_misses", 0),
-                            "beach_slot_2_violations": week_result.get("beach_slot_2_uses", 0),
-                            "unnecessary_gaps": week_result.get("unnecessary_gaps", 0),
-                            "grade": week_result.get("grade", "Unknown"),
-                            "violation_details": week_result.get("violation_details", []),
-                            "cluster_area_details": week_result.get("cluster_area_details", {}),
-                            "cluster_gap_details": week_result.get("cluster_gap_details", []),
-                            "cluster_improvement_targets": week_result.get("cluster_improvement_targets", {}),
-                            "top5_pct": week_result.get("top5_pct", 0),
-                            "top10_pct": week_result.get("top10_pct", 0)
-                        })
-                except Exception as e:
-                    print(f"  Warning: Could not evaluate {week_name}: {e}")
-        
+            try:
+                troop_file = _resolve_troop_file(week_name, schedules_path)
+            except FileNotFoundError as exc:
+                evaluation_failures.append(f"{week_name}: {exc}")
+                continue
+
+            try:
+                week_result = evaluate_week(str(troop_file), schedules_dir=schedules_path)
+            except Exception as exc:
+                evaluation_failures.append(f"{week_name}: {exc}")
+                continue
+
+            if week_result:
+                quality_metrics.append({
+                    "week_name": week_name,
+                    "total_score": week_result.get("final_score", 0),
+                    "core_goal_score": week_result.get("core_goal_score", 0),
+                    "raw_bonus_total": week_result.get("raw_bonus_total", 0),
+                    "effective_bonus_total": week_result.get("effective_bonus_total", 0),
+                    "preference_score": week_result.get("score_components", {}).get("preference_points", 0),
+                    "constraint_violations": week_result.get("constraint_violations", 0),
+                    "staff_variance": week_result.get("staff_variance", 0),
+                    "clustering_efficiency": week_result.get("excess_cluster_days", 0),
+                    "cluster_gaps": week_result.get("cluster_gaps", 0),
+                    "commissioner_day_compliance_pct": week_result.get("commissioner_day_compliance_pct", 0),
+                    "commissioner_day_misses": week_result.get("commissioner_day_misses", 0),
+                    "beach_slot_2_violations": week_result.get("beach_slot_2_uses", 0),
+                    "unnecessary_gaps": week_result.get("unnecessary_gaps", 0),
+                    "grade": week_result.get("grade", "Unknown"),
+                    "violation_details": week_result.get("violation_details", []),
+                    "cluster_area_details": week_result.get("cluster_area_details", {}),
+                    "cluster_gap_details": week_result.get("cluster_gap_details", []),
+                    "cluster_improvement_targets": week_result.get("cluster_improvement_targets", {}),
+                    "top5_pct": week_result.get("top5_pct", 0),
+                    "top10_pct": week_result.get("top10_pct", 0)
+                })
+
+        if evaluation_failures:
+            failure_list = "; ".join(evaluation_failures)
+            raise RuntimeError(
+                f"Quality evaluation failed for {len(evaluation_failures)} week(s): {failure_list}"
+            )
+
         # Calculate averages
         if quality_metrics:
             avg_score = sum(m["total_score"] for m in quality_metrics) / len(quality_metrics)
@@ -1258,7 +1570,7 @@ class EnhancedRegressionChecker:
             avg_cluster_gaps = sum(m["cluster_gaps"] for m in quality_metrics) / len(quality_metrics)
             avg_commissioner_compliance = sum(m["commissioner_day_compliance_pct"] for m in quality_metrics) / len(quality_metrics)
             avg_beach_violations = sum(m["beach_slot_2_violations"] for m in quality_metrics) / len(quality_metrics)
-            
+
             self.current_results.update({
                 "quality_metrics": {
                     "average_week_score": avg_score,
@@ -1274,7 +1586,7 @@ class EnhancedRegressionChecker:
                     "week_details": quality_metrics
                 }
             })
-            
+
             print(f"  Average Week Score: {avg_score:.1f}")
             print(f"  Average Core Goal Score: {avg_core_goal_score:.1f}")
             print(f"  Average Raw Bonus Total: {avg_raw_bonus_total:.1f}")
@@ -1285,7 +1597,7 @@ class EnhancedRegressionChecker:
             print(f"  Average Cluster Gaps: {avg_cluster_gaps:.2f}")
             print(f"  Avg Commissioner Day Compliance: {avg_commissioner_compliance:.1f}%")
             print(f"  Average Beach Slot Violations: {avg_beach_violations:.1f}")
-    
+
     def _check_quality_regressions(self):
         """Check for schedule quality regressions."""
         if not self.baseline_results or "quality_metrics" not in self.current_results:
@@ -1294,7 +1606,7 @@ class EnhancedRegressionChecker:
         if not self._baseline_comparable:
             print("Skipping quality regression comparison due to input dataset drift.")
             return
-        
+
         current_quality = self.current_results["quality_metrics"]
         baseline_quality = self.baseline_results.get("quality_metrics", {})
         has_core_baseline = "average_core_goal_score" in baseline_quality
@@ -1303,7 +1615,7 @@ class EnhancedRegressionChecker:
                 "Baseline lacks core-score fields; skipping score-comparison regressions "
                 "until baseline is refreshed."
             )
-        
+
         # Check for significant drop in core goal score first (primary quality signal).
         # Use week score as a secondary signal because bonuses can fluctuate by design.
         current_core_score = current_quality.get("average_core_goal_score", 0)
@@ -1321,7 +1633,7 @@ class EnhancedRegressionChecker:
         # Check for significant drop in average week score
         current_score = current_quality.get("average_week_score", 0)
         baseline_score = baseline_quality.get("average_week_score", 0)
-        
+
         # Only flag week-score regression when core score also dropped.
         # This avoids failing runs solely because minor bonus totals changed.
         if (
@@ -1368,11 +1680,11 @@ class EnhancedRegressionChecker:
                     f"{baseline_cluster_gaps:.2f} to {current_cluster_gaps:.2f}"
                 )
             })
-        
+
         # Check for increase in constraint violations
         current_violations = current_quality.get("average_constraint_violations", 0)
         baseline_violations = baseline_quality.get("average_constraint_violations", 0)
-        
+
         if current_violations > baseline_violations + 0.5:  # 0.5 violation tolerance
             self.regressions_detected.append({
                 "type": "Constraint Violations",
@@ -1382,11 +1694,11 @@ class EnhancedRegressionChecker:
                 "change": current_violations - baseline_violations,
                 "description": f"Constraint violations increased from {baseline_violations:.1f} to {current_violations:.1f}"
             })
-        
+
         # Check for beach slot compliance regression
         current_beach = current_quality.get("average_beach_slot_violations", 0)
         baseline_beach = baseline_quality.get("average_beach_slot_violations", 0)
-        
+
         if current_beach > baseline_beach + 0.5:  # 0.5 violation tolerance
             self.regressions_detected.append({
                 "type": "Beach Slot Compliance",
@@ -1396,11 +1708,11 @@ class EnhancedRegressionChecker:
                 "change": current_beach - baseline_beach,
                 "description": f"Beach slot violations increased from {baseline_beach:.1f} to {current_beach:.1f}"
             })
-        
+
         # Check for staff efficiency regression
         current_staff = current_quality.get("average_staff_variance", 0)
         baseline_staff = baseline_quality.get("average_staff_variance", 0)
-        
+
         if current_staff > baseline_staff + 0.2:  # 0.2 variance tolerance
             self.regressions_detected.append({
                 "type": "Staff Balance",
@@ -1410,33 +1722,36 @@ class EnhancedRegressionChecker:
                 "change": current_staff - baseline_staff,
                 "description": f"Staff variance increased from {baseline_staff:.2f} to {current_staff:.2f}"
             })
-    
+
     def _check_multislot_activities(self, schedules_dir: str):
         """Check that multi-slot activities have the correct number of slots scheduled."""
         print("Checking multi-slot activities...")
+        activity_by_name = {activity.name: activity for activity in get_all_activities()}
+        slot_calculator = Schedule()
 
-        # Multi-slot expectations from SPINE activity definitions.
-        slots_by_activity = {}
-        for activity in get_all_activities():
-            expected_slots = int(activity.slots + 0.5)
-            if expected_slots > 1:
-                slots_by_activity[activity.name] = expected_slots
-        
-        schedules_path = Path(schedules_dir)
+        schedules_path = _resolve_schedules_dir(schedules_dir)
         total_issues = 0
         weeks_with_issues = []
-        
+
         for week_name in self.target_weeks:
             schedule_file = schedules_path / f"{week_name}_schedule.json"
             if not schedule_file.exists():
                 continue
-            
+
             try:
                 with open(schedule_file) as f:
                     data = json.load(f)
             except Exception:
                 continue
-            
+
+            try:
+                troop_file = _resolve_troop_file(week_name, schedules_path)
+                troops_by_name = {
+                    troop.name: troop for troop in load_troops_from_json(str(troop_file))
+                }
+            except Exception:
+                continue
+
             # Group entries by troop and activity
             troop_activities = {}
             for entry in data.get('entries', []):
@@ -1444,12 +1759,16 @@ class EnhancedRegressionChecker:
                 if key not in troop_activities:
                     troop_activities[key] = []
                 troop_activities[key].append((entry['day'], entry['slot']))
-            
+
             # Check multi-slot activities
             week_issues = 0
-            for (troop, activity), slots in troop_activities.items():
-                expected_slots = slots_by_activity.get(activity)
-                if expected_slots is None:
+            for (troop_name, activity_name), slots in troop_activities.items():
+                troop = troops_by_name.get(troop_name)
+                activity = activity_by_name.get(activity_name)
+                if troop is None or activity is None:
+                    continue
+                expected_slots = int(slot_calculator._get_effective_slots(activity, troop) + 0.5)
+                if expected_slots <= 1:
                     continue
 
                 unique_slots = sorted({slot for _, slot in slots})
@@ -1474,10 +1793,10 @@ class EnhancedRegressionChecker:
                 if len(unique_slots) != expected_slots and not has_valid_start_representation:
                     week_issues += 1
                     total_issues += 1
-            
+
             if week_issues > 0:
                 weeks_with_issues.append(week_name)
-        
+
         if total_issues > 0:
             self.regressions_detected.append({
                 "type": "Multi-Slot Activities",
@@ -1488,18 +1807,19 @@ class EnhancedRegressionChecker:
                 "description": f"Found {total_issues} multi-slot activity issues across {len(weeks_with_issues)} weeks",
                 "details": weeks_with_issues
             })
-    
-    def _check_data_consistency(self):
+
+    def _check_data_consistency(self, schedules_dir: str):
         """Check for data consistency issues."""
         print("Checking data consistency...")
-        
+        schedules_path = _resolve_schedules_dir(schedules_dir)
+
         # Validate unscheduled data against scheduled entries
         for week_name in self.analyzer.week_analyses.keys():
-            schedule_path = Path("data/schedules") / f"{week_name}_schedule.json"
+            schedule_path = schedules_path / f"{week_name}_schedule.json"
             if schedule_path.exists():
                 validation = self.analyzer.validate_against_schedule_entries(week_name, schedule_path)
                 discrepancies = validation.get("discrepancies", [])
-                
+
                 if discrepancies:
                     self.regressions_detected.append({
                         "type": "Data Consistency",
@@ -1509,11 +1829,11 @@ class EnhancedRegressionChecker:
                         "description": f"Found {len(discrepancies)} data discrepancies in {week_name}",
                         "details": discrepancies
                     })
-    
+
     def _generate_regression_report(self) -> Dict[str, Any]:
         """Generate comprehensive regression report."""
         report = {
-            "timestamp": str(Path().cwd()),
+            "timestamp": _utc_timestamp(),
             "summary": {
                 "regressions_detected": len(self.regressions_detected),
                 "high_severity": len([r for r in self.regressions_detected if r.get("severity") == "HIGH"]),
@@ -1536,13 +1856,13 @@ class EnhancedRegressionChecker:
         if self.BASELINE_PRIME_FILE.exists():
             with open(self.BASELINE_PRIME_FILE, 'r') as f:
                 report["reference_prime_metrics"] = json.load(f)
-        
+
         # Print summary
         print("\n" + "=" * 60)
         print("ENHANCED REGRESSION CHECK SUMMARY")
         print("=" * 60)
         print("(Current run compared against Comparison Baseline; improvements vs Prime are informational)")
-        
+
         if self.regressions_detected:
             print(f"REGRESSIONS DETECTED: {len(self.regressions_detected)}")
             print(f"   High Severity: {report['summary']['high_severity']}")
@@ -1557,7 +1877,7 @@ class EnhancedRegressionChecker:
             print("NO REGRESSIONS DETECTED")
             print(f"   Top 5 Success Rate: {self.current_results.get('season_success_rate', 0):.1f}%")
             print(f"   Total Top 5 Misses: {self.current_results.get('total_counted_misses', 0)}")
-            
+
             # Show quality metrics if available
             if "quality_metrics" in self.current_results:
                 quality = self.current_results["quality_metrics"]
@@ -1565,27 +1885,27 @@ class EnhancedRegressionChecker:
                 print(f"   Average Constraint Violations: {quality.get('average_constraint_violations', 0):.1f}")
                 print(f"   Average Beach Slot Violations: {quality.get('average_beach_slot_violations', 0):.1f}")
                 print(f"   Average Staff Variance: {quality.get('average_staff_variance', 0):.2f}")
-        
+
         print("=" * 60)
-        
+
         # Print per-week metrics table
         self._print_week_table()
-        
+
         return report
-    
+
     def _print_week_table(self):
         """Print a formatted table of per-week metrics."""
         quality = self.current_results.get("quality_metrics", {})
         week_details = quality.get("week_details", [])
         if not week_details:
             return
-        
+
         print("\n" + "=" * 108)
         print("PER-WEEK EVALUATION SUMMARY")
         print("=" * 108)
         print(f"{'Week':<22} | {'Score':<6} | {'Top5%':<6} | {'Top10%':<6} | {'Viol':<5} | {'StVar':<5} | {'Clust':<5} | {'Gap':<4} | {'Comm%':<6}")
         print("-" * 108)
-        
+
         for w in sorted(week_details, key=lambda x: x['week_name']):
             print(
                 f"{w['week_name']:<22} | {w.get('total_score',0):<6} | {w.get('top5_pct',0):<6.1f} | "
@@ -1593,9 +1913,9 @@ class EnhancedRegressionChecker:
                 f"{w.get('staff_variance',0):<5.2f} | {w.get('clustering_efficiency',0):<5} | "
                 f"{w.get('cluster_gaps',0):<4} | {w.get('commissioner_day_compliance_pct',0):<6.1f}"
             )
-        
+
         print("=" * 108)
-    
+
     def print_violation_details(self, max_per_week: int = 10):
         """Print detailed violation messages for each week."""
         quality = self.current_results.get("quality_metrics", {})
@@ -1603,11 +1923,11 @@ class EnhancedRegressionChecker:
         if not week_details:
             print("No violation details available.")
             return
-        
+
         print("\n" + "=" * 60)
         print("VIOLATION DETAILS BY WEEK")
         print("=" * 60)
-        
+
         for w in sorted(week_details, key=lambda x: x['week_name']):
             violations = w.get('violation_details', [])
             if violations:
@@ -1618,7 +1938,7 @@ class EnhancedRegressionChecker:
                     print(f"  ... and {len(violations) - max_per_week} more")
             else:
                 print(f"\n--- {w['week_name']} (0 violations) ---")
-    
+
     def _save_baseline(self, role: str = "comparison"):
         """Save current results as baseline. role: 'comparison' or 'reference_prime'."""
         baseline_data = {
@@ -1626,13 +1946,17 @@ class EnhancedRegressionChecker:
             "description": (
                 "Reference Baseline (Prime): Original scheduler output before improvement work. Historical record."
                 if role == "reference_prime"
-                else "Comparison Baseline: Regression comparison point. New changes are compared against this."
+                else (
+                    "Comparison Baseline: rolling most-recent completed regression run. "
+                    "The next run is compared against this snapshot."
+                )
             ),
-            "timestamp": str(Path().cwd()),
+            "timestamp": _utc_timestamp(),
             "season_success_rate": self.current_results.get("season_success_rate", 0),
             "total_top5_slots": self.current_results.get("total_top5_slots", 0),
             "total_exempt_misses": self.current_results.get("total_exempt_misses", 0),
             "total_counted_misses": self.current_results.get("total_counted_misses", 0),
+            "non_exempt_top5_misses": self._get_non_exempt_top5_misses(self.current_results),
             "weeks_with_issues": self.current_results.get("weeks_with_issues", 0),
             "week_details": self.current_results.get("week_details", {}),
             "target_weeks": self.target_weeks,
@@ -1642,11 +1966,11 @@ class EnhancedRegressionChecker:
         out_file = self.BASELINE_PRIME_FILE if role == "reference_prime" else self.BASELINE_COMPARISON_FILE
         with open(out_file, 'w') as f:
             json.dump(baseline_data, f, indent=2)
-    
+
     def get_top5_detailed_report(self) -> Dict[str, Any]:
         """Get detailed Top 5 analysis report."""
         return self.analyzer.get_detailed_miss_report()
-    
+
     def _preserve_as_reference_prime_if_needed(self) -> bool:
         """
         If Comparison Baseline exists but Reference Prime does not, copy it to Prime
@@ -1670,7 +1994,7 @@ class EnhancedRegressionChecker:
     def set_baseline(self, force: bool = False, preserve_prime: bool = True):
         """
         Set current results as Comparison Baseline (used for regression checks).
-        
+
         Args:
             force: Force overwrite existing baseline
             preserve_prime: If True and Reference Prime does not exist, copy current
@@ -1679,29 +2003,32 @@ class EnhancedRegressionChecker:
         if self.BASELINE_COMPARISON_FILE.exists() and not force:
             print("Comparison baseline already exists. Use --force-baseline to overwrite.")
             return False
-        
+
         if not self.current_results:
             print("No current results to set as baseline. Run check first.")
             return False
-        
+
         if preserve_prime:
             self._preserve_as_reference_prime_if_needed()
-        
+
         self._save_baseline(role="comparison")
         print("Comparison baseline updated successfully.")
         return True
 
-    def _compute_input_fingerprint(self) -> Dict[str, Any]:
+    def _compute_input_fingerprint(self, schedules_dir: str | Path | None = None) -> Dict[str, Any]:
         """Fingerprint troop input files to keep baseline comparisons apples-to-apples."""
-        project_root = Path(__file__).resolve().parent.parent
-        troops_dir = project_root / "data" / "troops"
         per_week = {}
         total_top5_slots = 0
         total_troops = 0
 
         for week_name in self.target_weeks:
-            troop_file = troops_dir / f"{week_name}.json"
-            if not troop_file.exists():
+            troop_file = None
+            for candidate in _candidate_troop_files(week_name, schedules_dir):
+                if candidate.exists():
+                    troop_file = candidate
+                    break
+
+            if troop_file is None:
                 per_week[week_name] = {"exists": False}
                 continue
 
@@ -1818,7 +2145,7 @@ def _run_full_regeneration(project_root: Path) -> None:
 def main():
     """Main entry point for enhanced regression checker."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="ENHANCED Summer Camp Scheduler Regression Checker")
     parser.add_argument("--schedules-dir", default="data/schedules", help="Schedules directory")
     parser.add_argument("--set-baseline", action="store_true",
@@ -1832,18 +2159,36 @@ def main():
     parser.add_argument(
         "--fresh-eval",
         action="store_true",
-        help="Delete stale eval artifacts, regenerate all schedules, then run evaluation",
+        help="Compatibility flag; fresh evaluation is now the default",
     )
-    
+    parser.add_argument(
+        "--no-fresh-eval",
+        action="store_true",
+        help="Use existing schedule JSON files without regenerating first",
+    )
+    parser.add_argument(
+        "--no-update-comparison",
+        action="store_true",
+        help="Compatibility flag; regular checks no longer update the comparison baseline automatically",
+    )
+    parser.add_argument(
+        "--update-comparison",
+        action="store_true",
+        help="Save this run as the rolling comparison baseline for the next run",
+    )
+
     args = parser.parse_args()
-    
+
+    if args.force_baseline and not args.set_baseline:
+        parser.error("--force-baseline requires --set-baseline")
+
     checker = EnhancedRegressionChecker()
-    
+
     # Use absolute path from script directory parent
     project_root = Path(__file__).resolve().parent.parent
     schedules_dir = project_root / args.schedules_dir
 
-    if args.fresh_eval:
+    if not args.no_fresh_eval:
         print("Preparing fresh evaluation run...")
         deleted = _delete_stale_evaluation_artifacts(project_root)
         if deleted:
@@ -1854,25 +2199,28 @@ def main():
             print("No stale evaluation artifacts found.")
         print("Running full regeneration for authoritative schedule + unscheduled data...")
         _run_full_regeneration(project_root)
-    
+    else:
+        print("Using existing schedule JSON files (--no-fresh-eval).")
+
     if args.set_baseline or args.force_baseline:
         # Run analysis first
         checker._analyze_target_weeks(str(schedules_dir))
         checker.current_results = checker.analyzer.get_season_summary()
         checker._reconcile_demand_metrics_from_troops(str(schedules_dir))
-        checker.current_results["input_fingerprint"] = checker._compute_input_fingerprint()
+        checker.current_results["non_exempt_top5_misses"] = checker._get_non_exempt_top5_misses(checker.current_results)
+        checker.current_results["input_fingerprint"] = checker._compute_input_fingerprint(str(schedules_dir))
         if evaluate_week:
             checker._add_quality_metrics(str(schedules_dir))
-        checker.set_baseline(force=args.force_baseline, preserve_prime=args.preserve_prime)
-        return 0
-    
+        success = checker.set_baseline(force=args.force_baseline, preserve_prime=args.preserve_prime)
+        return 0 if success else 1
+
     # Run full regression check
     report = checker.run_full_check(str(schedules_dir))
     report_path = project_root / "analysis_results.json"
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
     print(f"Saved fresh evaluation report to {report_path}")
-    
+
     # Show detailed report if requested
     if args.detailed:
         print("\nDETAILED TOP 5 ANALYSIS:")
@@ -1888,13 +2236,18 @@ def main():
                     if miss['placement_suggestions']:
                         suggestions = ', '.join(miss['placement_suggestions'][:2])
                         # Replace unicode characters with ASCII
-                        suggestions = suggestions.replace('≤', '<=').replace('≥', '>=')
+                        suggestions = suggestions.replace('â‰¤', '<=').replace('â‰¥', '>=')
                         print(f"    Suggestions: {suggestions}")
-    
+
     # Show violation details if requested
     if args.show_violations:
         checker.print_violation_details()
-    
+
+    if args.update_comparison and not args.no_update_comparison:
+        checker._preserve_as_reference_prime_if_needed()
+        checker._save_baseline(role="comparison")
+        print(f"Saved rolling comparison baseline to {checker.BASELINE_COMPARISON_FILE}")
+
     # Exit with error code if regressions detected
     return 1 if report["summary"]["regressions_detected"] > 0 else 0
 

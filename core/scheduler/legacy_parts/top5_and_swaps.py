@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from ...activities import get_activity_by_name, get_all_activities
 from ...models import Activity, Day, ScheduleEntry, TimeSlot, Troop, Zone, generate_time_slots
+from ...services.sailing_half_fills import build_sailing_half_fills
 from .. import config_loader
 from ..constants import SchedulerConstants
 from ..validators import would_create_excess_day_for_entries
@@ -172,19 +173,7 @@ class LegacyPart02Mixin:
         """Detect area-level cluster gaps using the 1,-,3 same-area definition."""
         from ...models import Day
 
-        cluster_areas = {
-            "Tower": ["Climbing Tower"],
-            "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-            "Outdoor Skills": [
-                "Knots and Lashings",
-                "Orienteering",
-                "GPS & Geocaching",
-                "Ultimate Survivor",
-                "What's Cooking",
-                "Chopped!",
-            ],
-            "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"],
-        }
+        cluster_areas = self._get_authoritative_gap_area_map()
 
         total_gaps = 0
         details = []
@@ -314,8 +303,9 @@ class LegacyPart02Mixin:
 
                 # Find lowest priority activity to swap out
                 # PRIORITY: Avoid swapping Top 5 preferences
-                PROTECTED_ACTIVITIES = {"Sailing", "Climbing Tower", "Troop Rifle", "Troop Shotgun",
-                                       "Archery", "Delta", "Super Troop"}
+                PROTECTED_ACTIVITIES = self._get_protected_activity_names(
+                    {"Sailing", "Climbing Tower", "Troop Rifle", "Troop Shotgun", "Archery", "Delta"}
+                )
 
                 # First, try to find non-Top-5 activities to swap
                 top5_activities = set(troop.preferences[:5]) if len(troop.preferences) >= 5 else set(troop.preferences)
@@ -369,38 +359,169 @@ class LegacyPart02Mixin:
 
 
     def _schedule_sailing_balls_fills(self):
-        """Add balls (Gaga Ball/9 Square) during sailing if not in troop's top 5."""
-        balls_activities = ["Gaga Ball", "9 Square"]
+        """Assign 30-minute Sailing half-slot fills as sidecar metadata."""
+        self.sailing_balls_fills = build_sailing_half_fills(self.troops, self.schedule)
 
-        for entry in self.schedule.entries:
-            if entry.activity.name != "Sailing":
-                continue
+        for fill in sorted(
+            self.sailing_balls_fills.values(),
+            key=lambda item: (item["day"], item["slot"], item["troop_name"]),
+        ):
+            request_note = ""
+            if fill.get("requested_rank") is not None:
+                request_note = f" [request #{fill['requested_rank']}]"
+                if fill.get("counts_as_request"):
+                    request_note += " [counts]"
+                else:
+                    request_note += " [display-only]"
+            print(
+                f"  {fill['troop_name']}: {fill['activity_name']} (30 min, {fill['fill_half']} half)"
+                f" during Sailing at {fill['day']} slot {fill['slot']}{request_note}"
+            )
 
+
+    def _is_pair_protected_delta(self, entry) -> bool:
+        """True if entry is Delta and the troop has Sailing scheduled.
+
+        BRAIN §11 protects Delta when the same troop has a Sailing entry, so
+        late recovery and swap passes do not drift the pair apart after B.6.
+        """
+        try:
+            if entry.activity.name != "Delta":
+                return False
             troop = entry.troop
-            slot = entry.time_slot
+            prefs = getattr(troop, "preferences", []) or []
+            if "Sailing" not in prefs:
+                return False
+            for e in self.schedule.entries:
+                if (e.troop == troop
+                        and e.activity.name == "Sailing"
+                        and getattr(e, "time_slot", None) is not None):
+                    return True
+            return False
+        except Exception:
+            return False
 
-            # Check if either balls activity is NOT in top 5
-            for balls_name in balls_activities:
-                priority = troop.get_priority(balls_name)
-                if priority is None or priority >= 5:  # Not in top 5
-                    # Check if troop doesn't already have this balls activity scheduled
-                    if not self._troop_has_activity(troop, get_activity_by_name(balls_name)):
-                        self.sailing_balls_fills[(slot, troop.name)] = balls_name
-                        print(f"  {troop.name}: {balls_name} (30 min) during Sailing at {slot}")
-                        break  # Only one balls activity per sailing
+    def _optimization_may_ignore_day_requests(self, troop) -> bool:
+        """When False, optimizers must pass ignore_day_requests=False to _can_schedule.
 
+        Troops with any day_requests use MUST-HONOR semantics; bypassing day-request
+        checks in clustering/outlier moves caused drift that only the final seal fixed.
+        """
+        dr = getattr(troop, "day_requests", None)
+        return not dr
 
-    def _schedule_day_requests(self):
-        """Schedule day-specific activity requests (MUST be fulfilled)."""
-        print("\n--- Scheduling Day-Specific Requests (REQUIRED) ---")
+    def _schedule_day_requests(self, pass_label: str = "Day-Specific Requests",
+                               aggressive: bool = False):
+        """MUST-HONOR day-request solver.
+
+        BRAIN contract (authoritative): every troop day_request must be
+        honored on its requested day, even if that requires violations that
+        would otherwise be unacceptable. Only physical impossibilities are
+        allowed to fail (e.g. 3-slot activity requested on a 2-slot day).
+
+        Placement tiers (per request, first success wins):
+          T0. Already placed on the requested day for this activity -> skip.
+          T1. Strict _can_schedule on the requested day (cluster-ordered).
+          T2. Relaxed _can_schedule on the requested day.
+          T3. force_day_request (bypasses soft constraints: duplicate, staff
+              limit, back-to-back, beach slot/staff cap) on the requested day.
+          T4. Already placed on a WRONG day -> remove wrong entry, retry T1-T3.
+          T5. Displace a non-anchor, non-Top-5 occupant, retry T3.
+          T6. Displace a Top-5 occupant as a last resort, retry T3.
+                 Reports a (suppressible) loud warning because BRAIN allows this
+                 only under MUST-HONOR day-request policy.
+
+        Anchors never displaced: Reflection (Fri), Super Troop,
+        History Center / Disc Golf (Tuesday hard-fixed).
+        """
+        print(f"\n--- {pass_label} (MUST-HONOR) ---")
 
         day_map = {
             "Monday": Day.MONDAY,
             "Tuesday": Day.TUESDAY,
             "Wednesday": Day.WEDNESDAY,
             "Thursday": Day.THURSDAY,
-            "Friday": Day.FRIDAY
+            "Friday": Day.FRIDAY,
         }
+
+        protected_anchor_names = {"Reflection", "Super Troop", "History Center", "Disc Golf"}
+
+        honored = 0
+        relocated = 0
+        forced = 0
+        infeasible: list[tuple[str, str, str, str]] = []  # (troop, activity, day, reason)
+        unfulfilled: list[tuple[str, str, str, str]] = []
+
+        def _ordered_day_slots(troop, activity, day):
+            """Cluster-ordered slots filtered to a single requested day."""
+            ordered = [s for s in self._get_cluster_ordered_slots(troop, activity) if s.day == day]
+            pref_rank = troop.get_priority(activity.name) if hasattr(troop, "get_priority") else None
+            if pref_rank is None:
+                pref_rank = 999
+            return self._rerank_slots_by_projected_score(troop, activity, ordered, pref_rank)
+
+        def _try_place(troop, activity, day, *, relax=False, force=False):
+            for slot in _ordered_day_slots(troop, activity, day):
+                if self._can_schedule(
+                    troop, activity, slot, day,
+                    relax_constraints=relax,
+                    force_day_request=force,
+                ):
+                    if self._add_to_schedule(slot, activity, troop):
+                        self._update_progress(troop, activity.name)
+                        return slot
+            return None
+
+        def _physical_fit(activity, day):
+            """Can the activity physically fit on this day at all?
+
+            Thursday normally has 2 scheduled slots (the 3rd hour is the
+            mandatory camp-wide event, not a troop slot). BRAIN rule:
+            a day-requested 3-slot activity on Thursday IS allowed — it means
+            the troop opts out of the mandatory 3rd-slot event to do the
+            3-hour requested activity for their entire Thursday.
+            """
+            effective_slots = getattr(activity, "slots", 1.0)
+            slots_needed = int(float(effective_slots) + 0.5)
+            if day == Day.THURSDAY and slots_needed == 3:
+                return True  # requested 3-hour Thursday opt-out
+            max_slot = 2 if day == Day.THURSDAY else 3
+            return 1 + slots_needed - 1 <= max_slot
+
+        def _force_place_thursday_3slot(troop, activity):
+            """Manually place a day-requested 3-slot activity on Thursday.
+
+            Bypasses Schedule.add_entry's day-boundary guard (which caps
+            Thursday at slot 2). Creates a Thursday slot-3 TimeSlot on the
+            fly; no other troop iterates into this slot because
+            generate_time_slots() only emits Thursday 1-2.
+            """
+            # Protected anchors are never displaced, even by MUST-HONOR.
+            existing_thu = [
+                e for e in list(self.schedule.entries)
+                if e.troop == troop and e.time_slot.day == Day.THURSDAY
+            ]
+            blocked_anchor = next(
+                (e for e in existing_thu if e.activity.name in protected_anchor_names),
+                None,
+            )
+            if blocked_anchor:
+                return None
+
+            # Clear any other Thursday entries for this troop first.
+            for e in existing_thu:
+                if e in self.schedule.entries:
+                    self._remove_from_schedule(e)
+
+            thu1 = TimeSlot(day=Day.THURSDAY, slot_number=1)
+            thu2 = TimeSlot(day=Day.THURSDAY, slot_number=2)
+            thu3 = TimeSlot(day=Day.THURSDAY, slot_number=3)
+            self.schedule.entries.append(ScheduleEntry(time_slot=thu1, activity=activity, troop=troop))
+            self.schedule.entries.append(ScheduleEntry(time_slot=thu2, activity=activity, troop=troop))
+            self.schedule.entries.append(ScheduleEntry(time_slot=thu3, activity=activity, troop=troop))
+            self._update_progress(troop, activity.name)
+            self._mark_schedule_changed()
+            return thu1
 
         for troop in self.troops:
             if not troop.day_requests:
@@ -411,26 +532,193 @@ class LegacyPart02Mixin:
                 if not day:
                     continue
 
-                day_slots = [s for s in self.time_slots if s.day == day]
-
                 for activity_name in activities:
                     activity = get_activity_by_name(activity_name)
                     if not activity:
                         print(f"  WARNING: Activity '{activity_name}' not found!")
+                        infeasible.append((troop.name, activity_name, day_name, "activity not found"))
                         continue
 
-                    # Try to schedule on requested day
-                    scheduled = False
-                    for slot in day_slots:
-                        if self._can_schedule(troop, activity, slot, day):
-                            if self._add_to_schedule(slot, activity, troop):
-                                self._update_progress(troop, activity_name)
-                                print(f"  {troop.name}: {activity_name} -> {day_name} [OK]")
-                                scheduled = True
-                                break
+                    # T0: Already placed on requested day?
+                    already_on_day = [
+                        e for e in self.schedule.entries
+                        if e.troop == troop and e.activity.name == activity_name
+                        and e.time_slot.day == day
+                    ]
+                    if already_on_day:
+                        honored += 1
+                        continue
 
-                    if not scheduled:
-                        print(f"  ERROR: Could not schedule {activity_name} on {day_name} for {troop.name}!")
+                    # Special: 3-slot day-request on Thursday (troop opts out of
+                    # mandatory 3rd-slot camp event). Use dedicated force path
+                    # that adds Thursday slot 3 dynamically. FINAL-PASS ONLY to
+                    # keep the opt-out stable (earlier placements get reclaimed
+                    # by downstream cleanup because Thu-3 is not yet in the
+                    # canonical time_slots list).
+                    if (aggressive
+                            and day == Day.THURSDAY
+                            and int(float(getattr(activity, "slots", 1.0)) + 0.5) >= 3):
+                        slot = _force_place_thursday_3slot(troop, activity)
+                        if slot is None:
+                            reason = "blocked by protected Thursday anchor"
+                            unfulfilled.append((troop.name, activity_name, day_name, reason))
+                            print(f"  [UNFULFILLED] {troop.name}: {activity_name} on {day_name} ({reason})")
+                        else:
+                            honored += 1
+                            forced += 1
+                            print(f"  {troop.name}: {activity_name} -> Thursday 1-2-3 [THURSDAY-3HR-OPT-OUT]")
+                        continue
+
+                    # Physical impossibility check (do not attempt).
+                    if not _physical_fit(activity, day):
+                        reason = (
+                            f"{activity_name} needs {int(activity.slots + 0.5)} slots; "
+                            f"{day_name} has {'2' if day == Day.THURSDAY else '3'} slots"
+                        )
+                        infeasible.append((troop.name, activity_name, day_name, reason))
+                        print(f"  [INFEASIBLE] {troop.name}: {activity_name} on {day_name} ({reason})")
+                        continue
+
+                    # T1: strict
+                    slot = _try_place(troop, activity, day)
+                    if slot is not None:
+                        honored += 1
+                        print(f"  {troop.name}: {activity_name} -> {day_name}-{slot.slot_number}")
+                        continue
+
+                    # T2: relaxed
+                    slot = _try_place(troop, activity, day, relax=True)
+                    if slot is not None:
+                        honored += 1
+                        print(f"  {troop.name}: {activity_name} -> {day_name}-{slot.slot_number} [RELAXED]")
+                        continue
+
+                    # T3: force (bypasses duplicate prevention, beach rule, staff cap, back-to-back).
+                    # This is the correct path for multi-day same-activity requests
+                    # (e.g. Shower House Thu + Fri) because the troop already has
+                    # one Shower House when processing the second day.
+                    # GATING: only use aggressive force in the final pass to avoid
+                    # breaking Top-5 enforcement during early/mid scheduling.
+                    if aggressive:
+                        slot = _try_place(troop, activity, day, relax=True, force=True)
+                        if slot is not None:
+                            honored += 1
+                            forced += 1
+                            print(f"  {troop.name}: {activity_name} -> {day_name}-{slot.slot_number} [FORCED]")
+                            continue
+
+                    # T4-prep: only pull wrong-day entries on days NOT in any day-request
+                    # for this activity (preserves multi-day requests of the same activity).
+                    requested_days_for_activity = set()
+                    for rd_name, rd_acts in troop.day_requests.items():
+                        if activity_name in rd_acts:
+                            rd = day_map.get(rd_name)
+                            if rd is not None:
+                                requested_days_for_activity.add(rd)
+                    wrong_day = [
+                        e for e in self.schedule.entries
+                        if e.troop == troop and e.activity.name == activity_name
+                        and e.time_slot.day not in requested_days_for_activity
+                    ]
+                    wrong_day_snapshot = self._snapshot_scheduler_state() if wrong_day else None
+                    pulled = False
+                    for e in wrong_day:
+                        if e in self.schedule.entries:
+                            self._remove_from_schedule(e)
+                            pulled = True
+
+                    # Retry T3 force after pulling wrong-day entries (final-pass only).
+                    if aggressive and pulled:
+                        slot = _try_place(troop, activity, day, relax=True, force=True)
+                        if slot is not None:
+                            honored += 1
+                            forced += 1
+                            relocated += 1
+                            print(f"  {troop.name}: {activity_name} -> {day_name}-{slot.slot_number} [FORCED-RELOCATED]")
+                            continue
+
+                    # T5/T6: displace occupant(s), trying non-Top-5 first, then Top 5.
+                    # Only runs in the final aggressive pass.
+                    if not aggressive:
+                        # Soft pass: leave unfulfilled for the Final pass to repair.
+                        if pulled and wrong_day_snapshot is not None:
+                            self._restore_scheduler_state(wrong_day_snapshot)
+                        continue
+                    pref_rank = troop.get_priority(activity_name) if hasattr(troop, "get_priority") else 999
+                    if pref_rank is None:
+                        pref_rank = 999
+                    day_slots = [s for s in self.time_slots if s.day == day]
+                    displaced = False
+                    for pass_idx, allow_top5_displace in enumerate((False, True)):
+                        for target_slot in day_slots:
+                            occupant = next(
+                                (e for e in self.schedule.entries
+                                 if e.troop == troop and e.time_slot == target_slot),
+                                None,
+                            )
+                            if occupant is None:
+                                continue
+                            if occupant.activity.name in protected_anchor_names:
+                                continue
+                            if self._is_pair_protected_delta(occupant):
+                                continue
+                            try:
+                                occ_rank = troop.preferences.index(occupant.activity.name)
+                            except ValueError:
+                                occ_rank = 999
+                            is_top5 = occ_rank < 5
+                            if is_top5 and not allow_top5_displace:
+                                continue
+                            snapshot = self._snapshot_scheduler_state()
+                            self._remove_from_schedule(occupant)
+                            if self._can_schedule(
+                                troop, activity, target_slot, day,
+                                relax_constraints=True, force_day_request=True,
+                            ) and self._add_to_schedule(target_slot, activity, troop):
+                                self._update_progress(troop, activity_name)
+                                honored += 1
+                                forced += 1
+                                if pulled:
+                                    relocated += 1
+                                tag = "[DISPLACED-TOP5]" if is_top5 else "[DISPLACED]"
+                                print(
+                                    f"  {troop.name}: {activity_name} -> {day_name}-{target_slot.slot_number} "
+                                    f"{tag} evicted {occupant.activity.name}"
+                                )
+                                displaced = True
+                                break
+                            self._restore_scheduler_state(snapshot)
+                        if displaced:
+                            break
+
+                    if displaced:
+                        continue
+
+                    # Could not place. Restore pulled original (best effort) and report.
+                    if pulled and wrong_day_snapshot is not None:
+                        self._restore_scheduler_state(wrong_day_snapshot)
+                    unfulfilled.append((troop.name, activity_name, day_name, "no legal placement"))
+                    print(f"  [UNFULFILLED] {troop.name}: {activity_name} on {day_name}")
+
+        if infeasible or unfulfilled:
+            print(
+                f"  Summary: honored={honored}, relocated={relocated}, forced={forced}, "
+                f"infeasible={len(infeasible)}, unfulfilled={len(unfulfilled)}"
+            )
+            for name, act, d, reason in infeasible:
+                print(f"    - {name}: {act} on {d} ({reason})")
+            for name, act, d, reason in unfulfilled:
+                print(f"    - {name}: {act} on {d} ({reason})")
+        else:
+            print(f"  Summary: honored={honored}, relocated={relocated}, forced={forced}")
+
+        return {
+            "honored": honored,
+            "relocated": relocated,
+            "forced": forced,
+            "infeasible": infeasible,
+            "unfulfilled": unfulfilled,
+        }
 
 
     def _schedule_two_hour_activities_priority(self):
@@ -807,7 +1095,7 @@ class LegacyPart02Mixin:
         from ...activities import get_activity_by_name
 
         # Protect multi-slot activities (Rocks) from being shredded
-        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
+        PROTECTED = self._get_protected_activity_names(self._get_multi_slot_activity_names())
         missed = []
         placed = 0
 
@@ -849,6 +1137,8 @@ class LegacyPart02Mixin:
                 for entry in troop_entries:
                     if entry.activity.name in PROTECTED:
                         continue
+                    if self._is_pair_protected_delta(entry):
+                        continue
                     if entry.activity.name in self.BEACH_ACTIVITIES and entry.activity.name not in top5_set:
                         replaceable.append((entry, -1))  # highest priority to displace
 
@@ -856,6 +1146,8 @@ class LegacyPart02Mixin:
             if not replaceable:
                 for entry in troop_entries:
                     if entry.activity.name in PROTECTED:
+                        continue
+                    if self._is_pair_protected_delta(entry):
                         continue
                     if entry.activity.name in top5_set:
                         continue  # never displace Top 5
@@ -916,7 +1208,7 @@ class LegacyPart02Mixin:
         from ...activities import get_activity_by_name
 
         # Protect multi-slot activities (Rocks) from being shredded
-        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
+        PROTECTED = self._get_protected_activity_names(self._get_multi_slot_activity_names())
         forced = 0
         missed = []
 
@@ -945,6 +1237,8 @@ class LegacyPart02Mixin:
             replaceable = []
             for entry in troop_entries:
                 if entry.activity.name in PROTECTED:
+                    continue
+                if self._is_pair_protected_delta(entry):
                     continue
                 try:
                     entry_priority = troop.preferences.index(entry.activity.name)
@@ -1590,103 +1884,6 @@ class LegacyPart02Mixin:
                         break
 
 
-    def _schedule_limited_activities_by_priority(self, max_rank=None):
-        """
-        Schedule limited-capacity activities by GLOBAL priority across all troops.
-
-        For activities like Troop Shotgun (max 1 per slot) and 3-hour activities (1 per day),
-        sort ALL troops who want them by preference rank and schedule highest-ranked first.
-
-        This ensures that if:
-        - Troop A wants Shotgun as #2
-        - Troop B wants Shotgun as #9
-        Then Troop A gets it first, regardless of scheduling phase.
-
-        Also ensures each troop gets at most 1 three-hour activity.
-
-        Args:
-            max_rank (int, optional): If set, only schedule requests with preference_index <= max_rank.
-                                      Used to prioritize Top 5 Limited before Top 5 General.
-        """
-        print(f"\n--- Priority Scheduling for Limited Activities (Max Rank: {max_rank if max_rank is not None else 'ALL'}) ---")
-
-        # Per Spine: Allow multiple 3-hour activities per troop - do NOT track or limit
-
-        # Define limited activities that need priority scheduling
-        # Added Canoe activities and limited beach activities (Aqua Trampoline, Water Polo)
-        # to ensure Top 5 preference priority over lower-ranked requests
-        LIMITED_ACTIVITIES = (
-            set(self.ACCURACY_ACTIVITIES) | 
-            set(self.THREE_HOUR_ACTIVITIES) |
-            set(self.CANOE_ACTIVITIES) |
-            {'Aqua Trampoline', 'Water Polo'}
-        )
-
-        print(f"  Limited activities to check: {LIMITED_ACTIVITIES}")
-
-        # For each limited activity, collect all troops who want it and their ranks
-        activity_requests = {}  # activity_name: [(troop, pref_rank), ...]
-
-        for activity_name in LIMITED_ACTIVITIES:
-            requests = []
-            for troop in self.troops:
-                if activity_name in troop.preferences:
-                    pref_rank = troop.preferences.index(activity_name)
-
-                    # Filter by max_rank if specified
-                    if max_rank is not None and pref_rank > max_rank:
-                        continue
-
-                    # Skip if already has this activity
-                    activity = get_activity_by_name(activity_name)
-                    if not activity:
-                        print(f"  WARNING: Activity '{activity_name}' not found by get_activity_by_name!")
-                        continue
-                    if self._troop_has_activity(troop, activity):
-                        # print(f"  {troop.name} already has {activity_name}")
-                        continue
-                    requests.append((troop, pref_rank))
-                    # print(f"  {troop.name} wants {activity_name} at rank #{pref_rank+1}")
-
-            if requests:
-                # Sort by preference rank (lower = higher priority)
-                requests.sort(key=lambda x: x[1])
-                activity_requests[activity_name] = requests
-
-        print(f"  Found {len(activity_requests)} limited activities with requests")
-
-        # Schedule each limited activity in priority order
-        scheduled_count = 0
-        for activity_name, requests in activity_requests.items():
-            activity = get_activity_by_name(activity_name)
-            if not activity:
-                continue
-
-            is_3hour = activity_name in self.THREE_HOUR_ACTIVITIES
-            print(f"  Attempting to schedule {activity_name} for {len(requests)} troops...")
-
-            for troop, pref_rank in requests:
-                # Skip if troop already has this activity
-                if self._troop_has_activity(troop, activity):
-                    continue
-
-                # Get current entries for this troop
-                troop_entries = [e for e in self.schedule.entries if e.troop == troop]
-
-                # Per Spine: Allow multiple 3-hour activities per troop if sufficient days available
-                # No limit check needed
-
-                # Try to schedule (Tuesday is allowed for 3-hour activities per Spine rule)
-                scheduled = self._try_schedule_activity(troop, activity)
-                if scheduled:
-                    scheduled_count += 1
-                    print(f"  [OK] {troop.name}: {activity_name} (rank #{pref_rank+1})")
-                else:
-                    print(f"    [FAIL] {troop.name}: {activity_name} failed to schedule")
-
-        print(f"  Scheduled {scheduled_count} limited activities by priority")
-
-
     def _schedule_preferences_range(self, start_rank, end_rank):
         """
         Unified per-preference scheduling: iterate through preference ranks start_rank to end_rank.
@@ -1768,7 +1965,6 @@ class LegacyPart02Mixin:
                 # For clustered activities, prefer non-excess-day placements earlier.
                 # Keep Top 1-5 flexible to protect satisfaction.
                 if activity_name in clustered_activity_names and pref_rank >= 5:
-                    # Use per-troop excess check (BRAIN §6 is a per-troop metric).
                     non_excess_slots = [s for s in slots_to_try if not self._would_create_excess_day(activity_name, s.day, troop=troop)]
                     excess_slots = [s for s in slots_to_try if self._would_create_excess_day(activity_name, s.day, troop=troop)]
                     slots_to_try = non_excess_slots + excess_slots  # Try non-excess first
@@ -1799,6 +1995,10 @@ class LegacyPart02Mixin:
                 displaceable = []
                 for entry in troop_entries:
                     if entry.activity.name in PROTECTED:
+                        continue
+                    # BRAIN: protect Delta when its troop has Sailing scheduled
+                    # so the Delta-Sailing pairing is preserved in-place.
+                    if self._is_pair_protected_delta(entry):
                         continue
                     try:
                         entry_rank = troop.preferences.index(entry.activity.name)
@@ -1921,7 +2121,7 @@ class LegacyPart02Mixin:
         print("\n--- Aggressive Top 6-15 Preference Recovery (Clustering-Aware) ---")
 
         # Protect multi-slot activities (Rocks) from being shredded
-        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
+        PROTECTED = self._get_protected_activity_names(self._get_multi_slot_activity_names())
 
         total_recovered = 0
 
@@ -1965,6 +2165,9 @@ class LegacyPart02Mixin:
                 displaceable = []
                 for entry in troop_entries:
                     if entry.activity.name in PROTECTED:
+                        continue
+                    # BRAIN: preserve Delta-Sailing pairing in place
+                    if self._is_pair_protected_delta(entry):
                         continue
                     try:
                         entry_rank = troop.preferences.index(entry.activity.name)
@@ -2026,6 +2229,8 @@ class LegacyPart02Mixin:
                 for entry in troop_entries:
                     if entry.activity.name in PROTECTED:
                         continue
+                    if self._is_pair_protected_delta(entry):
+                        continue
                     try:
                         entry_rank = troop.preferences.index(entry.activity.name)
                     except ValueError:
@@ -2081,7 +2286,7 @@ class LegacyPart02Mixin:
         print("\n--- ENHANCED: Guaranteeing 100% non-exempt Top 5 Satisfaction ---")
 
         # Protect multi-slot activities (Rocks) from being shredded
-        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
+        PROTECTED = self._get_protected_activity_names(self._get_multi_slot_activity_names())
 
         swaps_made = 0
         total_recovered = 0
@@ -2167,7 +2372,7 @@ class LegacyPart02Mixin:
                     # Only replace if lower priority than the missing Top 5
                     if entry_priority > pref_rank:
                         # Don't replace mandatory activities (Spine)
-                        if entry.activity.name not in PROTECTED:
+                        if entry.activity.name not in PROTECTED and not self._is_pair_protected_delta(entry):
                             replaceable.append((entry, entry_priority))
 
                 # Sort by priority (highest index = lowest priority = best to replace)
@@ -2358,7 +2563,7 @@ class LegacyPart02Mixin:
         print("\n--- Guaranteeing Minimum Top 10 (2-3 per troop) ---")
 
         # Protect multi-slot activities (Rocks) from being shredded
-        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
+        PROTECTED = self._get_protected_activity_names(self._get_multi_slot_activity_names())
         MIN_TOP10_REQUIRED = 3  # Require at least 3 of Top 10
 
         total_recovered = 0
@@ -2421,6 +2626,8 @@ class LegacyPart02Mixin:
                 for entry in troop_entries:
                     if entry.activity.name in PROTECTED:
                         continue
+                    if self._is_pair_protected_delta(entry):
+                        continue
                     try:
                         entry_rank = troop.preferences.index(entry.activity.name)
                     except ValueError:
@@ -2482,7 +2689,7 @@ class LegacyPart02Mixin:
 
         # Activities that cannot be displaced (Spine protected)
         # Protect multi-slot activities (Rocks) from being shredded
-        PROTECTED = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel", "Climbing Tower"})
+        PROTECTED = self._get_protected_activity_names(self._get_multi_slot_activity_names())
 
         enforcements = 0
         failures = []
@@ -2642,9 +2849,9 @@ class LegacyPart02Mixin:
             for i, pref in enumerate(top5_preferences):
                 if pref not in scheduled_activities:
                     # Check exemption rules
-                    if pref in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"]:
+                    if pref in self.THREE_HOUR_ACTIVITIES:
                         # Check if troop already has any 3-hour activity
-                        has_3hr = any(e.activity.name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] 
+                        has_3hr = any(e.activity.name in self.THREE_HOUR_ACTIVITIES
                                      for e in self.schedule.entries if e.troop == troop)
                         if has_3hr:
                             continue  # Exempt - already has a 3-hour activity
@@ -3029,13 +3236,8 @@ class LegacyPart02Mixin:
                         if placed:
                             break
 
-                # ENHANCED: Strategy 4 - Ultra-aggressive cross-day activity consolidation
-                if not placed and rank < 3:  # Only for Top 3 activities
-                    # Temporarily disabled due to bug - main optimizations working well
-                    # placed = self._ultra_aggressive_top5_recovery(troop, activity, missing_pref, rank)
-                    # if placed:
-                    #     recoveries += 1
-                    pass
+                # (Strategy 4 "ultra-aggressive cross-day top-5 recovery" was removed
+                # due to a correctness bug; current 3-tier strategy is sufficient.)
 
                 if not placed:
                     failures.append((troop.name, missing_pref, rank + 1))
@@ -3242,8 +3444,7 @@ class LegacyPart02Mixin:
         Multi-slot activities are prioritized within each round.
         ENHANCED: Better troop ordering and slot selection for improved satisfaction.
         """
-        MULTI_SLOT_ACTIVITIES = {"Sailing", "Climbing Tower", "Float for Floats", "Canoe Snorkel",
-                                 "Itasca State Park", "Tamarac Wildlife Refuge", "Back of the Moon"}
+        MULTI_SLOT_ACTIVITIES = self._get_multi_slot_activity_names()
 
         # ENHANCED: Order troops by priority (larger troops first for limited activities)
         def troop_priority_key(troop):
@@ -3309,8 +3510,7 @@ class LegacyPart02Mixin:
         WITHIN each rank, multi-slot activities (Sailing, Climbing Tower) are scheduled FIRST
         because they're harder to fit and need priority slot selection.
         """
-        MULTI_SLOT_ACTIVITIES = {"Sailing", "Climbing Tower", "Float for Floats", "Canoe Snorkel",
-                                 "Itasca State Park", "Tamarac Wildlife Refuge", "Back of the Moon"}
+        MULTI_SLOT_ACTIVITIES = self._get_multi_slot_activity_names()
 
         for pref_index in range(10, 15):  # 10=11th, 11=12th, etc.
             pref_rank = pref_index + 1
@@ -3364,8 +3564,7 @@ class LegacyPart02Mixin:
 
         WITHIN each rank, multi-slot activities are scheduled FIRST.
         """
-        MULTI_SLOT_ACTIVITIES = {"Sailing", "Climbing Tower", "Float for Floats", "Canoe Snorkel",
-                                 "Itasca State Park", "Tamarac Wildlife Refuge", "Back of the Moon"}
+        MULTI_SLOT_ACTIVITIES = self._get_multi_slot_activity_names()
 
         for pref_index in range(15, 20):  # 15=16th, 16=17th, etc.
             pref_rank = pref_index + 1
@@ -3415,12 +3614,7 @@ class LegacyPart02Mixin:
         IMPROVED: Prioritizes ANY remaining preferences (even beyond Top 15) before default fills.
         AGGRESSIVE: First pass fills ALL remaining preferences (especially Top 5) before default fills.
         """
-        cluster_map = {
-            "Tower": ["Climbing Tower"],
-            "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-            "Outdoor Skills": ["Knots and Lashings", "Orienteering", "GPS & Geocaching", "Ultimate Survivor", "What's Cooking", "Chopped!"],
-            "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"],
-        }
+        cluster_map = self._get_authoritative_gap_area_map()
         activity_to_area = {}
         for area_name, acts in cluster_map.items():
             for act in acts:
@@ -3606,9 +3800,34 @@ class LegacyPart02Mixin:
                         )
 
                 if strict_candidates:
-                    strict_candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
-                    _, _, fill_name, activity, pref_rank = strict_candidates[0]
+                    pref_candidates = [c for c in strict_candidates if c[4] is not None]
+                    if pref_candidates:
+                        # Requests always beat generic fillers; projected score only
+                        # breaks ties among equally ranked requests.
+                        pref_candidates.sort(key=lambda item: (item[4], -item[0], item[2]))
+                        _, _, fill_name, activity, pref_rank = pref_candidates[0]
+                    else:
+                        fill_rank = {name: idx for idx, name in enumerate(fill_priority)}
+                        strict_candidates.sort(key=lambda item: (fill_rank.get(item[2], 999), item[2]))
+                        _, _, fill_name, activity, pref_rank = strict_candidates[0]
                     self._add_to_schedule(slot, activity, troop)
+                    # #region agent log
+                    if hasattr(self, "_debug_log"):
+                        self._debug_log(
+                            "H4",
+                            "top5_and_swaps.py:_fill_all_remaining:3815",
+                            "Final fill selected strict candidate",
+                            {
+                                "troop": troop.name,
+                                "day": slot.day.name,
+                                "slot": slot.slot_number,
+                                "chosen": fill_name,
+                                "prefRank": pref_rank,
+                                "candidateCount": len(strict_candidates),
+                                "phase": getattr(self, "current_pipeline_phase", "unknown"),
+                            },
+                        )
+                    # #endregion
                     rank_info = f" (Pref #{pref_rank + 1})" if pref_rank is not None else ""
                     self.logger.info(f"  [Fill] {troop.name}: {fill_name}{rank_info} -> {slot}")
                     scheduled = True
@@ -3659,7 +3878,7 @@ class LegacyPart02Mixin:
         """
         from ...activities import get_activity_by_name
 
-        BALLS_ACTIVITIES = ["Gaga Ball", "9 Square"]
+        BALLS_ACTIVITIES = self.SMART_BALLS_ACTIVITIES
         LONG_DISTANCE_ACTIVITIES = [
             "Delta", "Super Troop",  # Far from center
             "Climbing Tower", "Knots and Lashings", "Orienteering",  # Tower/ODS
@@ -3837,6 +4056,130 @@ class LegacyPart02Mixin:
                             vacated_slot = TimeSlot(day=day, slot_number=slot_num)
                             self._fill_vacated_slot(solo_troop, vacated_slot)
                             break
+
+        # Strategy 3: Consolidate existing solo AT entries via a same-troop swap.
+        # If the moving troop is busy in the target AT slot, move that lower-value
+        # single-slot activity back into the vacated AT slot. This preserves the
+        # troop's activity set while creating the expected small-troop AT pair.
+        protected_names = set(self.NON_DISPLACEABLE_ACTIVITIES).union({"Sailing", "Float for Floats", "Canoe Snorkel"})
+
+        def is_safe_target_occupant(entry) -> bool:
+            if entry is None:
+                return True
+            if entry.activity.name in protected_names:
+                return False
+            if self._is_pair_protected_delta(entry):
+                return False
+            if entry.activity.slots > 1.0:
+                return False
+            priority = entry.troop.get_priority(entry.activity.name)
+            return priority >= 5
+
+        def try_consolidate_at(moving_entry, target_entry) -> bool:
+            moving_troop = moving_entry.troop
+            source_slot = moving_entry.time_slot
+            target_slot = target_entry.time_slot
+            if source_slot == target_slot:
+                return False
+
+            baseline_non_exempt, _ = self._count_non_exempt_top5_misses()
+            baseline_excess = self._count_excess_cluster_days()
+            baseline_gaps = self._count_area_cluster_gaps()
+
+            target_occupant = next(
+                (
+                    e for e in self.schedule.entries
+                    if e.troop == moving_troop and e.time_slot == target_slot
+                ),
+                None,
+            )
+            if not is_safe_target_occupant(target_occupant):
+                return False
+
+            snapshot = self._snapshot_scheduler_state()
+            if not self._remove_from_schedule(moving_entry):
+                self._restore_scheduler_state(snapshot)
+                return False
+            if target_occupant and not self._remove_from_schedule(target_occupant):
+                self._restore_scheduler_state(snapshot)
+                return False
+
+            can_place_at = self._can_schedule(
+                moving_troop,
+                AT_ACTIVITY,
+                target_slot,
+                target_slot.day,
+                relax_constraints=False,
+            )
+            can_place_occupant = True
+            if target_occupant:
+                can_place_occupant = self._can_schedule(
+                    moving_troop,
+                    target_occupant.activity,
+                    source_slot,
+                    source_slot.day,
+                    relax_constraints=False,
+                )
+
+            if not (can_place_at and can_place_occupant):
+                self._restore_scheduler_state(snapshot)
+                return False
+
+            if not self._add_to_schedule(target_slot, AT_ACTIVITY, moving_troop):
+                self._restore_scheduler_state(snapshot)
+                return False
+            if target_occupant and not self._add_to_schedule(source_slot, target_occupant.activity, moving_troop):
+                self._restore_scheduler_state(snapshot)
+                return False
+
+            new_non_exempt, _ = self._count_non_exempt_top5_misses()
+            new_excess = self._count_excess_cluster_days()
+            new_gaps = self._count_area_cluster_gaps()
+            if (
+                new_non_exempt > baseline_non_exempt
+                or new_excess > baseline_excess
+                or new_gaps > baseline_gaps
+            ):
+                self._restore_scheduler_state(snapshot)
+                return False
+
+            moved_name = target_occupant.activity.name if target_occupant else "open slot"
+            print(
+                f"  [AT Share Swap] {moving_troop.name}: Aqua Trampoline {source_slot} -> {target_slot}; "
+                f"{moved_name} moved back to {source_slot}"
+            )
+            return True
+
+        consolidation_attempts = 0
+        while consolidation_attempts < 12:
+            consolidation_attempts += 1
+            current_at_entries = [e for e in self.schedule.entries if e.activity.name == "Aqua Trampoline"]
+            current_slot_groups = defaultdict(list)
+            for entry in current_at_entries:
+                current_slot_groups[(entry.time_slot.day, entry.time_slot.slot_number)].append(entry)
+
+            current_solos = [
+                entries[0]
+                for entries in current_slot_groups.values()
+                if len(entries) == 1 and (entries[0].troop.scouts + entries[0].troop.adults) <= AT_MAX_SIZE
+            ]
+            if len(current_solos) < 2:
+                break
+
+            moved_this_round = False
+            for moving_entry in current_solos:
+                for target_entry in current_solos:
+                    if moving_entry == target_entry:
+                        continue
+                    if try_consolidate_at(moving_entry, target_entry):
+                        swaps_made += 1
+                        moved_this_round = True
+                        break
+                if moved_this_round:
+                    break
+
+            if not moved_this_round:
+                break
 
         if swaps_made > 0:
             print(f"  Created {swaps_made} Aqua Trampoline sharing pairs")

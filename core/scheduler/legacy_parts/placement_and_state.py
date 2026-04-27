@@ -17,6 +17,12 @@ from ..constants import SchedulerConstants
 from ..validators import would_create_excess_day_for_entries
 
 EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
+WATER_GAMES_SOFT_ACTIVITIES = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
+WATER_GAMES_SOFT_CONFLICTS = tuple(
+    tuple(pair)
+    for pair in SchedulerConstants.SOFT_SAME_DAY_CONFLICTS
+    if len(pair) == 2 and set(pair).issubset(WATER_GAMES_SOFT_ACTIVITIES)
+)
 
 class LegacyPart01Mixin:
     """Scheduler legacy methods part 01."""
@@ -102,6 +108,16 @@ class LegacyPart01Mixin:
         self._troop_day_counts_cache.clear()
         if hasattr(self, "cache") and self.cache:
             self.cache.invalidate_schedule_caches()
+
+    def _rebuild_staff_tracking(self) -> None:
+        """Recompute staff-load caches from schedule entries after direct mutations."""
+        self.total_staff_by_slot = defaultdict(int)
+        self.staff_load_by_slot = defaultdict(lambda: defaultdict(int))
+        for entry in self.schedule.entries:
+            self._update_staff_load(entry.time_slot, entry.activity.name, delta=1)
+            if entry.activity.name in self.ACTIVITY_STAFF_COUNT:
+                self.total_staff_by_slot[entry.time_slot] += self.ACTIVITY_STAFF_COUNT[entry.activity.name]
+        self._mark_schedule_changed()
 
 
     def _snapshot_scheduler_state(self) -> dict:
@@ -357,8 +373,7 @@ class LegacyPart01Mixin:
             else:
                 delta -= 1.2
 
-        # Efficiency: avoid excess area spread; reward filling true 1,-,3 gaps.
-        # Per-troop check — the BRAIN excess-day metric is per-troop.
+        # Efficiency: avoid troop-local area spread; reward filling true 1,-,3 gaps.
         if self._would_create_excess_day(activity.name, slot.day, troop=troop):
             delta -= 4.5
         if opens_new_area_day:
@@ -372,15 +387,35 @@ class LegacyPart01Mixin:
             if pref_rank is None or pref_rank >= 5:
                 delta -= 1.5
 
-        # Staff balancing approximation: discourage creating overloaded slots.
-        projected_slot_staff = self._get_total_staff_score(slot) + self._get_activity_staff_count(activity.name)
-        if projected_slot_staff > 14:
-            delta -= 0.8
-        elif projected_slot_staff <= 1 and activity.name in self.ACTIVITY_STAFF_COUNT:
-            delta += 0.4
+        # Staff balancing approximation aligned with scoring: ease heavy slots
+        # and build up light ones, without treating staff as a hard override.
+        activity_staff = self._get_activity_staff_count(activity.name)
+        if activity_staff > 0:
+            current_staff = self._get_total_staff_score(slot)
+            staff_loads = [self._get_total_staff_score(s) for s in self.time_slots]
+            avg_staff = sum(staff_loads) / len(staff_loads) if staff_loads else 0
+            target_staff = config_loader.get_target_staff_global()
+            max_staff = config_loader.get_max_staff_global()
 
-        # Bonuses aligned to regression-checker categories.
-        if activity.name in {"Delta", "Super Troop"} and slot.day in {Day.MONDAY, Day.TUESDAY}:
+            def staff_cost(load: int) -> float:
+                cost = abs(load - avg_staff)
+                if load > target_staff:
+                    cost += (load - target_staff) * 1.5
+                if load > max_staff:
+                    cost += (load - max_staff) * 3.0
+                return cost
+
+            projected_slot_staff = current_staff + activity_staff
+            cost_delta = staff_cost(projected_slot_staff) - staff_cost(current_staff)
+            if cost_delta > 0:
+                delta -= min(1.2, cost_delta * 0.25)
+            elif not opens_new_area_day and not self._would_create_excess_day(activity.name, slot.day, troop=troop):
+                delta += min(0.6, abs(cost_delta) * 0.18)
+
+        # Expectation alignment: keep this pass focused on staff and AT sharing;
+        # Delta timing is measured by the scorer, but broad Delta day nudges can
+        # compete with official cluster scoring.
+        if activity.name == "Super Troop" and slot.day in {Day.MONDAY, Day.TUESDAY}:
             delta += 0.5
         if activity.name == "Aqua Trampoline" and (troop.scouts + troop.adults) <= 16:
             sharing_exists = any(
@@ -390,7 +425,7 @@ class LegacyPart01Mixin:
                 for e in self.schedule.entries
             )
             if sharing_exists:
-                delta += 2.0
+                delta += 4.0
         if slot.day == Day.FRIDAY and activity.name != "Reflection":
             delta -= 0.35
 
@@ -460,6 +495,10 @@ class LegacyPart01Mixin:
         # Uses strict same-troop swaps with rollback checks.
         self._targeted_accuracy_day_dedup_swaps()
 
+        # NEW: Targeted de-dup pass for Water Games same-day soft conflicts.
+        # Avoids Aqua Trampoline / Water Polo / Greased Watermelon pairings when safe.
+        self._targeted_water_games_day_dedup_swaps()
+
         # NEW: Targeted wet/dry violation repairs with week-wide strict swaps.
         self._targeted_wet_dry_dedup_swaps()
 
@@ -485,15 +524,15 @@ class LegacyPart01Mixin:
     def _count_excess_cluster_days(self) -> int:
         """
         Count excess cluster days using the same definition as regression checker:
-        required_days = ceil(activity_count / 3) for Tower/Rifle/Outdoor Skills/Handicrafts.
+        required_days = ceil(activity_count / 3) for authoritative SKULL cluster areas.
         """
         import math
 
-        cluster_areas = ["Tower", "Rifle Range", "Outdoor Skills", "Handicrafts"]
+        cluster_areas = self._get_authoritative_gap_area_map()
         total_excess = 0
 
-        for area in cluster_areas:
-            activities = set(EXCLUSIVE_AREAS.get(area, []))
+        for activities in cluster_areas.values():
+            activities = set(activities)
             if not activities:
                 continue
             entries = [e for e in self.schedule.entries if e.activity.name in activities]
@@ -523,6 +562,16 @@ class LegacyPart01Mixin:
             for troop in self.troops
             for day in Day
             if self._has_tp_pair_violation_on_day(troop, day)
+        )
+
+
+    def _count_global_water_games_pair_violations(self) -> int:
+        """Count configured Water Games same-day soft violations."""
+        return sum(
+            1
+            for troop in self.troops
+            for day in Day
+            for _ in self._water_games_pair_violations_on_day(troop, day)
         )
 
 
@@ -579,14 +628,16 @@ class LegacyPart01Mixin:
         wet = self._count_wet_dry_violations()
         accuracy = self._count_accuracy_same_day_violations()
         tp = self._count_global_tp_pair_violations()
+        water_games = self._count_global_water_games_pair_violations()
         shower = self._count_global_shower_order_violations()
-        soft_total = wet + accuracy + tp + shower
+        soft_total = wet + accuracy + tp + water_games + shower
         composite = (
             25 * excess
             + 15 * gaps
             + 4 * wet
             + 4 * accuracy
             + 2 * tp
+            + 2 * water_games
             + 2 * shower
             + commissioner
         )
@@ -597,6 +648,7 @@ class LegacyPart01Mixin:
             "wet": wet,
             "accuracy": accuracy,
             "tp": tp,
+            "water_games": water_games,
             "shower": shower,
             "soft_total": soft_total,
             "composite": composite,
@@ -653,7 +705,7 @@ class LegacyPart01Mixin:
         if os.getenv("ENABLE_TOP5_METRIC_SWAPS", "1").strip().lower() in {"0", "false", "no", "off"}:
             print("    [Top5 Metric Swaps] Disabled by environment")
             return 0
-        protected = self.NON_DISPLACEABLE_ACTIVITIES | {"Sailing"}
+        protected = self._get_protected_activity_names({"Sailing"})
         fixes = 0
         max_fixes = min(max(6, len(self.troops)), 18)
         time_budget_s = float(os.getenv("TOP5_METRIC_SWAP_BUDGET_SECONDS", "1.5"))
@@ -779,7 +831,7 @@ class LegacyPart01Mixin:
         - must not increase non-exempt Top 5 misses
         - must not increase excess cluster days
         """
-        protected = self.NON_DISPLACEABLE_ACTIVITIES | {"Sailing"}
+        protected = self._get_protected_activity_names({"Sailing"})
         fixes = 0
         max_fixes = max(8, len(self.troops) * 2)
 
@@ -870,6 +922,175 @@ class LegacyPart01Mixin:
         return fixes
 
 
+    def _targeted_water_games_day_dedup_swaps(self) -> int:
+        """
+        Reduce same-day Water Games pairs via week-wide same-troop strict swaps.
+        Guardrails preserve hard metrics, cluster shape, and existing soft metrics.
+        """
+        protected = self._get_protected_activity_names({"Sailing"})
+        fixes = 0
+        max_fixes = max(8, len(self.troops) * 2)
+
+        print("    [Water Games De-dup] Starting targeted strict swaps...")
+
+        improved = True
+        while improved and fixes < max_fixes:
+            improved = False
+            baseline_water_games = self._count_global_water_games_pair_violations()
+            baseline_non_exempt, _ = self._count_non_exempt_top5_misses()
+            baseline_excess_days = self._count_excess_cluster_days()
+            baseline_cluster_gaps = self._count_area_cluster_gaps()
+            baseline_wet = self._count_wet_dry_violations()
+            baseline_accuracy = self._count_accuracy_same_day_violations()
+            baseline_tp_pairs = self._count_global_tp_pair_violations()
+            baseline_shower_order = self._count_global_shower_order_violations()
+
+            if baseline_water_games == 0:
+                break
+
+            for troop in sorted(self.troops, key=lambda t: t.name):
+                made_for_troop = False
+                for day in Day:
+                    if not self._water_games_pair_violations_on_day(troop, day):
+                        continue
+
+                    day_entries = [
+                        e for e in self.schedule.entries
+                        if e.troop == troop
+                        and e.time_slot.day == day
+                        and e.activity.name in WATER_GAMES_SOFT_ACTIVITIES
+                        and e.activity.slots <= 1
+                        and e.activity.name not in protected
+                    ]
+                    if len(day_entries) < 2:
+                        continue
+
+                    def conflict_count(entry: ScheduleEntry) -> int:
+                        return sum(
+                            1
+                            for pair in WATER_GAMES_SOFT_CONFLICTS
+                            if entry.activity.name in pair
+                            and any(
+                                other.activity.name in pair
+                                and other.activity.name != entry.activity.name
+                                for other in day_entries
+                            )
+                        )
+
+                    day_entries.sort(
+                        key=lambda e: (
+                            -conflict_count(e),
+                            -troop.get_priority(e.activity.name),
+                            e.time_slot.slot_number,
+                        )
+                    )
+
+                    for source in day_entries:
+                        swap_candidates = [
+                            e for e in self.schedule.entries
+                            if e.troop == troop
+                            and e.time_slot.day != day
+                            and e.activity.slots <= 1
+                            and e.activity.name not in protected
+                            and e.activity.name not in WATER_GAMES_SOFT_ACTIVITIES
+                        ]
+                        swap_candidates.sort(
+                            key=lambda e: (
+                                troop.get_priority(e.activity.name) < 5,
+                                troop.get_priority(e.activity.name),
+                                e.time_slot.day.value,
+                                e.time_slot.slot_number,
+                            )
+                        )
+
+                        best_signature = None
+                        best_score = None
+                        for other in swap_candidates[:30]:
+                            slot_a = source.time_slot
+                            act_a = source.activity.name
+                            slot_b = other.time_slot
+                            act_b = other.activity.name
+                            if not self._try_strict_swap_same_troop(source, other):
+                                continue
+
+                            new_water_games = self._count_global_water_games_pair_violations()
+                            new_non_exempt, _ = self._count_non_exempt_top5_misses()
+                            new_excess_days = self._count_excess_cluster_days()
+                            new_cluster_gaps = self._count_area_cluster_gaps()
+                            new_wet = self._count_wet_dry_violations()
+                            new_accuracy = self._count_accuracy_same_day_violations()
+                            new_tp_pairs = self._count_global_tp_pair_violations()
+                            new_shower_order = self._count_global_shower_order_violations()
+                            if (
+                                new_water_games < baseline_water_games
+                                and new_non_exempt <= baseline_non_exempt
+                                and new_excess_days <= baseline_excess_days
+                                and new_cluster_gaps <= baseline_cluster_gaps
+                                and new_wet <= baseline_wet
+                                and new_accuracy <= baseline_accuracy
+                                and new_tp_pairs <= baseline_tp_pairs
+                                and new_shower_order <= baseline_shower_order
+                            ):
+                                pref_delta = troop.get_priority(act_b) - troop.get_priority(act_a)
+                                score = (
+                                    baseline_water_games - new_water_games,
+                                    baseline_excess_days - new_excess_days,
+                                    baseline_cluster_gaps - new_cluster_gaps,
+                                    baseline_wet - new_wet,
+                                    baseline_accuracy - new_accuracy,
+                                    baseline_tp_pairs - new_tp_pairs,
+                                    baseline_shower_order - new_shower_order,
+                                    -max(0, pref_delta),
+                                )
+                                if best_score is None or score > best_score:
+                                    best_score = score
+                                    best_signature = (slot_a, act_a, slot_b, act_b)
+
+                            self._undo_same_troop_swap(troop, slot_a, act_a, slot_b, act_b)
+
+                        if best_signature:
+                            slot_a, act_a, slot_b, act_b = best_signature
+                            src_now = next(
+                                (
+                                    e for e in self.schedule.entries
+                                    if e.troop == troop and e.time_slot == slot_a and e.activity.name == act_a
+                                ),
+                                None,
+                            )
+                            other_now = next(
+                                (
+                                    e for e in self.schedule.entries
+                                    if e.troop == troop and e.time_slot == slot_b and e.activity.name == act_b
+                                ),
+                                None,
+                            )
+                            if src_now and other_now and self._try_strict_swap_same_troop(src_now, other_now):
+                                fixes += 1
+                                improved = True
+                                made_for_troop = True
+                                print(
+                                    f"      [Water Games Swap] {troop.name}: {act_a} "
+                                    f"{slot_a.day.name[:3]}-{slot_a.slot_number} <-> "
+                                    f"{act_b} {slot_b.day.name[:3]}-{slot_b.slot_number}"
+                                )
+                                break
+
+                        if made_for_troop or fixes >= max_fixes:
+                            break
+
+                    if made_for_troop or fixes >= max_fixes:
+                        break
+
+                if made_for_troop or fixes >= max_fixes:
+                    break
+
+        if fixes > 0:
+            print(f"    [Water Games De-dup] Applied {fixes} strict swap fix(es)")
+        else:
+            print("    [Water Games De-dup] No safe swaps found")
+        return fixes
+
+
     def _targeted_wet_dry_dedup_swaps(self) -> int:
         """
         Reduce wet/dry violations via week-wide strict same-troop swaps.
@@ -879,7 +1100,7 @@ class LegacyPart01Mixin:
         - must not increase excess cluster days
         - must not increase accuracy same-day violations
         """
-        protected = self.NON_DISPLACEABLE_ACTIVITIES | {"Sailing"}
+        protected = self._get_protected_activity_names({"Sailing"})
         fixes = 0
         max_fixes = max(8, len(self.troops) * 2)
 
@@ -893,6 +1114,7 @@ class LegacyPart01Mixin:
             baseline_excess_days = self._count_excess_cluster_days()
             baseline_accuracy = self._count_accuracy_same_day_violations()
             baseline_tp_pairs = self._count_global_tp_pair_violations()
+            baseline_water_games = self._count_global_water_games_pair_violations()
             baseline_shower_order = self._count_global_shower_order_violations()
 
             if baseline_wet == 0:
@@ -986,6 +1208,7 @@ class LegacyPart01Mixin:
                             new_excess_days = self._count_excess_cluster_days()
                             new_accuracy = self._count_accuracy_same_day_violations()
                             new_tp_pairs = self._count_global_tp_pair_violations()
+                            new_water_games = self._count_global_water_games_pair_violations()
                             new_shower_order = self._count_global_shower_order_violations()
                             if (
                                 new_wet < baseline_wet
@@ -993,6 +1216,7 @@ class LegacyPart01Mixin:
                                 and new_excess_days <= baseline_excess_days
                                 and new_accuracy <= baseline_accuracy
                                 and new_tp_pairs <= baseline_tp_pairs
+                                and new_water_games <= baseline_water_games
                                 and new_shower_order <= baseline_shower_order
                             ):
                                 pref_delta = troop.get_priority(act_b) - troop.get_priority(act_a)
@@ -1001,6 +1225,7 @@ class LegacyPart01Mixin:
                                     baseline_accuracy - new_accuracy,
                                     baseline_excess_days - new_excess_days,
                                     baseline_tp_pairs - new_tp_pairs,
+                                    baseline_water_games - new_water_games,
                                     baseline_shower_order - new_shower_order,
                                     -max(0, pref_delta),
                                 )
@@ -1090,9 +1315,6 @@ class LegacyPart01Mixin:
             # 4. Guarantee mandatory activities (Reflection, Super Troop)
             self._guarantee_mandatory_activities()
 
-            # 4.5 PROACTIVE GAP-FILLING: Move valuable activities into gaps
-            # self._fill_gaps_with_valuable_moves() # DISABLED: Corrupts multi-slot activities
-
             # 5. Fill empty slots
             self._fill_empty_slots_final()
 
@@ -1177,16 +1399,12 @@ class LegacyPart01Mixin:
                     slots = int(activity.slots + 0.5)
                     MULTI_SLOT_ACTIVITIES[activity.name] = slots
 
-        # Fallback for hardcoded activities if self.activities is empty (shouldn't happen)
+        # Fallback from configured activity metadata if self.activities is empty.
         if not MULTI_SLOT_ACTIVITIES:
-             MULTI_SLOT_ACTIVITIES = {
-                "Sailing": 2,  # 1.5 slots rounds to 2
-                "Back of the Moon": 3,
-                "Itasca State Park": 3,
-                "Tamarac Wildlife Refuge": 3,
-                "Canoe Snorkel": 2,
-                "Float for Floats": 2,
-            }
+            for activity_name in self._get_multi_slot_activity_names():
+                activity = get_activity_by_name(activity_name)
+                if activity and activity.slots > 1:
+                    MULTI_SLOT_ACTIVITIES[activity.name] = int(activity.slots + 0.5)
 
         print(f"  [Multi-Slot Integrity] Verifying {len(MULTI_SLOT_ACTIVITIES)} activity types: {sorted(list(MULTI_SLOT_ACTIVITIES.keys()))}")
 
@@ -1218,8 +1436,15 @@ class LegacyPart01Mixin:
                 activity = entries[0].activity
                 day = entries[0].time_slot.day
 
-                # Find the starting slot (lowest slot number)
-                start_slot = min(e.time_slot.slot_number for e in entries)
+                # Find the starting slot (lowest slot number).
+                # Exception: Thursday 3-slot day-request opt-out always starts
+                # at slot 1 (consumes Thu 1+2+3), regardless of which remnants
+                # survived earlier cleanup passes.
+                if (day == Day.THURSDAY
+                        and self._is_day_request_thursday_3slot(troop, activity)):
+                    start_slot = 1
+                else:
+                    start_slot = min(e.time_slot.slot_number for e in entries)
 
                 # Determine which slots are missing
                 existing_slot_nums = {e.time_slot.slot_number for e in entries}
@@ -1237,15 +1462,25 @@ class LegacyPart01Mixin:
 
                     # Missing slot object means this slot is not valid for the day (e.g. Thu-3).
                     if not time_slot:
-                        print(f"    [REMOVE] {troop_name} {activity_name} @ {day_name} - slot {slot_num} is not a valid timeslot")
-                        for e in entries:
-                            if e in self.schedule.entries:
-                                self.schedule.entries.remove(e)
-                                removed_count += 1
-                        break
+                        # Exception: Thursday 3-slot day-request opt-out authorizes
+                        # a virtual Thu-3 (troop skips mandatory 3rd-slot camp event).
+                        if (day == Day.THURSDAY
+                                and self._is_day_request_thursday_3slot(troop, activity)):
+                            time_slot = TimeSlot(day=Day.THURSDAY, slot_number=slot_num)
+                        else:
+                            print(f"    [REMOVE] {troop_name} {activity_name} @ {day_name} - slot {slot_num} is not a valid timeslot")
+                            for e in entries:
+                                if e in self.schedule.entries:
+                                    self.schedule.entries.remove(e)
+                                    removed_count += 1
+                            break
 
                     # Check if slot is within day bounds
                     max_slot = 2 if day == Day.THURSDAY else 3
+                    # Exception: Thursday 3-slot day-request opt-out extends to slot 3.
+                    if (day == Day.THURSDAY
+                            and self._is_day_request_thursday_3slot(troop, activity)):
+                        max_slot = 3
                     if slot_num > max_slot:
                         # Can't add - would exceed day bounds
                         # Remove the incomplete activity instead
@@ -1265,8 +1500,17 @@ class LegacyPart01Mixin:
                     )
 
                     if not troop_busy:
-                        # Add the missing slot via add_entry for validation and multi-slot consistency
-                        if self.schedule.add_entry(time_slot, activity, troop):
+                        # Exception: Thu-3 opt-out uses direct append because
+                        # add_entry relies on generate_time_slots which doesn't
+                        # include Thu-3.
+                        if (day == Day.THURSDAY and slot_num == 3
+                                and self._is_day_request_thursday_3slot(troop, activity)):
+                            self.schedule.entries.append(ScheduleEntry(
+                                time_slot=time_slot, activity=activity, troop=troop
+                            ))
+                            fixed_count += 1
+                            print(f"    [FIXED] {troop_name} {activity_name} @ {day_name} - added virtual slot {slot_num} (Thu-3hr opt-out)")
+                        elif self.schedule.add_entry(time_slot, activity, troop):
                             fixed_count += 1
                             print(f"    [FIXED] {troop_name} {activity_name} @ {day_name} - added slot {slot_num}")
                     else:
@@ -1401,6 +1645,35 @@ class LegacyPart01Mixin:
                 f"Examples: {preview}"
             )
 
+        # Final Top-5 repair can reclaim slots after Phase D and leave the
+        # delivered schedule with avoidable excess cluster days. Run one
+        # guarded cleanup now that the hard Top-5 contract is restored.
+        post_top5_snapshot = self._snapshot_scheduler_state()
+        post_top5_non_exempt, _ = self._count_non_exempt_top5_misses()
+        post_top5_excess = self._count_excess_cluster_days()
+        post_top5_gaps = self._count_area_cluster_gaps()
+        if post_top5_non_exempt == 0 and (post_top5_excess > 0 or post_top5_gaps > 0):
+            cluster_moves = self._aggressive_excess_day_reduction_swaps()
+            if cluster_moves:
+                self._fix_multislot_integrity()
+                self._guarantee_no_gaps()
+                after_cluster_non_exempt, _ = self._count_non_exempt_top5_misses()
+                after_cluster_excess = self._count_excess_cluster_days()
+                after_cluster_gaps = self._count_area_cluster_gaps()
+                if (
+                    after_cluster_non_exempt > post_top5_non_exempt
+                    or after_cluster_excess > post_top5_excess
+                    or after_cluster_gaps > post_top5_gaps
+                ):
+                    print("  [Final Validation] Rolling back post-Top5 cluster repair")
+                    self._restore_scheduler_state(post_top5_snapshot)
+                else:
+                    print(
+                        "  [Final Validation] Post-Top5 cluster repair OK "
+                        f"(excess {post_top5_excess}->{after_cluster_excess}, "
+                        f"gaps {post_top5_gaps}->{after_cluster_gaps})"
+                    )
+
         final_gap_count = self._count_area_cluster_gaps()
         if final_gap_count > 0:
             print(
@@ -1410,6 +1683,79 @@ class LegacyPart01Mixin:
             self._fix_multislot_integrity()
             self._guarantee_no_gaps()
             self._validate_critical_constraints()
+
+        # MUST-HONOR seal (runs after all repairs / gap fill / multi-slot fixes).
+        # Earlier passes may use ignore_day_requests or relocations that push
+        # day-requested activities off their authored days; this is the last
+        # authoritative placement before the returned schedule is considered final.
+        print("  [Final Validation] MUST-HONOR day-request seal (post-repair)...")
+        day_request_result = self._schedule_day_requests(
+            pass_label="Final Validation — MUST-HONOR seal", aggressive=True
+        )
+        if day_request_result and day_request_result.get("unfulfilled"):
+            preview = ", ".join(
+                f"{troop}/{activity} on {day} ({reason})"
+                for troop, activity, day, reason in day_request_result["unfulfilled"][:5]
+            )
+            raise ValueError(
+                "Final acceptance failed: feasible day request(s) remain unfulfilled. "
+                f"Examples: {preview}"
+            )
+        # Fast-path: skip terminal re-sanitization work when no day-request
+        # seal moves were made. This keeps the no-day-request troop path
+        # identical to the pre-seal legacy behavior and avoids disrupting
+        # placements that are already clean (e.g. tight unit-test fixtures).
+        troops_with_day_requests = any(
+            getattr(t, "day_requests", None) for t in self.troops
+        )
+        if troops_with_day_requests:
+            self._fix_multislot_integrity()
+            self._guarantee_no_gaps()
+            self._guarantee_mandatory_activities()
+            # Gap-fill or MUST-HONOR placements can reintroduce beach-slot
+            # saturation on a per-slot basis. Re-enforce the hard cap as the
+            # very last mutating step before validation.
+            self._fix_beach_activity_saturation()
+            self._fix_multislot_integrity()
+            self._guarantee_no_gaps()
+            self._validate_critical_constraints()
+            seal_cluster_snapshot = self._snapshot_scheduler_state()
+            seal_non_exempt, _ = self._count_non_exempt_top5_misses()
+            seal_excess = self._count_excess_cluster_days()
+            seal_gaps = self._count_area_cluster_gaps()
+            if seal_non_exempt == 0 and (seal_excess > 0 or seal_gaps > 0):
+                print("  [Final Validation] Post-day-request cluster offender repair...")
+                seal_cluster_moves = self._aggressive_excess_day_reduction_swaps()
+                if seal_cluster_moves:
+                    self._fix_multislot_integrity()
+                    self._guarantee_no_gaps()
+                    self._validate_critical_constraints()
+                    after_seal_non_exempt, _ = self._count_non_exempt_top5_misses()
+                    after_seal_excess = self._count_excess_cluster_days()
+                    after_seal_gaps = self._count_area_cluster_gaps()
+                    if (
+                        after_seal_non_exempt > seal_non_exempt
+                        or after_seal_excess > seal_excess
+                        or after_seal_gaps > seal_gaps
+                    ):
+                        print("  [Final Validation] Rolling back post-day-request cluster repair")
+                        self._restore_scheduler_state(seal_cluster_snapshot)
+                    else:
+                        print(
+                            "  [Final Validation] Post-day-request cluster repair OK "
+                            f"(excess {seal_excess}->{after_seal_excess}, "
+                            f"gaps {seal_gaps}->{after_seal_gaps})"
+                        )
+            final_count, final_details = self._count_non_exempt_top5_misses()
+            if final_count > 0:
+                preview = ", ".join(
+                    f"{troop}/{activity}#{rank}"
+                    for troop, activity, rank in final_details[:5]
+                )
+                raise ValueError(
+                    f"Final acceptance failed after day-request seal: "
+                    f"{final_count} non-exempt Top 5 misses remain. Examples: {preview}"
+                )
 
         print("  [Final Validation] Complete")
 
@@ -1551,7 +1897,7 @@ class LegacyPart01Mixin:
         max_beach_acts = config_loader.get_constraints().get("max_beach_staffed_activities", 4)
         beach_staffed = set(SchedulerConstants.BEACH_STAFFED_ACTIVITIES)
 
-        fallback_names = ["Campsite Free Time", "Gaga Ball", "9 Square"]
+        fallback_names = list(self._get_swappable_fill_names())
         fallbacks = [get_activity_by_name(n) for n in fallback_names]
         fallbacks = [f for f in fallbacks if f is not None]
 
@@ -1622,6 +1968,23 @@ class LegacyPart01Mixin:
         act_a = entry_a.activity
         act_b = entry_b.activity
 
+        # Do not let local cleanup swaps make staff distribution materially
+        # worse. Same-staff swaps are neutral; only check unequal staff moves.
+        staff_a = self._get_activity_staff_count(act_a.name)
+        staff_b = self._get_activity_staff_count(act_b.name)
+        if staff_a != staff_b:
+            staff_loads = [self._get_total_staff_score(s) for s in self.time_slots]
+            avg_staff = sum(staff_loads) / len(staff_loads) if staff_loads else 0
+            load_a = self._get_total_staff_score(slot_a)
+            load_b = self._get_total_staff_score(slot_b)
+
+            before_cost = (load_a - avg_staff) ** 2 + (load_b - avg_staff) ** 2
+            after_a = load_a - staff_a + staff_b
+            after_b = load_b - staff_b + staff_a
+            after_cost = (after_a - avg_staff) ** 2 + (after_b - avg_staff) ** 2
+            if after_cost > before_cost + 2.0:
+                return False
+
         self.schedule.remove_entry(entry_a)
         self.schedule.remove_entry(entry_b)
         can_a = self._can_schedule(troop, act_a, slot_b, slot_b.day, relax_constraints=False)
@@ -1658,6 +2021,19 @@ class LegacyPart01Mixin:
         return "Trading Post" in day_acts and (
             "Shower House" in day_acts or "Campsite Free Time" in day_acts
         )
+
+
+    def _water_games_pair_violations_on_day(self, troop: Troop, day: Day) -> List[tuple[str, str]]:
+        day_acts = {
+            e.activity.name
+            for e in self.schedule.entries
+            if e.troop == troop and e.time_slot.day == day
+        }
+        return [
+            pair
+            for pair in WATER_GAMES_SOFT_CONFLICTS
+            if set(pair).issubset(day_acts)
+        ]
 
 
     def _has_shower_order_violation_on_day(self, troop: Troop, day: Day) -> bool:
@@ -1719,7 +2095,7 @@ class LegacyPart01Mixin:
         """
         print("    [Soft Cleanup] Shower/Trading targeted pass...")
         fixes = 0
-        protected = {"Reflection", "Super Troop"}
+        protected = self._get_protected_activity_names()
 
         # Pass 1: Shower ordering (same-day strict swaps only).
         for troop in sorted(self.troops, key=lambda t: t.name):
@@ -1849,7 +2225,7 @@ class LegacyPart01Mixin:
         """
         moved = 0
         unresolved = 0
-        protected = self.NON_DISPLACEABLE_ACTIVITIES | {"Sailing"}
+        protected = self._get_protected_activity_names({"Sailing"})
 
         for troop in self.troops:
             friday_st = next(
@@ -1941,6 +2317,9 @@ class LegacyPart01Mixin:
         """Validate critical constraints are satisfied."""
         from ...models import Day
 
+        self._rebuild_staff_tracking()
+        hard_errors = []
+
         # Check Friday Reflection
         missing_reflection = 0
         for troop in self.troops:
@@ -1953,8 +2332,72 @@ class LegacyPart01Mixin:
 
         if missing_reflection > 0:
             print(f"    [WARNING] {missing_reflection} troops missing Friday Reflection")
+            hard_errors.append(f"{missing_reflection} troop(s) missing Friday Reflection")
         else:
             print("    [OK] All troops have Friday Reflection")
+
+        missing_super_troop = 0
+        for troop in self.troops:
+            has_super_troop = any(
+                e.activity.name == "Super Troop"
+                for e in self.schedule.entries if e.troop == troop
+            )
+            if not has_super_troop:
+                missing_super_troop += 1
+        if missing_super_troop > 0:
+            print(f"    [WARNING] {missing_super_troop} troops missing Super Troop")
+            hard_errors.append(f"{missing_super_troop} troop(s) missing Super Troop")
+        else:
+            print("    [OK] All troops have Super Troop")
+
+        empty_slots = self._count_troop_empty_slots()
+        if empty_slots > 0:
+            print(f"    [WARNING] {empty_slots} troop empty slots")
+            hard_errors.append(f"{empty_slots} troop empty slot(s)")
+        else:
+            print("    [OK] No troop empty slots")
+
+        tuesday_only_violations = [
+            e for e in self.schedule.entries
+            if e.activity.name in {"History Center", "Disc Golf"}
+            and e.time_slot.day != Day.TUESDAY
+        ]
+        if tuesday_only_violations:
+            print(f"    [WARNING] {len(tuesday_only_violations)} HC/DG day violations")
+            hard_errors.append(f"{len(tuesday_only_violations)} HC/DG Tuesday-only violation(s)")
+        else:
+            print("    [OK] HC/DG Tuesday-only constraints")
+
+        exclusive_violations = 0
+        concurrent = set(self.CONCURRENT_ACTIVITIES)
+        for slot in self.time_slots:
+            slot_entries = [e for e in self.schedule.entries if e.time_slot == slot]
+            for area_name, area_activities in EXCLUSIVE_AREAS.items():
+                area_entries = [
+                    e for e in slot_entries
+                    if e.activity.name in area_activities
+                    and e.activity.name not in concurrent
+                ]
+                if len(area_entries) <= 1:
+                    continue
+                if area_name == "Sailing" and slot.slot_number == 2 and len(area_entries) <= 2:
+                    continue
+                if area_name == "Aqua Trampoline":
+                    small_troops = [
+                        e for e in area_entries
+                        if (e.troop.scouts + e.troop.adults) <= 16
+                    ]
+                    if len(small_troops) == len(area_entries) and len(area_entries) <= 2:
+                        continue
+                if area_name == "Water Polo" and len(area_entries) <= 2:
+                    continue
+                exclusive_violations += len(area_entries) - 1
+
+        if exclusive_violations > 0:
+            print(f"    [WARNING] {exclusive_violations} exclusive area violations")
+            hard_errors.append(f"{exclusive_violations} exclusive area violation(s)")
+        else:
+            print("    [OK] Exclusive areas")
 
         # Check beach slot violations using SKULL-driven beach slot restrictions.
         # Sailing is intentionally excluded here; it has a separate slot-2 exception path.
@@ -1980,46 +2423,27 @@ class LegacyPart01Mixin:
         else:
             print("    [OK] No beach slot violations")
 
+        if hard_errors:
+            raise ValueError("Critical schedule validation failed: " + "; ".join(hard_errors))
+
 
     def _count_non_exempt_top5_misses(self):
         """
-        Count non-exempt missed Top 5 preferences in the current schedule.
-
-        Exemptions are intentionally limited to:
-        1) 2nd+ requested 3-hour activity when troop already has one 3-hour activity.
-        2) HC/DG Tuesday saturation.
-        3) Canoe-family duplication: troop already has another canoe-family activity.
+        Count non-exempt missed Top 5 preferences using the same unscheduled
+        payload builder that feeds schedule JSON and regression reporting.
         """
-        tuesday_hc_dg_slots = set()
-        for entry in self.schedule.entries:
-            if entry.time_slot.day == Day.TUESDAY and entry.activity.name in ("History Center", "Disc Golf"):
-                tuesday_hc_dg_slots.add(entry.time_slot.slot_number)
-        hc_dg_tuesday_full = tuesday_hc_dg_slots >= {1, 2, 3}
+        from core.services.unscheduled_source import build_unscheduled_data
 
+        unscheduled = build_unscheduled_data(
+            self.troops,
+            self.schedule,
+            getattr(self, "sailing_balls_fills", None),
+        )
         misses = []
-        for troop in self.troops:
-            troop_entries = [e for e in self.schedule.entries if e.troop == troop]
-            scheduled_names = {e.activity.name for e in troop_entries}
-            has_3hr_scheduled = any(e.activity.name in self.THREE_HOUR_ACTIVITIES for e in troop_entries)
-
-            top5 = troop.preferences[:5] if len(troop.preferences) >= 5 else troop.preferences
-            for idx, pref_name in enumerate(top5):
-                if pref_name in scheduled_names:
-                    continue
-
-                is_exempt = False
-                if pref_name in self.THREE_HOUR_ACTIVITIES and has_3hr_scheduled:
-                    is_exempt = True
-                elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                    is_exempt = True
-                elif (
-                    pref_name in self.CANOE_ACTIVITIES
-                    and any(name in self.CANOE_ACTIVITIES and name != pref_name for name in scheduled_names)
-                ):
-                    is_exempt = True
-
-                if not is_exempt:
-                    misses.append((troop.name, pref_name, idx + 1))
+        for troop_name, troop_data in unscheduled.items():
+            for item in troop_data.get("top5", []):
+                if not item.get("is_exempt", False):
+                    misses.append((troop_name, item.get("name", ""), item.get("rank", 0)))
 
         return len(misses), misses
 

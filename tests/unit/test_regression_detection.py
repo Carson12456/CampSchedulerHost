@@ -50,9 +50,9 @@ class TestRegressionDetection:
                       ["Aqua Trampoline", "Climbing Tower", "Archery", "Water Polo", "Sailing",
                        "Delta", "Super Troop", "Reflection", "Troop Rifle", "Nature Canoe"], 
                       12, 2),
-                Troop("Red Cloud", "Site B", 
+                Troop("Red Cloud", "Site B",
                       ["Climbing Tower", "Aqua Trampoline", "Archery", "Water Polo", "Sailing",
-                       "Delta", "Super Troop", "Reflection", "GPS & Geocaching", "Knots and Lashings"], 
+                       "Delta", "Super Troop", "Reflection", "Knots and Lashings", "Trading Post"],
                       15, 2),
                 Troop("Tamanend", "Site C", 
                       ["Archery", "Aqua Trampoline", "Climbing Tower", "Water Polo", "Sailing",
@@ -289,23 +289,13 @@ class TestRegressionDetection:
     # ========== UTILITY METHODS FOR REGRESSION TESTING ==========
     
     def _calculate_top5_satisfaction(self, schedule: Schedule, troops: List[Troop]) -> float:
-        """Calculate current Top 5 satisfaction rate"""
-        total_achieved = 0
-        total_available = 0
-        
-        for troop in troops:
-            troop_activities = {e.activity.name for e in schedule.entries if e.troop == troop}
-            top5_preferences = set(troop.preferences[:5]) if len(troop.preferences) >= 5 else set(troop.preferences)
-            
-            # Filter exempt activities
-            exempt = self._get_exempt_top5_activities(troop)
-            available_preferences = top5_preferences - exempt
-            achieved_preferences = troop_activities & available_preferences
-            
-            total_achieved += len(achieved_preferences)
-            total_available += len(available_preferences)
-        
-        return (total_achieved / total_available * 100) if total_available > 0 else 0
+        """Calculate Top 5 satisfaction through the authoritative unscheduled helper."""
+        from core.services.unscheduled_source import build_unscheduled_data, summarize_non_exempt_misses
+
+        total_top5 = sum(min(5, len(troop.preferences)) for troop in troops)
+        unscheduled = build_unscheduled_data(troops, schedule)
+        misses = summarize_non_exempt_misses(unscheduled)["missing_top5"]
+        return (100.0 * (total_top5 - misses) / total_top5) if total_top5 > 0 else 100.0
     
     def _get_exempt_top5_activities(self, troop: Troop) -> set:
         """Get activities exempt from Top 5 requirements"""

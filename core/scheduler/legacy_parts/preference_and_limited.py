@@ -51,12 +51,9 @@ class LegacyPart03Mixin:
         """Try to schedule an activity for a troop, prioritizing area pair day blocking."""
         pref_rank = troop.get_priority(activity.name)
 
-        # Define activity groups for area pair blocking
-        rifle_range_activities = ["Troop Rifle", "Troop Shotgun"]
-        tower_ods_activities = ["Climbing Tower", "Knots and Lashings", "Orienteering", 
-                                "GPS & Geocaching", "Ultimate Survivor", 
-                                "What's Cooking", "Chopped!"]
-        handicrafts_activities = ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"]
+        rifle_range_activities = EXCLUSIVE_AREAS.get("Rifle Range", [])
+        tower_ods_activities = EXCLUSIVE_AREAS.get("Tower", []) + EXCLUSIVE_AREAS.get("Outdoor Skills", [])
+        handicrafts_activities = EXCLUSIVE_AREAS.get("Handicrafts", [])
 
         staff_areas = rifle_range_activities + tower_ods_activities + handicrafts_activities
         is_staff_activity = activity.name in staff_areas
@@ -116,7 +113,6 @@ class LegacyPart03Mixin:
                         else:
                             other_comm_archery_days.append(entry.time_slot.day)
 
-            # DEBUG
             if same_comm_archery_days:
                 print(f"  [Comm Cluster] {troop.name} Archery: Same comm ({troop_commissioner}) on {[d.name for d in same_comm_archery_days]}")
 
@@ -175,7 +171,6 @@ class LegacyPart03Mixin:
             # Remove Friday from cluster days (deprioritize it)
             rifle_days_no_friday = [d for d in rifle_days if d != Day.FRIDAY]
 
-            # DEBUG: Print cluster info
             if rifle_days:
                 print(f"  [Rifle Debug] {troop.name} {activity.name}: Found existing on {[d.name for d in rifle_days]}")
             else:
@@ -256,7 +251,6 @@ class LegacyPart03Mixin:
                 handicrafts_days.extend(self._get_days_with_activity(hc_act))
             handicrafts_days = list(set(handicrafts_days))  # Remove duplicates
 
-            # DEBUG: Print cluster info for Tie Dye
             if activity.name == "Tie Dye":
                 if handicrafts_days:
                     print(f"  [Tie Dye Debug] {troop.name}: Found existing HC on {[d.name for d in handicrafts_days]}")
@@ -322,9 +316,8 @@ class LegacyPart03Mixin:
             # Sort ALL slots globally by total staff (lowest first)
             # BATCHING: Prefer slots adjacent to same activity for Tie Dye, Rifle, Shotgun
             def get_batching_score(slot):
-                # Only for specific batching targets
-                BATCH_TARGETS = ["Tie Dye", "Troop Rifle", "Troop Shotgun"]
-                if activity.name not in BATCH_TARGETS:
+                # Only for configured setup-heavy batching targets.
+                if activity.name not in self.BATCH_SETUP_ACTIVITIES:
                     return 0
 
                 # Check for same activity in adjacent slots on same day
@@ -443,17 +436,14 @@ class LegacyPart03Mixin:
                 if self._can_schedule(troop, activity, slot, day):
                     if self._add_to_schedule(slot, activity, troop):
                         self._update_progress(troop, activity.name)
-                        # DEBUG: Show where archery was placed
                         if activity.name == "Archery":
                             print(f"  [Cluster Debug] {troop.name} Archery: Scheduled on {slot.day.name}-{slot.slot_number}")
                         # Try to chain a paired activity in adjacent slot
                         self._try_pair_chain(troop, activity, slot)
                         return True
                 elif activity.name == "Archery":
-                    # DEBUG: Show why slot was rejected
                     print(f"  [Cluster Debug] {troop.name} Archery: REJECTED {day.name}-{slot.slot_number}")
                 elif activity.name in ["Troop Rifle", "Troop Shotgun"]:
-                    # DEBUG: Show why slot was rejected
                     print(f"  [Rifle Debug] {troop.name} {activity.name}: REJECTED {day.name}-{slot.slot_number}")
 
         # Fallback: try any available slot, but prefer days with same activity type
@@ -532,7 +522,7 @@ class LegacyPart03Mixin:
 
         # User Request: HC/DG need "balls (Gaga/9Sq) or reserve (Free Time)" paired
         if activity_area in ["History Center", "Disc Golf"]:
-             paired_activities = ["Gaga Ball", "9 Square", "Campsite Free Time"]
+             paired_activities = list(self._get_swappable_fill_names())
         elif paired_area:
              # Standard behavior
              paired_activities = EXCLUSIVE_AREAS.get(paired_area, [])
@@ -551,7 +541,7 @@ class LegacyPart03Mixin:
 
         # EXCEPTION: Always allow chaining for "Balls" (Gaga/9 Square/Free Time) regardless of priority
         # because they are required fillers for HC/DG
-        is_balls_chain = any(p in paired_activities for p in ["Gaga Ball", "9 Square", "Campsite Free Time"])
+        is_balls_chain = any(p in paired_activities for p in self._get_swappable_fill_names())
 
         if not is_balls_chain:
             # Cap at 15 to never chain very low priority activities (unless it's balls)
@@ -578,7 +568,7 @@ class LegacyPart03Mixin:
         # === BACK-TO-BACK SPECIFIC LOGIC ===
         # User request: Tie Dye, Troop Rifle, Troop Shotgun should be back-to-back with themselves
         # Valid pairs: Tie Dye <-> Tie Dye, Rifle <-> Rifle, Shotgun <-> Shotgun
-        if just_scheduled.name in ["Tie Dye", "Troop Rifle", "Troop Shotgun"]:
+        if just_scheduled.name in self.BATCH_SETUP_ACTIVITIES:
              # Check if we can schedule another instance of the SAME activity
              # Only if user wants it multiple times? Assuming yes if it's in preferences multiple times?
              # Or maybe standard is 1? 
@@ -634,7 +624,6 @@ class LegacyPart03Mixin:
         for adj_idx in adjacent_indices:
             adj_slot = self.time_slots[adj_idx]
             if not self.schedule.is_troop_free(adj_slot, troop):
-                # print(f"  [Pair Debug] {troop.name}: Adj slot {adj_slot} busy")
                 continue
 
             # Try each paired activity from troop's preferences (sorted by priority)
@@ -645,7 +634,6 @@ class LegacyPart03Mixin:
                 if self._can_schedule(troop, paired_activity, adj_slot, adj_slot.day):
                      self._add_to_schedule(adj_slot, paired_activity, troop)
                      self._update_progress(troop, paired_name)
-                     # print(f"  [Chain] {troop.name}: {just_scheduled.name} -> {slot} (paired with {paired_name} at {adj_slot})")
                      return
                 else:
                      pass
@@ -827,7 +815,6 @@ class LegacyPart03Mixin:
             print("  Warning: Reflection activity not found!")
             return
 
-        print("DEBUG: Checking slots for Reflection...")
         friday_slots = [s for s in self.time_slots if s.day == Day.FRIDAY]
 
         # Group troops by campsite proximity (divide into 3 zones: north, middle, south)
@@ -1042,19 +1029,14 @@ class LegacyPart03Mixin:
         If the target slot has a low-priority fill activity (like Gaga Ball),
         swap it out for the preferred staff area activity.
         """
-        # Define exclusive areas to optimize
         areas_to_optimize = {
-            "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-            "Tower": ["Climbing Tower"],
-            "Outdoor Skills": ["Knots and Lashings", "Orienteering", "Ultimate Survivor", 
-                              "What's Cooking", "Chopped!"],
+            area_name: EXCLUSIVE_AREAS.get(area_name, [])
+            for area_name in ("Rifle Range", "Tower", "Outdoor Skills")
         }
 
         # Only these LOW-PRIORITY fill activities can be swapped out
         # Do NOT include Delta, Super Troop, Sailing, Reflection, or multi-slot activities
-        SWAPPABLE_FILLS = {
-            "Gaga Ball", "9 Square", "Campsite Free Time"
-        }
+        SWAPPABLE_FILLS = self._get_swappable_fill_names()
 
         moves_made = 0
         moved_entries = set()  # Track (troop_name, activity_name) that have already been moved
@@ -1200,9 +1182,6 @@ class LegacyPart03Mixin:
             if not activity or self._troop_has_activity(troop, activity):
                 continue
 
-            if self._is_exclusive_blocked(slot, activity.name, duration=activity.slots, ignore_troop=troop):
-                continue
-
             strict_ok = self._can_schedule(troop, activity, slot, slot.day, relax_constraints=False)
             relaxed_ok = strict_ok or self._can_schedule(troop, activity, slot, slot.day, relax_constraints=True)
             if not relaxed_ok:
@@ -1271,23 +1250,39 @@ class LegacyPart03Mixin:
         if not valid_candidates:
             return
 
-        non_excess = [c for c in valid_candidates if not c["creates_excess_day"]]
-        if non_excess:
-            valid_candidates = non_excess
+        pref_candidates = [c for c in valid_candidates if c["pref_rank"] is not None]
+        if pref_candidates:
+            # A vacated slot should become a request whenever one fits. Soft
+            # clustering/excess signals only break ties within the same rank.
+            best = min(
+                pref_candidates,
+                key=lambda c: (
+                    c["pref_rank"],
+                    c["creates_excess_day"],
+                    c["opens_new_area_day"],
+                    0 if c["strict_ok"] else 1,
+                    -c["score"],
+                    c["index"],
+                ),
+            )
+        else:
+            non_excess = [c for c in valid_candidates if not c["creates_excess_day"]]
+            if non_excess:
+                valid_candidates = non_excess
 
-        existing_area_day = [c for c in valid_candidates if not c["opens_new_area_day"]]
-        if existing_area_day:
-            valid_candidates = existing_area_day
+            existing_area_day = [c for c in valid_candidates if not c["opens_new_area_day"]]
+            if existing_area_day:
+                valid_candidates = existing_area_day
 
-        best = max(
-            valid_candidates,
-            key=lambda c: (
-                c["score"],
-                1 if c["strict_ok"] else 0,
-                -(c["pref_rank"] if c["pref_rank"] is not None else 999),
-                -c["index"],
-            ),
-        )
+            best = min(
+                valid_candidates,
+                key=lambda c: (
+                    c["index"],
+                    c["creates_excess_day"],
+                    c["opens_new_area_day"],
+                    0 if c["strict_ok"] else 1,
+                ),
+            )
 
         if self._add_to_schedule(slot, best["activity"], troop):
             print(f"    [Fill vacated] {troop.name}: {best['fill_name']} -> {slot}")
@@ -1305,12 +1300,12 @@ class LegacyPart03Mixin:
         from collections import defaultdict
 
         areas_to_consolidate = {
-            "Rifle": ["Troop Rifle", "Troop Shotgun"],
-            "Tower": ["Climbing Tower"],
+            "Rifle": EXCLUSIVE_AREAS.get("Rifle Range", []),
+            "Tower": EXCLUSIVE_AREAS.get("Tower", []),
             "Commissioner": ["Super Troop", "Delta"],
         }
 
-        SWAPPABLE_FILLS = {"Gaga Ball", "9 Square", "Campsite Free Time"}
+        SWAPPABLE_FILLS = self._get_swappable_fill_names()
 
         moves_made = 0
 
@@ -1426,14 +1421,8 @@ class LegacyPart03Mixin:
         """
         from collections import defaultdict
 
-        CLUSTERING_AREAS = {
-            "Outdoor Skills": ["Knots and Lashings", "Orienteering", "GPS & Geocaching", 
-                              "Ultimate Survivor", "What's Cooking", "Chopped!"],
-            "Tower": ["Climbing Tower"],
-            "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-            "Archery": ["Archery"],
-            "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"]
-        }
+        CLUSTERING_AREAS = self._get_authoritative_gap_area_map()
+        CLUSTERING_AREAS["Archery"] = set(EXCLUSIVE_AREAS.get("Archery", ["Archery"]))
 
         # Measure baseline clustering
         baseline = self._measure_clustering(CLUSTERING_AREAS)
@@ -1469,10 +1458,6 @@ class LegacyPart03Mixin:
                     for swap_entry in troop_entries:
                         if swap_entry == area_entry:
                             continue
-
-                        # PROTECTED: Do not swap out Reflection (REMOVED: User allows swapping now)
-                        # if swap_entry.activity.name == "Reflection":
-                        #     continue
 
                         # Optimization: Don't swap two activities from same area (pointless)
                         if swap_entry.activity.name in area_activities:
@@ -2722,11 +2707,6 @@ class LegacyPart03Mixin:
                     print(f"  {troop.name}: Super Troop -> {best_slot} (best available, {st_on_day} ST on {best_slot.day.name})")
             else:
                 print(f"  ERROR: Could not schedule Super Troop for {troop.name} - no available slots!")
-
-
-    def _pre_cluster_archery(self):
-         # DEPRECATED: Commissioner clustering is disabled for preference-based scheduling.
-         pass
 
 
     def _pre_cluster_ods(self):

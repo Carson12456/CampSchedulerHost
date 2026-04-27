@@ -6,6 +6,8 @@ import math
 import os
 import random
 import typing
+import json
+import time
 from collections import Counter, defaultdict
 from typing import Any, Dict, List, Optional, Set
 
@@ -13,12 +15,30 @@ from ...activities import get_activity_by_name, get_all_activities
 from ...models import Activity, Day, ScheduleEntry, TimeSlot, Troop, Zone, generate_time_slots
 from .. import config_loader
 from ..constants import SchedulerConstants
-from ..validators import would_create_excess_day_for_entries
+from ..validators import CLUSTER_AREAS, would_create_excess_day_for_entries
 
 EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
 
 class LegacyPart05Mixin:
     """Scheduler legacy methods part 05."""
+
+    def _debug_log(self, hypothesis_id: str, location: str, message: str, data: Dict[str, Any]) -> None:
+        # #region agent log
+        try:
+            payload = {
+                "sessionId": "574b8a",
+                "runId": getattr(self, "_debug_run_id", "pre-fix"),
+                "hypothesisId": hypothesis_id,
+                "location": location,
+                "message": message,
+                "data": data,
+                "timestamp": int(time.time() * 1000),
+            }
+            with open("debug-574b8a.log", "a", encoding="utf-8") as f:
+                f.write(json.dumps(payload, separators=(",", ":")) + "\n")
+        except Exception:
+            pass
+        # #endregion
 
     def _check_consecutive_slots(self, troop: Troop, activity: Activity, 
                                   start_index: int, slots_needed: int) -> bool:
@@ -203,6 +223,31 @@ class LegacyPart05Mixin:
             cluster_areas["Commissioner"] = {"Super Troop", "Delta"}
 
         return cluster_areas
+
+    def _get_multi_slot_activity_names(self) -> set[str]:
+        """Return activities that should be protected as multi-slot/rock placements."""
+        names = set(getattr(self, "THREE_HOUR_ACTIVITIES", set()) or set())
+        for activity in getattr(self, "activities", []) or []:
+            if getattr(activity, "slots", 1) > 1:
+                names.add(activity.name)
+        # Climbing Tower is a setup-heavy rock in legacy Top-5 swap protection.
+        if any(getattr(activity, "name", None) == "Climbing Tower" for activity in getattr(self, "activities", []) or []):
+            names.add("Climbing Tower")
+        return names
+
+    def _get_protected_activity_names(self, extra=()) -> set[str]:
+        """Return activities that preference recovery should not displace."""
+        protected = set(getattr(self, "NON_DISPLACEABLE_ACTIVITIES", set()) or set())
+        protected.update(getattr(self, "MANDATORY_ANCHORS", set()) or set())
+        protected.update(extra or ())
+        return protected
+
+    def _get_swappable_fill_names(self) -> set[str]:
+        """Return low-risk filler activities that can be swapped during cleanup."""
+        configured = set(getattr(self, "SWAPPABLE_FILL_ACTIVITIES", set()) or set())
+        if configured:
+            return configured
+        return {"Gaga Ball", "9 Square", "Campsite Free Time"}
 
     def _get_authoritative_gap_area_map(self) -> dict:
         """Return the exact area set used by official gap scoring."""
@@ -836,7 +881,8 @@ class LegacyPart05Mixin:
                         score += area_count_on_day * 100  # Strong bonus for non-Top 5 area clustering
 
                 # Excess-day avoidance: penalize placements that spread this troop's
-                # area beyond ceil(n/3). Uses per-troop semantics per BRAIN §6.
+                # area beyond ceil(n/3). Keep this local during initial placement;
+                # official global excess is enforced by guarded Phase D passes.
                 if self._would_create_excess_day(activity.name, day, troop=troop):
                     if is_top5:
                         score -= 120  # Keep flexibility for critical preferences.
@@ -888,9 +934,6 @@ class LegacyPart05Mixin:
                     score += 20  # Moderate bonus for light slots
                 elif current_load <= 12:
                     score += 10  # Small bonus
-
-            # IMPROVEMENT 4: Additional bonus for slots significantly below average (reduces variance)
-            # REMOVED: This is now handled by the enhanced variance-based logic above
 
             # Progressive penalty as we approach the limit
             if current_load >= STAFF_MAX:
@@ -982,9 +1025,6 @@ class LegacyPart05Mixin:
                 if day_count == 0 and day_idx == preferred_day_offset:
                     score += 25
 
-            if activity.name == 'Climbing Tower':
-                print(f"  DEBUG_SLOT {day.name} slot {slot_num}: Score {score} (Primary={day in area_primary_days if area_primary_days else 'None'})")
-
             # ============================================================
             # ENHANCED: Better cluster gap detection and prevention
             # ============================================================
@@ -1017,11 +1057,6 @@ class LegacyPart05Mixin:
                         score += cluster_gap_bonus  # Additional bonus for cluster gaps
                     elif has_slot_1 or has_slot_3:
                         score += 150  # Strong bonus to prevent future gap
-
-                # IMPROVEMENT 1: Penalize slots that would CREATE a gap (1-x-3 pattern)
-                # REMOVED: This penalty was causing more gaps than it prevented
-                # The gap filling logic in Phase D handles gaps better than prevention
-                # Keeping gap filling bonus (slot 2 when 1&3 exist) but removing creation penalty
 
             # ============================================================
             # STAFF AREA CLUSTERING (BULLETPROOF WITH PRE-CALCULATED DEMAND)
@@ -1294,19 +1329,8 @@ class LegacyPart05Mixin:
             | {"Sailing"}
         )
 
-        # Build area mapping for clustering score
-        # Dynamic CLUSTER_AREAS based on configuration
-        priority_areas = config_loader.get_optimization_rules().get("area_clustering_priority", 
-                                        ["Tower", "Rifle Range", "Archery", "Outdoor Skills", "Commissioner"])
-
-        CLUSTER_AREAS = {}
-        for area_name in priority_areas:
-            if area_name in EXCLUSIVE_AREAS:
-                 CLUSTER_AREAS[area_name] = EXCLUSIVE_AREAS[area_name]
-
-        # Manual population for Commissioner zone
-        if 'Commissioner' in priority_areas:
-             CLUSTER_AREAS['Commissioner'] = {'Super Troop', 'Delta'}
+        # Build area mapping from the same areas official excess/gap scoring uses.
+        CLUSTER_AREAS = self._get_authoritative_gap_area_map()
 
         activity_to_area = {}
         for area, acts in CLUSTER_AREAS.items():
@@ -1383,10 +1407,7 @@ class LegacyPart05Mixin:
                     from collections import Counter
                     day_dist = Counter(e.time_slot.day for e in area_entries)
                     total = len(area_entries)
-                    if area == "Rifle Range":
-                        min_days = max(2, math.ceil(total / 2))
-                    else:
-                        min_days = max(2, math.ceil(total / 3))
+                    min_days = math.ceil(total / 3)
                     # Primary days = top N days by count
                     primary = set(d for d, _ in day_dist.most_common(min_days))
                     STAFF_AREA_PRIMARY_DAYS[area] = primary
@@ -1515,6 +1536,246 @@ class LegacyPart05Mixin:
         return total_moves
 
 
+    def _total_excess_cluster_days(self) -> int:
+        """Total excess cluster days across all CLUSTER_AREAS for the
+        current schedule state. Mirrors regression checker's definition:
+        required_days = ceil(activity_count / 3), excess = max(0, days_used - required).
+        """
+        import math
+        total_excess = 0
+        for _area, activities in self._get_authoritative_gap_area_map().items():
+            area_entries = [
+                e for e in self.schedule.entries
+                if e.activity.name in activities
+            ]
+            if not area_entries:
+                continue
+            days_used = len({e.time_slot.day for e in area_entries})
+            required_days = math.ceil(len(area_entries) / 3.0)
+            total_excess += max(0, days_used - required_days)
+        return total_excess
+
+
+    def _finalize_filler_replacement_audit(self) -> dict:
+        """Post-pipeline safe-swap audit (runs ONCE at the very end).
+
+        For each placed generic-filler activity, try to swap in the
+        highest-ranked unscheduled preference that fits the slot. Commit
+        only when ALL safety guards pass:
+
+          * Strict _can_schedule(relax_constraints=False)
+          * Top-5 non-exempt miss count NOT increased
+          * Top-10 global count NOT decreased
+          * Soft metrics are measured for diagnostics, but do not block a
+            valid requested activity from replacing a generic filler.
+
+        If any guard fails, the state is restored and the next candidate
+        preference is tried. If none pass, the filler is left untouched.
+
+        Returns a stats dict suitable for reporting.
+        """
+        FILLER_SET = set(self.FINAL_AUDIT_FILLER_ACTIVITIES)
+        MANDATORY_ANCHORS = self._get_protected_activity_names({"Honor Camper", "Director's Game", "Delta"})
+
+        stats = {
+            "candidates_seen": 0,
+            "swaps_committed": 0,
+            "blocked_by_can_schedule": 0,
+            "blocked_by_top5": 0,
+            "blocked_by_top10": 0,
+            "blocked_by_cluster": 0,
+            "blocked_by_staff": 0,
+            "no_pref_fit": 0,
+            "generic_cft_swaps": 0,
+            "rank_histogram": {},
+        }
+
+        # Snapshot baseline metrics for relative comparison across the full pass
+        try:
+            top5_baseline, _ = self._count_non_exempt_top5_misses()
+        except Exception:
+            top5_baseline = 0
+        top10_baseline = self._count_top10_in_schedule()
+        excess_baseline = self._total_excess_cluster_days()
+        try:
+            staff_baseline = self._calculate_staff_variance()
+        except Exception:
+            staff_baseline = 0.0
+
+        print(
+            f"  [Final Audit] baseline: top5_miss={top5_baseline}, "
+            f"top10={top10_baseline}, excess_days={excess_baseline}, "
+            f"staff_var={staff_baseline:.3f}"
+        )
+
+        filler_entries = [
+            e for e in list(self.schedule.entries)
+            if e.activity.name in FILLER_SET
+            and e.activity.name not in MANDATORY_ANCHORS
+            and not getattr(e, "is_continuation", False)
+        ]
+
+        for filler_entry in filler_entries:
+            if filler_entry not in self.schedule.entries:
+                continue
+            stats["candidates_seen"] += 1
+
+            troop = filler_entry.troop
+            slot = filler_entry.time_slot
+            day = slot.day
+
+            scheduled_names = {
+                e.activity.name for e in self.schedule.entries if e.troop == troop
+            }
+            current_rank = troop.get_priority(filler_entry.activity.name)
+            if current_rank is not None and current_rank >= 999:
+                current_rank = None
+
+            committed_this_filler = False
+
+            for pref_rank, pref_name in enumerate(troop.preferences or []):
+                if current_rank is not None and pref_rank >= current_rank:
+                    break
+                if pref_name in scheduled_names:
+                    continue
+                pref_activity = get_activity_by_name(pref_name)
+                if not pref_activity:
+                    continue
+
+                # Transactional swap: snapshot, remove filler, add pref, measure.
+                snapshot = self._snapshot_scheduler_state()
+
+                self._remove_from_schedule(filler_entry)
+
+                if not self._can_schedule(
+                    troop, pref_activity, slot, day, relax_constraints=False,
+                ):
+                    self._restore_scheduler_state(snapshot)
+                    stats["blocked_by_can_schedule"] += 1
+                    continue
+
+                if not self._add_to_schedule(slot, pref_activity, troop):
+                    self._restore_scheduler_state(snapshot)
+                    stats["blocked_by_can_schedule"] += 1
+                    continue
+
+                # Post-swap metric evaluation
+                try:
+                    top5_after, _ = self._count_non_exempt_top5_misses()
+                except Exception:
+                    top5_after = top5_baseline
+                top10_after = self._count_top10_in_schedule()
+                excess_after = self._total_excess_cluster_days()
+                try:
+                    staff_after = self._calculate_staff_variance()
+                except Exception:
+                    staff_after = staff_baseline
+
+                if top5_after > top5_baseline:
+                    self._restore_scheduler_state(snapshot)
+                    stats["blocked_by_top5"] += 1
+                    continue
+                if top10_after < top10_baseline:
+                    self._restore_scheduler_state(snapshot)
+                    stats["blocked_by_top10"] += 1
+                    continue
+                # All guards passed — commit. Update progress tracking so
+                # downstream sailing-balls metadata sees the new pref.
+                self._update_progress(troop, pref_activity.name)
+                stats["swaps_committed"] += 1
+                stats["rank_histogram"][pref_rank + 1] = (
+                    stats["rank_histogram"].get(pref_rank + 1, 0) + 1
+                )
+
+                # Update baselines so subsequent swaps are evaluated
+                # against the new (improved) state, not the stale original.
+                top10_baseline = top10_after
+                excess_baseline = excess_after
+                staff_baseline = staff_after
+
+                # #region agent log
+                self._debug_log(
+                    "H-AUDIT",
+                    "gap_fill_and_stats.py:_finalize_filler_replacement_audit",
+                    "Safe swap: filler -> unscheduled preference",
+                    {
+                        "troop": troop.name,
+                        "day": day.name,
+                        "slot": slot.slot_number,
+                        "replaced": filler_entry.activity.name,
+                        "placedPref": pref_name,
+                        "prefRank": pref_rank + 1,
+                        "top10": top10_after,
+                        "excessDays": excess_after,
+                        "staffVar": round(staff_after, 4),
+                        "runId": "final-audit",
+                    },
+                )
+                # #endregion
+                print(
+                    f"  [Final Audit] {troop.name}: {filler_entry.activity.name} "
+                    f"-> {pref_name} (#{pref_rank + 1}) @ {day.name[:3]}-{slot.slot_number}"
+                )
+                committed_this_filler = True
+                break
+
+            if not committed_this_filler:
+                cft_activity = get_activity_by_name("Campsite Free Time")
+                if (
+                    cft_activity
+                    and current_rank is None
+                    and filler_entry.activity.name != "Campsite Free Time"
+                    and "Campsite Free Time" not in scheduled_names
+                ):
+                    snapshot = self._snapshot_scheduler_state()
+                    self._remove_from_schedule(filler_entry)
+                    if (
+                        self._can_schedule(
+                            troop,
+                            cft_activity,
+                            slot,
+                            day,
+                            relax_constraints=False,
+                        )
+                        and self._add_to_schedule(slot, cft_activity, troop)
+                    ):
+                        try:
+                            top5_after, _ = self._count_non_exempt_top5_misses()
+                        except Exception:
+                            top5_after = top5_baseline
+                        top10_after = self._count_top10_in_schedule()
+                        if top5_after <= top5_baseline and top10_after >= top10_baseline:
+                            stats["generic_cft_swaps"] += 1
+                            committed_this_filler = True
+                            print(
+                                f"  [Final Audit] {troop.name}: {filler_entry.activity.name} "
+                                f"-> Campsite Free Time @ {day.name[:3]}-{slot.slot_number}"
+                            )
+                        else:
+                            self._restore_scheduler_state(snapshot)
+                    else:
+                        self._restore_scheduler_state(snapshot)
+
+            if not committed_this_filler:
+                stats["no_pref_fit"] += 1
+
+        print(
+            f"  [Final Audit] candidates={stats['candidates_seen']}, "
+            f"committed={stats['swaps_committed']}, "
+            f"generic_cft={stats['generic_cft_swaps']}, "
+            f"no_pref_fit={stats['no_pref_fit']}, "
+            f"blocked[can_sched={stats['blocked_by_can_schedule']}, "
+            f"top5={stats['blocked_by_top5']}, top10={stats['blocked_by_top10']}, "
+            f"cluster={stats['blocked_by_cluster']}, staff={stats['blocked_by_staff']}]"
+        )
+        if stats["rank_histogram"]:
+            ranks_str = ", ".join(
+                f"#{r}:{c}" for r, c in sorted(stats["rank_histogram"].items())
+            )
+            print(f"  [Final Audit] rank histogram: {ranks_str}")
+        return stats
+
+
     def _guarantee_no_gaps(self):
         """
         ABSOLUTE FINAL SAFETY NET: Ensure every troop has an activity in every slot.
@@ -1531,16 +1792,39 @@ class LegacyPart05Mixin:
             Day.THURSDAY: 2, Day.FRIDAY: 3
         }
 
-        # Harmless activities for force-filling (in priority order)
-        # Campsite Free Time is concurrent (can have multiple troops) so always works
-        FORCE_FILL_ACTIVITIES = [
-            "Campsite Free Time",  # Always available, no conflicts, can repeat
-            "Gaga Ball",           # Flexible, middle of camp
-            "9 Square",            # Flexible, middle of camp
-            "Fishing",             # Relaxed activity
-            "Trading Post",        # Easy fill
-            "Dr. DNA",             # Nature center fill
-        ]
+        # Generic fills come from SKULL fill_priority. Requests are prepended
+        # per gap below, so a generic fill is only used when no request fits.
+        FORCE_FILL_ACTIVITIES = list(self.DEFAULT_FILL_PRIORITY or self.EMERGENCY_FILL_ACTIVITIES)
+
+        def _ordered_gap_fill_names(troop):
+            scheduled_names = {
+                e.activity.name for e in self.schedule.entries if e.troop == troop
+            }
+            remaining_prefs = [
+                p for p in (troop.preferences or []) if p not in scheduled_names
+            ]
+            return remaining_prefs + [
+                f for f in FORCE_FILL_ACTIVITIES if f not in remaining_prefs
+            ]
+
+        def _try_gap_fill(troop, slot, day, relax_constraints=False):
+            for fill_name in _ordered_gap_fill_names(troop):
+                activity = get_activity_by_name(fill_name)
+                if not activity or self._troop_has_activity(troop, activity):
+                    continue
+                if not self._can_schedule(
+                    troop,
+                    activity,
+                    slot,
+                    day,
+                    relax_constraints=relax_constraints,
+                ):
+                    continue
+                if self._add_to_schedule(slot, activity, troop):
+                    if fill_name in (troop.preferences or []):
+                        self._update_progress(troop, fill_name)
+                    return fill_name, activity
+            return None
 
         gaps_filled = 0
         max_iterations = 8  # Increased iterations for more aggressive filling
@@ -1635,76 +1919,73 @@ class LegacyPart05Mixin:
                             filled = False
 
                             if iteration >= 5:
-                                fill_name = "Campsite Free Time"
-                                activity = get_activity_by_name(fill_name)
-                                if activity:
-                                    added = self._add_to_schedule(slot, activity, troop)
-                                    if added:
-                                        print(f"  [FORCE FILL] {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
-                                        filled = True
-                                        iteration_fills += 1
-                                        gaps_filled += 1
-                                        filled_slots.add((day, slot_num))
-                                        troop_entries = [e for e in self.schedule.entries if e.troop == troop]
+                                placed = _try_gap_fill(troop, slot, day, relax_constraints=True)
+                                if placed:
+                                    fill_name, _activity = placed
+                                    # #region agent log
+                                    self._debug_log(
+                                        "H1",
+                                        "gap_fill_and_stats.py:_guarantee_no_gaps:late",
+                                        "Late gap fill used request-first ordering",
+                                        {
+                                            "troop": troop.name,
+                                            "day": day.name,
+                                            "slot": slot_num,
+                                            "fillName": fill_name,
+                                            "iteration": iteration,
+                                            "phase": getattr(self, "current_pipeline_phase", "unknown"),
+                                        },
+                                    )
+                                    # #endregion
+                                    print(f"  [FORCE FILL] {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
+                                    filled = True
+                                    iteration_fills += 1
+                                    gaps_filled += 1
+                                    filled_slots.add((day, slot_num))
+                                    troop_entries = [e for e in self.schedule.entries if e.troop == troop]
                             else:
-                                # Earlier iterations: keep gap repair safe. Use only
-                                # low-risk filler activities so we do not close windows
-                                # needed for Top-5 multi-slot recovery later.
-                                safe_candidates = []
-                                for fill_name in FORCE_FILL_ACTIVITIES:
-                                    activity = get_activity_by_name(fill_name)
-                                    if not activity:
-                                        continue
-                                    pref_rank = troop.get_priority(fill_name)
-                                    if pref_rank is not None and pref_rank >= 999:
-                                        pref_rank = None
-                                    can_place = self._can_schedule(
-                                        troop,
-                                        activity,
-                                        slot,
-                                        day,
-                                        relax_constraints=iteration >= 3,
+                                placed = _try_gap_fill(
+                                    troop,
+                                    slot,
+                                    day,
+                                    relax_constraints=iteration >= 3,
+                                )
+                                if placed:
+                                    fill_name, _activity = placed
+                                    # #region agent log
+                                    self._debug_log(
+                                        "H2",
+                                        "gap_fill_and_stats.py:_guarantee_no_gaps:request_first",
+                                        "Gap fill selected request-first candidate",
+                                        {
+                                            "troop": troop.name,
+                                            "day": day.name,
+                                            "slot": slot_num,
+                                            "chosenFill": fill_name,
+                                            "iteration": iteration,
+                                            "phase": getattr(self, "current_pipeline_phase", "unknown"),
+                                        },
                                     )
-                                    if not can_place:
-                                        continue
-                                    score = self._projected_score_delta_for_slot(
-                                        troop,
-                                        activity,
-                                        slot,
-                                        pref_rank,
-                                    )
-                                    if pref_rank is not None:
-                                        score += 1.0
-                                    safe_candidates.append((score, fill_name, activity))
-
-                                if safe_candidates:
-                                    safe_candidates.sort(key=lambda item: item[0], reverse=True)
-                                    _, fill_name, activity = safe_candidates[0]
-                                    if self._add_to_schedule(slot, activity, troop):
-                                        tag = "[RELAXED FILL]" if iteration >= 3 else "[Gap Fill]"
-                                        print(f"  {tag} {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
-                                        filled = True
-                                        iteration_fills += 1
-                                        gaps_filled += 1
-                                        filled_slots.add((day, slot_num))
-                                        troop_entries = [e for e in self.schedule.entries if e.troop == troop]
+                                    # #endregion
+                                    tag = "[RELAXED FILL]" if iteration >= 3 else "[Gap Fill]"
+                                    print(f"  {tag} {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
+                                    filled = True
+                                    iteration_fills += 1
+                                    gaps_filled += 1
+                                    filled_slots.add((day, slot_num))
+                                    troop_entries = [e for e in self.schedule.entries if e.troop == troop]
 
                                 # If still not filled after all candidates, attempt safe emergency fill.
                                 if not filled and iteration >= 3:
-                                    emergency_fill_order = FORCE_FILL_ACTIVITIES
-                                    for fill_name in emergency_fill_order:
-                                        force_activity = get_activity_by_name(fill_name)
-                                        if not force_activity:
-                                            continue
-                                        if self._can_schedule(troop, force_activity, slot, day, relax_constraints=True):
-                                            if self._add_to_schedule(slot, force_activity, troop):
-                                                print(f"  [SAFE EMERGENCY FILL] {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
-                                                filled = True
-                                                iteration_fills += 1
-                                                gaps_filled += 1
-                                                filled_slots.add((day, slot_num))
-                                                troop_entries = [e for e in self.schedule.entries if e.troop == troop]
-                                                break
+                                    placed = _try_gap_fill(troop, slot, day, relax_constraints=True)
+                                    if placed:
+                                        fill_name, _activity = placed
+                                        print(f"  [SAFE EMERGENCY FILL] {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
+                                        filled = True
+                                        iteration_fills += 1
+                                        gaps_filled += 1
+                                        filled_slots.add((day, slot_num))
+                                        troop_entries = [e for e in self.schedule.entries if e.troop == troop]
 
             print(f"  Total gaps filled: {gaps_filled}")
 
@@ -1741,32 +2022,19 @@ class LegacyPart05Mixin:
 
         if final_gaps > 0:
             print(f"  WARNING: {final_gaps} gaps remain after all attempts!")
-            # Last resort: try safe fillers only (never bypass Schedule.add_entry).
-            emergency_fill_order = [
-                "Campsite Free Time",
-                "Gaga Ball",
-                "9 Square",
-                "Fishing",
-                "Trading Post",
-                "Dr. DNA",
-            ]
+            # Last resort still honors request-first, then SKULL fill_priority.
             for troop in self.troops:
                 for day in days_list:
                     for slot_num in range(1, slots_per_day[day] + 1):
                         slot = next((s for s in self.time_slots 
                                     if s.day == day and s.slot_number == slot_num), None)
                         if slot and self.schedule.is_troop_free(slot, troop):
-                            placed = False
-                            for fill_name in emergency_fill_order:
-                                activity = get_activity_by_name(fill_name)
-                                if not activity:
-                                    continue
-                                if self._add_to_schedule(slot, activity, troop):
-                                    print(f"  [EMERGENCY FILL] {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
-                                    final_gaps -= 1
-                                    placed = True
-                                    break
-                            if not placed:
+                            placed = _try_gap_fill(troop, slot, day, relax_constraints=True)
+                            if placed:
+                                fill_name, _activity = placed
+                                print(f"  [EMERGENCY FILL] {troop.name}: {fill_name} -> {day.name[:3]}-{slot_num}")
+                                final_gaps -= 1
+                            else:
                                 print(f"  [UNRESOLVED GAP] {troop.name}: {day.name[:3]}-{slot_num} (no safe fill found)")
 
         print(f"  Final gap filling complete. Total filled: {gaps_filled}")
@@ -1811,14 +2079,7 @@ class LegacyPart05Mixin:
 
                         # Try multiple safe filler activities; never bypass add_entry checks.
                         placed = False
-                        for fill_name in (
-                            "Campsite Free Time",
-                            "Gaga Ball",
-                            "9 Square",
-                            "Fishing",
-                            "Trading Post",
-                            "Dr. DNA",
-                        ):
+                        for fill_name in self.EMERGENCY_FILL_ACTIVITIES:
                             activity = get_activity_by_name(fill_name)
                             if not activity:
                                 continue
@@ -1849,19 +2110,6 @@ class LegacyPart05Mixin:
         Calculate score for an activity placement.
         Higher scores = better placement.
         """
-
-
-    def _can_schedule_wrapper(self, timeslot, activity, troop, day=None):
-        """Wrapper method to match test signature (timeslot, activity, troop)."""
-        if day is None:
-            day = timeslot.day
-        # Store original method reference if not already done
-        if not hasattr(self, '_original_can_schedule'):
-            self._original_can_schedule = self._can_schedule
-            # Rename the original method
-            self.__class__._can_schedule = self._can_schedule_wrapper
-        # Call the actual method with correct parameter order
-        return self._original_can_schedule(troop, activity, timeslot, day)
 
 
     def get_stats(self) -> dict:
@@ -2487,8 +2735,12 @@ class LegacyPart05Mixin:
 
         # === EXCLUSIVITY CHECK: Multi-slot activities (Tower for 15+ scouts) ===
         # Don't swap into a slot where another troop has a multi-slot activity continuation
-        EXCLUSIVE_ACTIVITIES = {"Climbing Tower", "Super Troop", "Delta", "Archery", 
-                                "Troop Rifle", "Troop Shotgun"}
+        EXCLUSIVE_ACTIVITIES = (
+            {"Super Troop", "Delta"}
+            | set(EXCLUSIVE_AREAS.get("Tower", []))
+            | set(EXCLUSIVE_AREAS.get("Archery", []))
+            | set(EXCLUSIVE_AREAS.get("Rifle Range", []))
+        )
 
         if activity_a.name in EXCLUSIVE_ACTIVITIES or activity_b.name in EXCLUSIVE_ACTIVITIES:
             # Check for other troops' exclusive activities in this slot
@@ -2660,15 +2912,9 @@ class LegacyPart05Mixin:
 
         print("\n--- Aggressive Within-Troop Slot Swaps ---")
 
-        # Staff areas to optimize for clustering
-        CLUSTER_AREAS = {
-            "Tower": ["Climbing Tower"],
-            "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-            "Outdoor Skills": ["Knots and Lashings", "Orienteering", "GPS & Geocaching",
-                              "Ultimate Survivor", "What's Cooking", "Chopped!"],
-            "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"],
-            "Commissioner": ["Delta", "Super Troop", "Archery"]
-        }
+        # Optimize the same cluster areas official scoring uses. Delta/Super
+        # Troop may still be swap targets, but they are not excess-day areas.
+        CLUSTER_AREAS = self._get_authoritative_gap_area_map()
 
         # Build activity -> area mapping
         activity_to_area = {}
@@ -2891,15 +3137,17 @@ class LegacyPart05Mixin:
                         if score <= 0:
                             continue
 
-                        # For intra-troop optimization, use relaxed constraints to allow more beneficial swaps
-                        # Constraint compliance is still checked, but we allow day request flexibility
-                        # Check if cluster_activity can move to swap_slot
-                        can_move_cluster = self._can_schedule(troop, cluster_entry.activity, swap_slot, swap_day, 
-                                                              relax_constraints=True, ignore_day_requests=True)
-
-                        # Check if swap_activity can move to current_slot
-                        can_move_swap = self._can_schedule(troop, swap_entry.activity, current_slot, current_day,
-                                                            relax_constraints=True, ignore_day_requests=True)
+                        # Intra-troop swap scoring: relax soft rules; only bypass day-request
+                        # checks when troop has no day_requests (MUST-HONOR otherwise).
+                        ign_dr = self._optimization_may_ignore_day_requests(troop)
+                        can_move_cluster = self._can_schedule(
+                            troop, cluster_entry.activity, swap_slot, swap_day,
+                            relax_constraints=True, ignore_day_requests=ign_dr,
+                        )
+                        can_move_swap = self._can_schedule(
+                            troop, swap_entry.activity, current_slot, current_day,
+                            relax_constraints=True, ignore_day_requests=ign_dr,
+                        )
 
                         # Both must be valid - constraint compliance is mandatory
                         valid = can_move_cluster and can_move_swap
@@ -3140,7 +3388,7 @@ class LegacyPart05Mixin:
                             has_shotgun_current = "Troop Shotgun" in current_day_acts
 
                             # Check accuracy limit (max 1 of Rifle/Shotgun/Archery per day)
-                            ACCURACY = ["Troop Rifle", "Troop Shotgun", "Archery"]
+                            ACCURACY = self.ACCURACY_ACTIVITIES
                             accuracy_swap = sum(1 for a in swap_day_acts if a in ACCURACY)
                             accuracy_current = sum(1 for a in current_day_acts if a in ACCURACY)
 
@@ -3322,10 +3570,11 @@ class LegacyPart05Mixin:
                         debug_blocked += 1
                         continue
 
-                    # For outlier optimization, allow relaxed constraints and ignore day requests
-                    # This helps move activities that are currently valid but could be better positioned
-                    # Day requests are for initial scheduling preference, not hard constraints for optimization
-                    if not self._can_schedule(troop, activity, target_slot, target_day, relax_constraints=True, ignore_day_requests=True):
+                    ign_dr = self._optimization_may_ignore_day_requests(troop)
+                    if not self._can_schedule(
+                        troop, activity, target_slot, target_day,
+                        relax_constraints=True, ignore_day_requests=ign_dr,
+                    ):
                         debug_blocked += 1
                         continue
 
@@ -3341,14 +3590,8 @@ class LegacyPart05Mixin:
                         }
                         best_score = score
 
-            # Strategy 2: Fill cluster gaps (slots 1&3 full, slot 2 empty)
-            CLUSTER_AREAS = {
-                "Tower": ["Climbing Tower"],
-                "Rifle Range": ["Troop Rifle", "Troop Shotgun"],
-                "Outdoor Skills": ["Knots and Lashings", "Orienteering", "GPS & Geocaching",
-                                  "Ultimate Survivor", "What's Cooking", "Chopped!"],
-                "Handicrafts": ["Tie Dye", "Hemp Craft", "Woggle Neckerchief Slide", "Monkey's Fist"],
-            }
+            # Strategy 2: Fill official area-level cluster gaps (slots 1&3 full, slot 2 empty)
+            CLUSTER_AREAS = self._get_authoritative_gap_area_map()
 
             # Find which area this activity belongs to
             activity_area = None
@@ -3367,11 +3610,10 @@ class LegacyPart05Mixin:
                     if max_slot < 3:
                         continue  # Thursday only has 2 slots, can't have 1-3-2 gap
 
-                    # Check if this day has a cluster gap for this area
-                    troop_entries_day = [e for e in self.schedule.entries 
-                                       if e.troop == troop and e.time_slot.day == day]
+                    # Check if this day has an official area-level cluster gap.
+                    day_entries = [e for e in self.schedule.entries if e.time_slot.day == day]
                     area_activities = CLUSTER_AREAS[activity_area]
-                    slots_filled = {e.time_slot.slot_number for e in troop_entries_day 
+                    slots_filled = {e.time_slot.slot_number for e in day_entries
                                   if e.activity.name in area_activities}
 
                     # Check for cluster gap (slots 1&3 full, slot 2 empty)
@@ -3379,8 +3621,11 @@ class LegacyPart05Mixin:
                         # Try slot 2
                         target_slot = TimeSlot(day=day, slot_number=2)
                         if self.schedule.is_troop_free(target_slot, troop):
-                            # For outlier optimization, allow relaxed constraints and ignore day requests
-                            if self._can_schedule(troop, activity, target_slot, day, relax_constraints=True, ignore_day_requests=True):
+                            ign_dr = self._optimization_may_ignore_day_requests(troop)
+                            if self._can_schedule(
+                                troop, activity, target_slot, day,
+                                relax_constraints=True, ignore_day_requests=ign_dr,
+                            ):
                                 score = 50  # High value for filling cluster gap
                                 if score > best_score:
                                     best_move = {
@@ -3419,8 +3664,11 @@ class LegacyPart05Mixin:
                     if not self.schedule.is_troop_free(target_slot, troop):
                         continue
 
-                    # For outlier optimization, allow relaxed constraints and ignore day requests
-                    if not self._can_schedule(troop, activity, target_slot, day, relax_constraints=True, ignore_day_requests=True):
+                    ign_dr = self._optimization_may_ignore_day_requests(troop)
+                    if not self._can_schedule(
+                        troop, activity, target_slot, day,
+                        relax_constraints=True, ignore_day_requests=ign_dr,
+                    ):
                         continue
 
                     # Score based on how many adjacent activities

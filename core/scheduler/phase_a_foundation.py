@@ -14,7 +14,6 @@ Contains methods for Phase A of the scheduling algorithm (Rocks, Pebbles, Sand):
 - A.10: Early Aqua Trampoline for Top 5
 - A.11: Guarantee Top 1 Beach
 - A.12: Early staff area clustering
-- A.13: Priority limited activities (Global Rank 0-4)
 - A.14: Sailing pairs for same-day bonus
 """
 

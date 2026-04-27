@@ -750,6 +750,7 @@
             "Back of the Moon"
         ],
         "fill_activities": [
+            "Campsite Free Time",
             "Super Troop",
             "Aqua Trampoline",
             "Climbing Tower",
@@ -766,10 +767,10 @@
             "Hemp Craft",
             "Dr. DNA",
             "Loon Lore",
-            "Fishing",
-            "Campsite Free Time"
+            "Fishing"
         ],
         "fill_priority": [
+            "Campsite Free Time",
             "Super Troop",
             "Aqua Trampoline",
             "Archery",
@@ -784,8 +785,7 @@
             "Hemp Craft",
             "Dr. DNA",
             "Loon Lore",
-            "Fishing",
-            "Campsite Free Time"
+            "Fishing"
         ],
         "concurrent_activities": [
             "Reflection",
@@ -845,6 +845,48 @@
             "consecutive_activities": [
                 "Tie Dye",
                 "Archery"
+            ],
+            "batch_setup_activities": [
+                "Tie Dye",
+                "Troop Rifle",
+                "Troop Shotgun"
+            ],
+            "swappable_fill_activities": [
+                "Gaga Ball",
+                "9 Square",
+                "Campsite Free Time"
+            ],
+            "smart_balls_activities": [
+                "Gaga Ball",
+                "9 Square"
+            ],
+            "final_audit_filler_activities": [
+                "Campsite Free Time",
+                "Gaga Ball",
+                "9 Square",
+                "Fishing",
+                "Trading Post",
+                "Dr. DNA",
+                "Shower House",
+                "Sauna"
+            ],
+            "emergency_fill_activities": [
+                "Campsite Free Time",
+                "Gaga Ball",
+                "9 Square",
+                "Fishing",
+                "Trading Post",
+                "Dr. DNA"
+            ],
+            "movable_fill_activities": [
+                "Shower House",
+                "Trading Post",
+                "Campsite Free Time",
+                "Fishing",
+                "Sauna",
+                "Gaga Ball",
+                "9 Square",
+                "Troop Swim"
             ],
             "avoid_friday": [
                 "Archery"

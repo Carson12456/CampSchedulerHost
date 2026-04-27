@@ -63,15 +63,11 @@ class UnscheduledAnalyzer:
     
     def __init__(self, activities: List[Any] = None):
         self.week_analyses: Dict[str, WeekAnalysis] = {}
-        
-        # Initialize exemption rules dynamically if activities provided
-        self.THREE_HOUR_ACTIVITIES = {"Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"}
-        self.HC_DG_ACTIVITIES = {"History Center", "Disc Golf"}
-        
-        if activities:
-            # Future improvement: derive these from activity properties
-            # For now, we keep defaults but allow for property-based discovery in future
-            pass
+        from core.scheduler import config_loader
+
+        self.THREE_HOUR_ACTIVITIES = set(config_loader.get_three_hour_activities())
+        self.HC_DG_ACTIVITIES = set(config_loader.get_tuesday_only_activities())
+        self.CANOE_ACTIVITIES = set(config_loader.get_canoe_activities())
     
     def analyze_week_from_schedule_json(self, schedule_path: str) -> WeekAnalysis:
         """
@@ -102,7 +98,19 @@ class UnscheduledAnalyzer:
                 f"Invalid 'unscheduled' payload in {schedule_path}: expected object/dict."
             )
         
-        return self._analyze_week_unscheduled(week_name, unscheduled)
+        troops = schedule_data.get("troops", []) or []
+        total_troops = len(troops) if troops else None
+        total_top5_slots = (
+            sum(min(5, len(troop.get("preferences", []) or [])) for troop in troops)
+            if troops else None
+        )
+
+        return self._analyze_week_unscheduled(
+            week_name,
+            unscheduled,
+            total_troops=total_troops,
+            total_top5_slots=total_top5_slots,
+        )
     
     def analyze_all_weeks(self, schedules_dir: str = "schedules") -> Dict[str, WeekAnalysis]:
         """
@@ -130,17 +138,27 @@ class UnscheduledAnalyzer:
         
         return self.week_analyses
     
-    def _analyze_week_unscheduled(self, week_name: str, unscheduled: Dict) -> WeekAnalysis:
+    def _analyze_week_unscheduled(
+        self,
+        week_name: str,
+        unscheduled: Dict,
+        total_troops: int | None = None,
+        total_top5_slots: int | None = None,
+    ) -> WeekAnalysis:
         """Analyze unscheduled activities for a single week."""
         missed_top5 = []
-        total_troops = len(unscheduled)
-        total_top5_slots = 0
+        if total_troops is None:
+            total_troops = len(unscheduled)
+        infer_top5_slots_from_unscheduled = total_top5_slots is None
+        if infer_top5_slots_from_unscheduled:
+            total_top5_slots = 0
         
         # Analyze each troop's unscheduled activities
         for troop_name, troop_data in unscheduled.items():
             top5_data = troop_data.get('top5', [])
             # Each troop has 5 Top 5 slots, regardless of how many they missed
-            total_top5_slots += 5
+            if infer_top5_slots_from_unscheduled:
+                total_top5_slots += 5
             
             for activity_data in top5_data:
                 missed = self._create_missed_top5(
@@ -201,7 +219,7 @@ class UnscheduledAnalyzer:
             return "2nd+ 3-hour activity (troop already has one)"
         elif activity_name in self.HC_DG_ACTIVITIES:
             return "HC/DG when all Tuesday slots allocated to higher-priority troops"
-        elif activity_name in {"Troop Canoe", "Troop Kayak", "Canoe Snorkel", "Nature Canoe", "Float for Floats"}:
+        elif activity_name in self.CANOE_ACTIVITIES:
             return "Canoe-family duplicate request (troop already has another canoe-family activity)"
         elif "capacity" in activity_name.lower():
             return "Capacity-constrained activity"
@@ -350,6 +368,14 @@ class UnscheduledAnalyzer:
         for entry in entries:
             troop = entry.get('troop_name', '')
             activity = entry.get('activity_name', '')
+            if troop and activity:
+                scheduled_activities.setdefault(troop, set()).add(activity)
+
+        for fill in (schedule_data.get("sailing_half_fills", {}) or {}).values():
+            if not fill.get("counts_as_request"):
+                continue
+            troop = fill.get("troop_name", "")
+            activity = fill.get("activity_name", "")
             if troop and activity:
                 scheduled_activities.setdefault(troop, set()).add(activity)
         

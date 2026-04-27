@@ -4,7 +4,7 @@ from .models import Troop
 
 def load_troops_from_json(file_path):
     """Load troops from a JSON file."""
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
     troops = []
@@ -27,7 +27,7 @@ def load_troops_from_json(file_path):
         
     return troops
 
-def save_schedule_to_json(schedule, troops, output_file, unscheduled_data=None):
+def save_schedule_to_json(schedule, troops, output_file, unscheduled_data=None, sailing_half_fills=None):
     """Save schedule and troops to a JSON file (cache format)."""
     
     # Serialize troops
@@ -58,10 +58,11 @@ def save_schedule_to_json(schedule, troops, output_file, unscheduled_data=None):
     output_data = {
         'troops': troops_data,
         'entries': entries_data,
-        'unscheduled': unscheduled_data if unscheduled_data else {}
+        'unscheduled': unscheduled_data if unscheduled_data else {},
+        'sailing_half_fills': sailing_half_fills if sailing_half_fills else {}
     }
     
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, indent=2)
     
     print(f"Schedule saved to {output_file}")
@@ -72,7 +73,7 @@ def load_schedule_from_json(file_path, troops, all_activities):
     """
     from .models import Schedule, ScheduleEntry, TimeSlot, Day
     
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
         
     schedule = Schedule()
@@ -90,16 +91,21 @@ def load_schedule_from_json(file_path, troops, all_activities):
         troop = troop_map.get(troop_name)
         activity = activity_map.get(activity_name)
         
-        # Look up Day enum safely
         try:
             day = Day[day_name.upper()]
         except KeyError:
-            print(f"Warning: Invalid day {day_name}")
-            continue
-            
-        if troop and activity:
-            slot = TimeSlot(day=day, slot_number=slot_num)
-            entry = ScheduleEntry(time_slot=slot, activity=activity, troop=troop)
-            schedule.entries.append(entry)
+            raise ValueError(f"Invalid day {day_name!r} in schedule entry: {entry_data}")
+
+        missing = []
+        if troop is None:
+            missing.append(f"troop {troop_name!r}")
+        if activity is None:
+            missing.append(f"activity {activity_name!r}")
+        if missing:
+            raise ValueError(f"Unknown {' and '.join(missing)} in schedule entry: {entry_data}")
+
+        slot = TimeSlot(day=day, slot_number=slot_num)
+        entry = ScheduleEntry(time_slot=slot, activity=activity, troop=troop)
+        schedule.entries.append(entry)
             
     return schedule
