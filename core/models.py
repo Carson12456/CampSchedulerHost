@@ -203,9 +203,17 @@ class Schedule(BaseModel):
         return generate_time_slots()
 
     def _get_effective_slots(self, activity: Activity, troop: Troop) -> float:
-        """Get effective slot duration for activity based on troop size."""
+        """Get effective slot duration for activity based on troop size.
+
+        F-12: the Climbing Tower extended-slot threshold is sourced from SKULL
+        (`constraints.tower_extended_size`) instead of a hardcoded 15. The count is
+        the number of climbers (scouts) — distinct from the BRAIN §7 large-troop
+        Shotgun rule, which is keyed on total troop size (scouts + adults).
+        """
         if activity.name == "Climbing Tower" and hasattr(troop, 'scouts'):
-            if troop.scouts > 15:  # 16+ scouts
+            from core.scheduler import config_loader
+            tower_extended_size = config_loader.get_capacity_limits().get("tower_extended_size", 15)
+            if troop.scouts > tower_extended_size:
                 return 2.0
         return activity.slots
     

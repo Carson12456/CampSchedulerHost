@@ -902,10 +902,10 @@ class LegacyPart05Mixin:
                     if slot_num not in used_slots:
                         score += 40  # Strong bonus to fill the gap
 
-            # Staff load penalty - HARD MAX of 14 staff per slot
-            # Staff load penalty - HARD MAX of 16 staff per slot
+            # Staff load penalty for gap-fill scoring. F-24: cap sourced from SKULL
+            # (constraints.max_staff_global) instead of a hardcoded 16.
             current_load = slot_loads.get(slot, 0)
-            STAFF_MAX = 16
+            STAFF_MAX = config_loader.get_capacity_limits().get("max_staff_global", 16)
 
             # IMPROVEMENT 4: Enhanced staff balance awareness
             # BONUS for underloaded slots (encourages distribution)
@@ -1613,6 +1613,10 @@ class LegacyPart05Mixin:
             if e.activity.name in FILLER_SET
             and e.activity.name not in MANDATORY_ANCHORS
             and not getattr(e, "is_continuation", False)
+            # F-04A: a day-requested filler (e.g. Campsite Free Time, Shower
+            # House) placed on its requested day is a honored MUST-HONOR
+            # request, not replaceable filler. Leave it untouched.
+            and not self._is_honored_day_request_entry(e)
         ]
 
         for filler_entry in filler_entries:
@@ -3480,6 +3484,10 @@ class LegacyPart05Mixin:
 
                     # Skip protected and fill activities
                     if activity_name in PROTECTED or activity_name in FILL_ACTIVITIES:
+                        continue
+
+                    # BRAIN §11: never move a Sailing-paired Delta as an outlier.
+                    if self._is_pair_protected_delta(entry):
                         continue
 
                     # Skip multi-slot activities (they're handled separately)

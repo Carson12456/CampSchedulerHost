@@ -273,6 +273,17 @@
         </p>
         <div id="evaluationBanner" style="margin-top: 12px; padding: 10px 16px; border-radius: 8px; display: none;"></div>
         <div id="evaluationMetrics" style="margin-top: 8px; font-size: 13px; color: #aaa;"></div>
+        <div id="snapshotPanel" style="display: none; margin-top: 12px; padding: 10px 16px; background: #242426; border: 1px solid #4a9eff; border-radius: 8px;">
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <label for="snapshotRunSelect" style="font-size: 13px; color: #aaa;">Snapshot run</label>
+                <select id="snapshotRunSelect" onchange="changeSnapshotRun(this.value)" style="padding: 4px 8px; font-size: 13px; background: #2d2d30; color: #fff; border: 1px solid #4a9eff; border-radius: 3px;"></select>
+                <label for="snapshotStepRange" style="font-size: 13px; color: #aaa;">Step</label>
+                <input id="snapshotStepRange" type="range" min="0" max="0" value="0" onchange="changeSnapshotStep(this.value)" style="width: 260px;">
+                <span id="snapshotStepLabel" style="font-size: 13px; color: #ddd;"></span>
+                <button onclick="clearSnapshot()" style="padding: 5px 10px; background: #2d2d30; color: #fff; border: 1px solid #666; border-radius: 3px; cursor: pointer;">Live schedule</button>
+            </div>
+            <div id="snapshotMeta" style="margin-top: 8px; font-size: 12px; color: #aaa;"></div>
+        </div>
     </div>
 
     <div class="tab-section">
@@ -318,6 +329,8 @@
         // Get current week from URL or use default
         const urlParams = new URLSearchParams(window.location.search);
         const currentWeek = urlParams.get('week') || '{{ current_week }}';
+        let currentSnapshotRun = urlParams.get('snapshot_run') || '';
+        let currentSnapshotStep = urlParams.get('snapshot_step') || '';
 
         let currentView = 'troop';
         let latestEvaluationData = null;
@@ -329,6 +342,92 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
+        }
+
+        function withSnapshot(url) {
+            if (!currentSnapshotRun || currentSnapshotStep === '') {
+                return url;
+            }
+            const separator = url.includes('?') ? '&' : '?';
+            return `${url}${separator}snapshot_run=${encodeURIComponent(currentSnapshotRun)}&snapshot_step=${encodeURIComponent(currentSnapshotStep)}`;
+        }
+
+        async function loadSnapshotRuns() {
+            try {
+                const response = await fetch(`/api/snapshots/${currentWeek}`);
+                const data = await response.json();
+                const runs = data.runs || [];
+                const panel = document.getElementById('snapshotPanel');
+                if (!runs.length && !currentSnapshotRun) {
+                    panel.style.display = 'none';
+                    return;
+                }
+
+                panel.style.display = 'block';
+                const select = document.getElementById('snapshotRunSelect');
+                select.innerHTML = '<option value="">Live schedule</option>';
+                runs.forEach(run => {
+                    const option = document.createElement('option');
+                    option.value = run.run_id;
+                    option.textContent = `${run.run_id} (${run.snapshot_count} steps)`;
+                    option.dataset.count = run.snapshot_count;
+                    if (run.run_id === currentSnapshotRun) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+
+                const active = runs.find(run => run.run_id === currentSnapshotRun);
+                const stepRange = document.getElementById('snapshotStepRange');
+                if (active) {
+                    stepRange.max = Math.max(0, Number(active.snapshot_count || 1) - 1);
+                    stepRange.value = currentSnapshotStep || 0;
+                    document.getElementById('snapshotStepLabel').textContent = `${stepRange.value} / ${stepRange.max}`;
+                    await loadSnapshotMetadata();
+                } else {
+                    document.getElementById('snapshotStepLabel').textContent = 'No snapshot selected';
+                }
+            } catch (error) {
+                console.error('Error loading snapshot runs:', error);
+            }
+        }
+
+        async function loadSnapshotMetadata() {
+            if (!currentSnapshotRun || currentSnapshotStep === '') {
+                document.getElementById('snapshotMeta').textContent = '';
+                return;
+            }
+            try {
+                const response = await fetch(`/api/snapshot/${currentWeek}/${encodeURIComponent(currentSnapshotRun)}/${currentSnapshotStep}`);
+                const data = await response.json();
+                const metrics = data.metrics || {};
+                const diff = data.diff || {};
+                document.getElementById('snapshotMeta').textContent =
+                    `${data.phase || 'unknown'} - ${data.label || 'snapshot'} | ` +
+                    `entries ${metrics.entry_count ?? '?'} | empty ${metrics.troop_empty_slots ?? '?'} | ` +
+                    `Top5 misses ${metrics.non_exempt_top5_misses ?? '?'} | +${diff.added_count ?? 0} -${diff.removed_count ?? 0}`;
+            } catch (error) {
+                document.getElementById('snapshotMeta').textContent = `Snapshot metadata unavailable: ${error}`;
+            }
+        }
+
+        function changeSnapshotRun(runId) {
+            if (!runId) {
+                clearSnapshot();
+                return;
+            }
+            window.location.href = `/?week=${currentWeek}&snapshot_run=${encodeURIComponent(runId)}&snapshot_step=0`;
+        }
+
+        function changeSnapshotStep(step) {
+            if (!currentSnapshotRun) {
+                return;
+            }
+            window.location.href = `/?week=${currentWeek}&snapshot_run=${encodeURIComponent(currentSnapshotRun)}&snapshot_step=${step}`;
+        }
+
+        function clearSnapshot() {
+            window.location.href = `/?week=${currentWeek}`;
         }
 
         async function getEvaluationData() {
@@ -462,6 +561,7 @@
             }
         }
         loadEvaluation();
+        loadSnapshotRuns();
 
         // Create area tabs
         const areaTabsContainer = document.getElementById('areaTabs');
@@ -547,11 +647,11 @@
 
             try {
                 // Load schedule data
-                const scheduleResponse = await fetch(`/api/schedule/${troopName}?week=${currentWeek}`);
+                const scheduleResponse = await fetch(withSnapshot(`/api/schedule/${troopName}?week=${currentWeek}`));
                 const scheduleData = await scheduleResponse.json();
                 
                 // Load troop scoring data
-                const scoringResponse = await fetch(`/api/troop_scoring/${currentWeek}`);
+                const scoringResponse = await fetch(withSnapshot(`/api/troop_scoring/${currentWeek}`));
                 const scoringData = await scoringResponse.json();
                 
                 // Find this troop's scoring data
@@ -658,21 +758,21 @@
             try {
                 // Special handling for Beach Board
                 if (areaName === 'Beach Board') {
-                    const response = await fetch(`/api/beach_board?week=${currentWeek}`);
+                    const response = await fetch(withSnapshot(`/api/beach_board?week=${currentWeek}`));
                     const data = await response.json();
                     renderBeachBoard(data);
                 } else if (areaName === 'Balls') {
-                    const response = await fetch(`/api/balls?week=${currentWeek}`);
+                    const response = await fetch(withSnapshot(`/api/balls?week=${currentWeek}`));
                     const data = await response.json();
                     renderBallsBoard(data);
                 } else if (areaName === 'Unscheduled') {
                     // Redirect to unscheduled view
-                    const response = await fetch(`/api/unscheduled?week=${currentWeek}`);
+                    const response = await fetch(withSnapshot(`/api/unscheduled?week=${currentWeek}`));
                     const data = await response.json();
                     document.getElementById('scheduleTitle').textContent = 'Unscheduled Activities';
                     renderUnscheduledTable(data);
                 } else {
-                    const response = await fetch(`/api/area/${encodeURIComponent(areaName)}?week=${currentWeek}`);
+                    const response = await fetch(withSnapshot(`/api/area/${encodeURIComponent(areaName)}?week=${currentWeek}`));
                     const data = await response.json();
                     renderAreaScheduleGrid(data, areaName);
                 }
@@ -699,7 +799,7 @@
             document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
 
             try {
-                const response = await fetch(`/api/commissioner/${encodeURIComponent(commissionerName)}?week=${currentWeek}`);
+                const response = await fetch(withSnapshot(`/api/commissioner/${encodeURIComponent(commissionerName)}?week=${currentWeek}`));
                 const data = await response.json();
                 renderCommissionerScheduleGrid(data, commissionerName);
             } catch (error) {
@@ -717,7 +817,7 @@
             document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
 
             try {
-                const response = await fetch(`/api/reflection?week=${currentWeek}`);
+                const response = await fetch(withSnapshot(`/api/reflection?week=${currentWeek}`));
                 const data = await response.json();
                 renderReflectionScheduleGrid(data);
             } catch (error) {
@@ -735,7 +835,7 @@
             document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
 
             try {
-                const response = await fetch(`/api/staff/${encodeURIComponent(staffName)}?week=${currentWeek}`);
+                const response = await fetch(withSnapshot(`/api/staff/${encodeURIComponent(staffName)}?week=${currentWeek}`));
                 const data = await response.json();
                 renderStaffScheduleGrid(data, staffName);
             } catch (error) {
@@ -1463,7 +1563,7 @@
             document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
 
             try {
-                const response = await fetch(`/api/staff-requirements?week=${currentWeek}`);
+                const response = await fetch(withSnapshot(`/api/staff-requirements?week=${currentWeek}`));
                 const data = await response.json();
                 renderStaffRequirements(data);
             } catch (error) {
@@ -1686,7 +1786,7 @@
             document.getElementById('scheduleContent').innerHTML = '<div class="loading">Loading...</div>';
 
             try {
-                const response = await fetch(`/api/unscheduled?week=${currentWeek}`);
+                const response = await fetch(withSnapshot(`/api/unscheduled?week=${currentWeek}`));
                 const data = await response.json();
                 renderUnscheduledTable(data);
             } catch (error) {

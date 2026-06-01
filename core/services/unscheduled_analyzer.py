@@ -52,10 +52,10 @@ class UnscheduledAnalyzer:
     Analyzes unscheduled activities from schedule JSON files.
     
     This is the authoritative source for top 5 detection using the unscheduled
-    section of schedule JSON files, as specified in .cursorrules.
+    section of schedule JSON files, as specified in BRAIN.
     """
     
-    # Exemption rule definitions (from .cursorrules)
+    # Exemption rule definitions (from BRAIN/SKULL)
     # Exemption rule definitions (Initialized in constructor)
     # THREE_HOUR_ACTIVITIES = set() 
     # HC_DG_ACTIVITIES = set()
@@ -214,7 +214,7 @@ class UnscheduledAnalyzer:
         return missed
     
     def _determine_exemption_reason(self, activity_name: str) -> str:
-        """Determine why an activity is exempt based on .cursorrules."""
+        """Determine why an activity is exempt based on BRAIN."""
         if activity_name in self.THREE_HOUR_ACTIVITIES:
             return "2nd+ 3-hour activity (troop already has one)"
         elif activity_name in self.HC_DG_ACTIVITIES:

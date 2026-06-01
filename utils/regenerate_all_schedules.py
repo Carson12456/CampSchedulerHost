@@ -44,9 +44,12 @@ def regenerate_all():
             scheduler = ConstrainedScheduler(troops, all_activities, voyageur_mode=voyageur_mode)
             schedule = scheduler.schedule_all()
             sailing_half_fills = getattr(scheduler, 'sailing_balls_fills', {}) or {}
+            day_request_displacements = getattr(scheduler, 'day_request_displacements', None)
             
             # Authoritative unscheduled payload for all Top-5/Top-10 miss reporting.
-            unscheduled_data = build_unscheduled_data(scheduler.troops, schedule, sailing_half_fills)
+            unscheduled_data = build_unscheduled_data(
+                scheduler.troops, schedule, sailing_half_fills, day_request_displacements
+            )
             
             # Save
             output_file = schedules_dir / f"{week_name}_schedule.json"
@@ -56,6 +59,7 @@ def regenerate_all():
                 str(output_file),
                 unscheduled_data,
                 sailing_half_fills,
+                day_request_displacements,
             )
             
             print(f"  Saved to {output_file}")

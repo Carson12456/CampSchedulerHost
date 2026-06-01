@@ -137,7 +137,11 @@ def get_capacity_limits() -> Dict[str, Any]:
         "beach_staff_per_slot": constraints.get("beach_staff_per_slot", 12),
         "canoe_capacity": constraints.get("max_canoe_capacity", 26),
         "tower_extended_size": constraints.get("tower_extended_size", 15),
-        "sailing_extended_size": constraints.get("sailing_extended_size", 12)
+        "sailing_extended_size": constraints.get("sailing_extended_size", 12),
+        # F-24: global per-slot staff caps (was hardcoded 16 / 24 in the scheduler).
+        "max_staff_global": constraints.get("max_staff_global", 16),
+        "target_staff_global": constraints.get("target_staff_global", 14),
+        "clustering_staff_global": constraints.get("clustering_staff_global", 24),
     }
 
 
@@ -461,6 +465,23 @@ def get_commissioner_activity_days(activity_name: str) -> Dict[str, Any]:
                     result[comm] = day_map.get(day_str)
                     
     return result
+
+
+def apply_voyageur_commissioner_alias(day_map: Dict[str, Any]) -> Dict[str, Any]:
+    """Alias ``Commissioner A/B/C`` day assignments onto ``Voyageur A/B/C``.
+
+    Voyageur troops declare their commissioner as ``Voyageur A/B/C`` while the
+    rotation schedule (and therefore ``get_commissioner_activity_days``) is keyed
+    by ``Commissioner A/B/C``. The scheduler applies this same aliasing so
+    grouping is active for Voyageur weeks; the regression checker must mirror it
+    or its commissioner-day metric collapses to 0 (no key matches). Shared here
+    so both paths stay in lockstep. Mutates and returns ``day_map``.
+    """
+    for suffix in ("A", "B", "C"):
+        comm_key = f"Commissioner {suffix}"
+        if comm_key in day_map:
+            day_map[f"Voyageur {suffix}"] = day_map[comm_key]
+    return day_map
 
 
 def get_cluster_areas() -> List[str]:

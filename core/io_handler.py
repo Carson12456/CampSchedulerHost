@@ -4,9 +4,15 @@ from .models import Troop
 
 def load_troops_from_json(file_path):
     """Load troops from a JSON file."""
-    with open(file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Malformed troop JSON in {file_path}: {exc}") from exc
+
+    if not isinstance(data, dict) or 'troops' not in data:
+        raise ValueError(f"Troop JSON {file_path} is missing the required 'troops' key")
+
     troops = []
     for t_data in data['troops']:
         # Handle optional fields
@@ -27,8 +33,16 @@ def load_troops_from_json(file_path):
         
     return troops
 
-def save_schedule_to_json(schedule, troops, output_file, unscheduled_data=None, sailing_half_fills=None):
-    """Save schedule and troops to a JSON file (cache format)."""
+def save_schedule_to_json(schedule, troops, output_file, unscheduled_data=None, sailing_half_fills=None,
+                          day_request_displacements=None):
+    """Save schedule and troops to a JSON file (cache format).
+
+    ``day_request_displacements`` is the scheduler's set of
+    ``(troop_name, activity_name)`` preferences displaced by an honored
+    MUST-HONOR day request. It is persisted so the regression checker and any
+    JSON reader can reproduce the authoritative BRAIN §2 Exemption 4(b)
+    decisions without rerunning the scheduler.
+    """
     
     # Serialize troops
     troops_data = []
@@ -55,11 +69,18 @@ def save_schedule_to_json(schedule, troops, output_file, unscheduled_data=None, 
         }
         entries_data.append(entry_dict)
         
+    # Serialize day-request displacement provenance as a sorted list of
+    # [troop_name, activity_name] pairs (JSON has no sets/tuples).
+    displacements_data = sorted(
+        [list(pair) for pair in day_request_displacements]
+    ) if day_request_displacements else []
+
     output_data = {
         'troops': troops_data,
         'entries': entries_data,
         'unscheduled': unscheduled_data if unscheduled_data else {},
-        'sailing_half_fills': sailing_half_fills if sailing_half_fills else {}
+        'sailing_half_fills': sailing_half_fills if sailing_half_fills else {},
+        'day_request_displacements': displacements_data
     }
     
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -72,10 +93,16 @@ def load_schedule_from_json(file_path, troops, all_activities):
     Requires fully populated troops and activities lists to reconstruct objects.
     """
     from .models import Schedule, ScheduleEntry, TimeSlot, Day
-    
-    with open(file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-        
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Malformed schedule JSON in {file_path}: {exc}") from exc
+
+    if not isinstance(data, dict) or 'entries' not in data:
+        raise ValueError(f"Schedule JSON {file_path} is missing the required 'entries' key")
+
     schedule = Schedule()
     
     # Map names to objects

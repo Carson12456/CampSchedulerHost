@@ -108,13 +108,25 @@ class SchedulingPipelineMixin:
                     count += 1
         return count
 
-    def _safe_phase_d_step(self, step_name: str, step_fn) -> None:
+    def _safe_phase_d_step(
+        self,
+        step_name: str,
+        step_fn,
+        *,
+        guard_top10: bool = True,
+        guard_soft_metrics: bool = True,
+        guard_staff_variance: bool = False,
+    ) -> None:
         """Run a Phase D optimization step with Top-5/Top-10 rollback protection.
 
         The step runs, then any resulting gaps are filled within the same
         transactional boundary.  If the combined result increases non-exempt
         Top-5 misses or loses more than 2 Top-10 placements globally, the
         entire operation (including gap fills) is rolled back.
+
+        ``guard_staff_variance`` (F-16): additionally roll back unless the step
+        strictly *reduces* staffed-slot load variance — used for the staff
+        balancing pass, whose moves are otherwise invisible to the guard.
         """
         self._rebuild_staff_tracking()
         snapshot = self._snapshot_scheduler_state()
@@ -122,6 +134,7 @@ class SchedulingPipelineMixin:
         before_top10 = self._count_top10_in_schedule()
         before_excess = self._count_excess_cluster_days()
         before_gaps = self._count_area_cluster_gaps()
+        before_variance = self._compute_staff_load_variance() if guard_staff_variance else 0.0
 
         step_fn()
         self._rebuild_staff_tracking()
@@ -135,24 +148,50 @@ class SchedulingPipelineMixin:
         after_top10 = self._count_top10_in_schedule()
         after_excess = self._count_excess_cluster_days()
         after_gaps = self._count_area_cluster_gaps()
+        after_variance = self._compute_staff_load_variance() if guard_staff_variance else 0.0
         top10_lost = before_top10 - after_top10
 
         if after_top5 > before_top5:
             print(f"  [{step_name}] ROLLED BACK — Top-5 misses increased ({before_top5} -> {after_top5})")
             self._restore_scheduler_state(snapshot)
-        elif top10_lost > 2:
+            status = "rolled-back-top5"
+        elif guard_top10 and top10_lost > 2:
             print(f"  [{step_name}] ROLLED BACK — lost {top10_lost} Top-10 placements ({before_top10} -> {after_top10})")
             self._restore_scheduler_state(snapshot)
-        elif after_excess > before_excess:
+            status = "rolled-back-top10"
+        elif guard_soft_metrics and after_excess > before_excess:
             print(f"  [{step_name}] ROLLED BACK — excess cluster days increased ({before_excess} -> {after_excess})")
             self._restore_scheduler_state(snapshot)
-        elif after_gaps > before_gaps:
+            status = "rolled-back-excess"
+        elif guard_soft_metrics and after_gaps > before_gaps:
             print(f"  [{step_name}] ROLLED BACK — cluster gaps increased ({before_gaps} -> {after_gaps})")
             self._restore_scheduler_state(snapshot)
+            status = "rolled-back-gaps"
+        elif guard_staff_variance and after_variance > before_variance + 1e-9:
+            print(f"  [{step_name}] ROLLED BACK — staff variance increased ({before_variance:.2f} -> {after_variance:.2f})")
+            self._restore_scheduler_state(snapshot)
+            status = "rolled-back-staff-variance"
         else:
             delta_label = f"Top10: {before_top10}->{after_top10}" if top10_lost != 0 else "Top10: stable"
             cluster_label = f"Excess: {before_excess}->{after_excess}, Gaps: {before_gaps}->{after_gaps}"
             print(f"  [{step_name}] OK ({delta_label}; {cluster_label})")
+            status = "ok"
+        self._record_schedule_snapshot(
+            f"{step_name} complete",
+            reason="phase-step",
+            metadata={
+                "status": status,
+                "before_top5": before_top5,
+                "after_top5": after_top5,
+                "before_top10": before_top10,
+                "after_top10": after_top10,
+                "before_excess": before_excess,
+                "after_excess": after_excess,
+                "before_gaps": before_gaps,
+                "after_gaps": after_gaps,
+            },
+            force=True,
+        )
 
     def schedule_all(self) -> Schedule:
         """Run the constrained scheduling algorithm - TOP 5 FIRST approach.
@@ -160,6 +199,7 @@ class SchedulingPipelineMixin:
         Aligned with SCHEDULING_PROCESS.md Phase Groups A-D.
         """
         self.current_pipeline_phase = "foundation"
+        self._record_schedule_snapshot("run start", reason="run-start", force=True)
         self.logger.section("CONSTRAINED SCHEDULER - PHASE A: FOUNDATION")
 
         # Phase A structure notes:
@@ -173,14 +213,17 @@ class SchedulingPipelineMixin:
         # A.1: Friday Reflection — mandatory anchor, reserve Friday slots first
         self.logger.subsection("A.1 Friday Reflection (reserve Friday slots)")
         self._schedule_friday_reflection()
+        self._record_schedule_snapshot("A.1 Friday Reflection complete", reason="phase-step")
 
         # A.3: HC/DG Tuesday — mandatory anchor, Tuesday is the only allowed day
         self.logger.subsection("A.3 HC/DG Tuesday scheduling")
         self._schedule_hc_dg_tuesday()
+        self._record_schedule_snapshot("A.3 HC/DG Tuesday complete", reason="phase-step")
 
         # A.4: 3-Hour Activities — ROCKS: full-day blocks, biggest contiguous constraint
         self.logger.subsection("A.4 3-Hour Activities (Rocks)")
         self._schedule_three_hour_activities()
+        self._record_schedule_snapshot("A.4 3-Hour Activities complete", reason="phase-step")
 
         # A.6 (relocated pre-A.5): Sailing Optimization — 2-slot (90-min) capacity.
         # Must run BEFORE A.5 so the specialized 9-slot Sailing matrix owns its
@@ -188,30 +231,36 @@ class SchedulingPipelineMixin:
         # (slots>=1.5) and A.6 skips those troops entirely.
         self.logger.subsection("A.6 Sailing Optimization (9-Slot) [relocated pre-A.5]")
         self._schedule_sailing_optimize_all()
+        self._record_schedule_snapshot("A.6 Sailing Optimization complete", reason="phase-step")
 
         # A.7 (relocated pre-A.5): Delta + Sailing Pairing — pair Delta with Sailing
         # immediately after Sailing is placed so Delta seeks the same commissioner
         # day as Sailing, building a full-day block before 2-hour rocks land.
         self.logger.subsection("A.7 Delta + Sailing pairing (reserve day) [relocated pre-A.5]")
         self._schedule_delta_sailing_pairs()
+        self._record_schedule_snapshot("A.7 Delta + Sailing pairing complete", reason="phase-step")
 
         # A.5: 2-Hour Activities — ROCKS: consecutive multi-slot requirements.
         # Runs after Sailing (A.6) and Delta-Sailing pairing (A.7) so those
         # structural blocks are locked in first.
         self.logger.subsection("A.5 Top-10 2-Hour Activities (Rocks)")
         self._schedule_two_hour_activities_priority()
+        self._record_schedule_snapshot("A.5 2-Hour Activities complete", reason="phase-step")
 
         # A.2 (relocated): Super Troop — mandatory anchor for all troops.
         # Moved below multi-slot rocks so Super Troop no longer fragments 3hr/2hr/Sailing blocks.
         self.logger.subsection("A.2 Super Troop (mandatory) [relocated post-A.7]")
         self._schedule_super_troop()
+        self._record_schedule_snapshot("A.2 Super Troop complete", reason="phase-step")
 
         # A.12: Early Staff Area Clustering — pre-schedule Tower, ODS, Rifle
         self.logger.subsection("A.12 Early staff area clustering")
         self._early_staff_area_clustering()
+        self._record_schedule_snapshot("A.12 Early staff clustering complete", reason="phase-step")
 
         # Exit Gate A: Immediate gap repair
         self._immediate_gap_fix_if_needed("Phase A (Foundation)")
+        self._record_schedule_snapshot("Phase A exit gate complete", reason="phase-exit")
 
         # =================================================================
         # PHASE B: CORE REQUESTS
@@ -222,22 +271,27 @@ class SchedulingPipelineMixin:
         # B.1: Top 1 (First Priority)
         self.logger.subsection("B.1 Scheduling Top 1 (FIRST PRIORITY)")
         self._schedule_preferences_range(0, 1)
+        self._record_schedule_snapshot("B.1 Top 1 complete", reason="phase-step")
 
         # B.1b: Force Top 1 — make space before Top 2-5
         self.logger.subsection("B.1b Forcing Top 1 (make space before Top 2-5)")
         self._force_top1_preferences()
+        self._record_schedule_snapshot("B.1b Force Top 1 complete", reason="phase-step")
 
         # B.1c: Top 2-5
         self.logger.subsection("B.1c Scheduling Top 2-5")
         self._schedule_preferences_range(1, 5)
+        self._record_schedule_snapshot("B.1c Top 2-5 complete", reason="phase-step")
 
         # B.2: Guarantee 100% Top 5
         self.logger.subsection("B.2 Guaranteeing 100% Top 5 satisfaction")
         self._guarantee_all_top5()
+        self._record_schedule_snapshot("B.2 Top 5 guarantee complete", reason="phase-step")
 
         # B.3: Mandatory Top 5 Enforcement
         self.logger.subsection("B.3 Mandatory Top 5 enforcement")
         self._enforce_mandatory_top5()
+        self._record_schedule_snapshot("B.3 Mandatory Top 5 complete", reason="phase-step")
 
         # B.5: Commissioner Busy Map (diagnostic/tracking)
         self._build_commissioner_busy_map()
@@ -245,13 +299,16 @@ class SchedulingPipelineMixin:
         # B.6: Safety net after Top 1–5; Phase D + pair-protected Delta reduce drift.
         self.logger.subsection("B.6 Enforce Delta + Sailing same-day pairing")
         self._enforce_delta_sailing_pairing()
+        self._record_schedule_snapshot("B.6 Delta + Sailing pairing complete", reason="phase-step")
 
         # Exit Gate B: Immediate gap check and repair
         self._immediate_gap_fix_if_needed("Phase B (Core Requests)")
+        self._record_schedule_snapshot("Phase B exit gate complete", reason="phase-exit")
 
         # B.7: Aqua Trampoline sharing (must run after B.1/B.1c so AT rows exist)
         self.logger.subsection("B.7 Aqua Trampoline sharing (Top 5)")
         self._aggressive_aqua_trampoline_sharing()
+        self._record_schedule_snapshot("B.7 Aqua Trampoline sharing complete", reason="phase-step")
 
         self.current_pipeline_phase = "remaining"
         self.logger.section("PHASE C: REMAINING & OPTIMIZATION")
@@ -260,20 +317,24 @@ class SchedulingPipelineMixin:
         # relocating to Phase A caused regressions. MUST-HONOR aggressive seal runs
         # at end of _final_comprehensive_validation.
         self._schedule_day_requests()
+        self._record_schedule_snapshot("C.1 Day requests complete", reason="phase-step")
 
         # C.2: Staff Optimization (consecutive activities)
         self.logger.subsection("C.2 Staff Optimization (consecutive activities)")
         self._schedule_staff_optimized_areas()
+        self._record_schedule_snapshot("C.2 Staff optimization complete", reason="phase-step")
 
         # C.3: Remaining Preferences (Top 6-20)
         self.logger.subsection("C.3 Scheduling Remaining Preferences (Top 6-20)")
         self._schedule_preferences_range(5, 20)
+        self._record_schedule_snapshot("C.3 Remaining preferences complete", reason="phase-step")
 
         # C.4: Guarantee Minimum Top 10 — FLOOR pass.
         # Stops when a troop has >=3 Top 10. Only displaces non-Top-5 for
         # Top 6-10 recovery. Intentionally complementary to C.5.
         self.logger.subsection("C.4 Guaranteeing Minimum Top 10 (floor: 3 per troop)")
         self._guarantee_minimum_top10()
+        self._record_schedule_snapshot("C.4 Minimum Top 10 complete", reason="phase-step")
 
         # C.5: Guarantee Top 10 with Exceptions — MAXIMIZE pass.
         # Tries to fill ALL missing Top 10 (not just 3), skipping the
@@ -281,6 +342,7 @@ class SchedulingPipelineMixin:
         # so the floor is already met and this pass only pushes higher.
         self.logger.subsection("C.5 Guaranteeing Top 10 with exceptions (maximize)")
         self._guarantee_top10_with_exceptions()
+        self._record_schedule_snapshot("C.5 Top 10 maximize complete", reason="phase-step")
 
         # C.6: Fill All Remaining Slots.
         # Three-tier preference-first ordering is already in place:
@@ -289,6 +351,7 @@ class SchedulingPipelineMixin:
         #   PASS 2:  remaining_prefs THEN DEFAULT_FILL_PRIORITY
         self.logger.subsection("C.6 Filling remaining slots")
         self._fill_all_remaining()
+        self._record_schedule_snapshot("C.6 Fill remaining complete", reason="phase-step")
         # C.6b moved to FINAL VERIFICATION: sailing half-slot fills must be
         # computed against the *final* schedule, since Phase D re-arranges
         # activities and can change which balls activities are adjacent /
@@ -296,6 +359,7 @@ class SchedulingPipelineMixin:
 
         # Exit Gate C: Safety checks, ensure schedule is 100% populated
         self._immediate_gap_fix_if_needed("Phase C (Remaining & Optimization)")
+        self._record_schedule_snapshot("Phase C exit gate complete", reason="phase-exit")
 
         # =================================================================
         # PHASE D: FINAL POLISH (Guarded Swap Phase)
@@ -311,9 +375,14 @@ class SchedulingPipelineMixin:
         #     adversarial — D.1 tightens on clustering axes, D.6 tightens
         #     on visitation axes. Running both lets the guards keep only
         #     swaps that don't degrade Top 5/Top 10.
-        #   * D.3 has an internal "FORCED" bypass path that moves activities
-        #     despite constraint violations, relying on D.11 cleanup + final
-        #     validation to repair. Brittle but needed for excess-day cuts.
+        #   * D.3 (_force_clustering_consolidation) validates every move via
+        #     _can_schedule(relax)+add_entry, so it does NOT create hard
+        #     violations and does not depend on D.11 to "repair" anything.
+        #     (The only true constraint-bypassing forced mover was D.8's
+        #     _force_cluster_consolidation; F-10 now routes it through
+        #     _can_schedule(relax) too.) The authoritative safety net for any
+        #     residual hard issue is _final_comprehensive_validation, not D.11
+        #     (which runs guard_top10=False and is itself rolled back on Top-5).
         #   * D.7 is a DIAGNOSTIC (no mutations); moved to Final Verification.
         #   * D.10 is self-guarded (internal non-exempt/gap baselines).
         # =================================================================
@@ -323,12 +392,13 @@ class SchedulingPipelineMixin:
         # D.1: Friday Reflection Optimization (self-contained safe-swap)
         self.logger.subsection("D.1 Friday Reflection optimization")
         self._optimize_friday_reflections()
+        self._record_schedule_snapshot("D.1 Friday Reflection optimization complete", reason="phase-step")
 
         # D.2: Comprehensive Clustering & Smart Swaps (guarded)
         self.logger.subsection("D.2 Comprehensive clustering & smart swaps")
         self._safe_phase_d_step("D.2 Clustering", self._comprehensive_clustering_optimization)
 
-        # D.3: Forced Clustering Consolidation (guarded; relies on D.11 for FORCED-path cleanup)
+        # D.3: Forced Clustering Consolidation (guarded; validates moves via _can_schedule(relax))
         self.logger.subsection("D.3 Forced clustering consolidation")
         self._safe_phase_d_step("D.3 Forced Clustering", self._force_clustering_consolidation)
 
@@ -348,6 +418,7 @@ class SchedulingPipelineMixin:
         # different slots) so it cannot remove a preferred activity.
         self.logger.subsection("D.5 Friday Super Troop optimization")
         self._optimize_friday_super_troop()
+        self._record_schedule_snapshot("D.5 Friday Super Troop optimization complete", reason="phase-step")
 
         # D.6: Flexible Reflection Slot Optimization.
         # Spreads commissioner's troops across Friday slots (opposite goal
@@ -360,6 +431,7 @@ class SchedulingPipelineMixin:
         # _safe_phase_d_step("D.6 Reflection Spread", ...).
         self.logger.subsection("D.6 Flexible Reflection slot optimization")
         self._optimize_flexible_reflections()
+        self._record_schedule_snapshot("D.6 Flexible Reflection optimization complete", reason="phase-step")
 
         # --- D.7 MOVED to Final Verification section. ---
         # _optimize_commissioner_balance is a pure diagnostic print (no
@@ -379,13 +451,32 @@ class SchedulingPipelineMixin:
             self._optimize_commissioner_day_ownership(),
         ))
 
+        # D.9b: Staff Variance Optimization (F-16). Previously dead code; now wired
+        # as a guarded step that only commits if it strictly reduces staffed-slot
+        # load variance without losing Top-5/Top-10 or worsening clustering.
+        self.logger.subsection("D.9b Staff Variance Optimization")
+        self._safe_phase_d_step(
+            "D.9b Staff Variance",
+            self._optimize_staff_variance,
+            guard_staff_variance=True,
+        )
+
         # D.10: Post-Fill Cluster Gap Optimization (self-guarded internally)
         self.logger.subsection("D.10 Post-Fill Cluster Gap Optimization")
         self._optimize_cluster_gaps_post_fill()
+        self._record_schedule_snapshot("D.10 Cluster gap optimization complete", reason="phase-step")
 
-        # D.11: Comprehensive Final Cleanup (must run last in Phase D)
+        # D.11: Comprehensive Final Cleanup (must run last in Phase D).
+        # Guard it like the other destructive Phase D steps: cleanup must not
+        # hand final validation a schedule with new non-exempt Top-5 misses.
+        # Soft clustering metrics must not roll back hard overlap cleanup.
         self.logger.subsection("D.11 Comprehensive final cleanup")
-        self._comprehensive_final_cleanup()
+        self._safe_phase_d_step(
+            "D.11 Final Cleanup",
+            self._comprehensive_final_cleanup,
+            guard_top10=False,
+            guard_soft_metrics=False,
+        )
 
         # =================================================================
         # FINAL VERIFICATION
@@ -396,6 +487,7 @@ class SchedulingPipelineMixin:
         # Multi-slot Integrity Fix - Ensure all multi-slot activities have correct slots
         self.logger.subsection("Multi-Slot Integrity Check")
         self._fix_multislot_integrity()
+        self._record_schedule_snapshot("Final multi-slot integrity complete", reason="final-step")
 
         # MUST-HONOR aggressive day-requests run inside _final_comprehensive_validation
         # after all repairs (final seal), not here — otherwise gap fill / Top-5 repair
@@ -408,6 +500,13 @@ class SchedulingPipelineMixin:
 
         # Last mutating step (includes MUST-HONOR seal, multi-slot, gap fill, Top-5 gate).
         self._final_comprehensive_validation()
+        self._record_schedule_snapshot("Final comprehensive validation complete", reason="final-step")
+
+        self.logger.subsection("Late guarded soft-constraint cleanup")
+        self._final_soft_constraint_cleanup()
+        self._fix_multislot_integrity()
+        self._guarantee_no_gaps()
+        self._record_schedule_snapshot("Late soft-constraint cleanup complete", reason="final-step")
 
         # Final Filler -> Preference Audit (safe-swap, post everything).
         # After every phase and final verification have run, inspect any
@@ -424,6 +523,7 @@ class SchedulingPipelineMixin:
         self._rebuild_staff_tracking()
         self._fix_multislot_integrity()
         self._guarantee_no_gaps()
+        self._record_schedule_snapshot("Final filler audit complete", reason="final-step")
         final_cluster_snapshot = self._snapshot_scheduler_state()
         final_cluster_top5, _ = self._count_non_exempt_top5_misses()
         final_cluster_excess = self._count_excess_cluster_days()
@@ -447,6 +547,7 @@ class SchedulingPipelineMixin:
         self._finalize_filler_replacement_audit()
         self._fix_multislot_integrity()
         self._guarantee_no_gaps()
+        self._record_schedule_snapshot("Terminal filler audit complete", reason="final-step")
         terminal_cluster_snapshot = self._snapshot_scheduler_state()
         terminal_cluster_top5, _ = self._count_non_exempt_top5_misses()
         terminal_cluster_excess = self._count_excess_cluster_days()
@@ -471,7 +572,15 @@ class SchedulingPipelineMixin:
                 self._finalize_filler_replacement_audit()
                 self._fix_multislot_integrity()
                 self._guarantee_no_gaps()
+        self.logger.subsection("Terminal guarded soft-constraint cleanup")
+        self._final_soft_constraint_cleanup()
+        self._fix_multislot_integrity()
+        self._guarantee_no_gaps()
+        self._record_schedule_snapshot("Terminal soft-constraint cleanup complete", reason="final-step")
         self._validate_critical_constraints()
+        # F-04A: fail closed if any post-seal mutator (filler audit, beach
+        # saturation, cluster repair) dropped a honored MUST-HONOR day request.
+        self._revalidate_sealed_day_requests()
         final_top5, final_details = self._count_non_exempt_top5_misses()
         if final_top5 > 0:
             preview = ", ".join(
@@ -488,5 +597,6 @@ class SchedulingPipelineMixin:
         # mutate self.schedule.entries.
         self.logger.subsection("Scheduling half-slot fills during Sailing (final)")
         self._schedule_sailing_balls_fills()
+        self._record_schedule_snapshot("run complete", reason="run-complete", force=True)
 
         return self.schedule

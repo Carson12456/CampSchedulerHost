@@ -53,10 +53,7 @@ class SchedulerState:
             self.COMMISSIONER_SAILING_DAYS,
             self.COMMISSIONER_TOWER_ODS_DAYS,
         ]:
-            for suffix in ["A", "B", "C"]:
-                comm_key = f"Commissioner {suffix}"
-                if comm_key in config:
-                    config[f"Voyageur {suffix}"] = config[comm_key]
+            config_loader.apply_voyageur_commissioner_alias(config)
 
         self.AREA_PAIRS = SchedulerConstants.AREA_PAIRS.copy()
 
@@ -102,6 +99,16 @@ class SchedulerState:
         self.troop_has_super_troop = {t.name: False for t in troops}
         self.delta_was_swapped = set()
         self.sailing_balls_fills = {}
+        # F-02 provenance: (troop_name, activity_name) preferences displaced by an
+        # honored MUST-HONOR day request (T5/T6 eviction or Thursday 3-hr opt-out).
+        # The aggressive day-request seal records these so the Top-5 acceptance
+        # gate can exempt exactly the misses a day request actually caused
+        # (BRAIN §2 Exemption 4(b) / §10.2 T6), instead of a rank heuristic.
+        self.day_request_displacements = set()
+        # F-04A: honored MUST-HONOR day requests captured at the aggressive seal,
+        # revalidated after all post-seal mutators (fail-closed).
+        self._sealed_honored_day_requests = set()
+        self.snapshot_recorder = None
         self._friday_slots = None
 
         self.staff_load_by_slot = defaultdict(lambda: defaultdict(int))

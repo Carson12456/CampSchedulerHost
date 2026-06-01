@@ -69,8 +69,13 @@ class LegacyPart06Mixin:
             if area == "Water Polo" and len(entries) <= 2:
                 continue
 
-            # Sailing is EXCLUSIVE: Only 1 troop per slot (per Spine rule)
-            # No special handling needed - will be caught as violation if > 1
+            allowed_count = 1
+            if area == "Sailing":
+                # Preserve the BRAIN 90-minute overlap model: slot 2 can hold
+                # a slot-1 Sailing tail and a slot-2 Sailing start.
+                allowed_count = 2 if slot.day != Day.THURSDAY and slot.slot_number == 2 else 1
+                if len(entries) <= allowed_count:
+                    continue
 
             # Multiple troops have activities from this exclusive area in this slot!
             # Sort by preference rank (lower is better) - keep the best one
@@ -84,9 +89,9 @@ class LegacyPart06Mixin:
             # Sort by rank (lower = better), then by troop name for consistency
             entries_with_rank.sort(key=lambda x: (x[1], x[0].troop.name))
 
-            # Keep the first one (best rank), remove the rest
+            # Keep the best allowed entries, remove the rest
             keep_entry = entries_with_rank[0][0]
-            to_remove = [e for e, _ in entries_with_rank[1:]]
+            to_remove = [e for e, _ in entries_with_rank[allowed_count:]]
 
             for entry in to_remove:
                 if entry in self.schedule.entries:
@@ -546,9 +551,10 @@ class LegacyPart06Mixin:
 
         for (troop_name, activity_name), entries in troop_activities.items():
             activity = entries[0].activity
+            effective_slots = self.schedule._get_effective_slots(activity, entries[0].troop)
 
             # For multi-slot activities, group entries by (day, starting_slot) to find OCCURRENCES
-            if activity.slots > 1 or activity.slots == 1.5:  # Include Sailing (1.5 slots)
+            if effective_slots > 1:
                 # Group by day to find unique occurrences
                 day_groups = {}
                 for e in entries:
@@ -576,7 +582,7 @@ class LegacyPart06Mixin:
                     # For Sailing (1.5 slots), should have 2 entries (start + continuation)
                     # For 2-slot activities, should have 2 entries
                     # For 3-slot activities, should have 3 entries
-                    expected_entries = int(activity.slots + 0.5) if activity.slots != int(activity.slots) else int(activity.slots)
+                    expected_entries = int(effective_slots + 0.5)
                     if len(entries) > expected_entries:
                         # Too many entries for same day - keep only the first N
                         entries.sort(key=lambda e: e.time_slot.slot_number)
@@ -616,10 +622,30 @@ class LegacyPart06Mixin:
         """
         entries_to_remove = []
 
+        def is_multislot_start(entry):
+            effective_slots = self.schedule._get_effective_slots(entry.activity, entry.troop)
+            if effective_slots <= 1:
+                return True
+            same_instance_slots = [
+                e.time_slot.slot_number
+                for e in self.schedule.entries
+                if e.troop == entry.troop
+                and e.activity.name == entry.activity.name
+                and e.time_slot.day == entry.time_slot.day
+            ]
+            return bool(same_instance_slots) and entry.time_slot.slot_number == min(same_instance_slots)
+
         def mark_for_removal(e_to_remove):
             if e_to_remove in entries_to_remove:
                 return
             entries_to_remove.append(e_to_remove)
+            removal_rank = e_to_remove.troop.get_priority(e_to_remove.activity.name)
+            if removal_rank < 5:
+                if not hasattr(self, "_top5_to_recover"):
+                    self._top5_to_recover = []
+                recovery_item = (e_to_remove.troop, e_to_remove.activity, removal_rank)
+                if recovery_item not in self._top5_to_recover:
+                    self._top5_to_recover.append(recovery_item)
 
             # If multi-slot, remove ALL other entries for this activity on this day
             effective_slots = self.schedule._get_effective_slots(e_to_remove.activity, e_to_remove.troop)
@@ -635,19 +661,13 @@ class LegacyPart06Mixin:
 
         # PASS 1: Remove multi-slot activities that extend beyond day boundaries
         # IMPORTANT: Only check STARTING entries, not continuations
-        seen_activities = set()  # Track (troop, activity, day) to avoid checking continuations
-
         for entry in list(self.schedule.entries):
             effective_slots = self.schedule._get_effective_slots(entry.activity, entry.troop)
             if effective_slots > 1:
+                if not is_multislot_start(entry):
+                    continue
                 day = entry.time_slot.day
                 start_slot = entry.time_slot.slot_number
-                activity_key = (entry.troop.name, entry.activity.name, day.name)
-
-                # Skip if we've already processed this activity on this day for this troop
-                if activity_key in seen_activities:
-                    continue  # This is a continuation entry, skip it
-                seen_activities.add(activity_key)
 
                 # Now check if the STARTING entry would exceed boundaries
                 # Use effective slots to handle troop size scaling (e.g. Tower for 16+ scouts)
@@ -692,6 +712,8 @@ class LegacyPart06Mixin:
 
             # Calculate slots this activity occupies
             effective_slots = self.schedule._get_effective_slots(entry.activity, entry.troop)
+            if effective_slots > 1 and not is_multislot_start(entry):
+                continue
             slots_needed = int(effective_slots + 0.5) if effective_slots > 1 else 1
 
             for offset in range(slots_needed):
@@ -784,10 +806,6 @@ class LegacyPart06Mixin:
                                 for e, rank in top5_entries[1:]:
                                     if e not in entries_to_remove:
                                         mark_for_removal(e)
-                                        # TRACK TOP 5 TO RECOVER LATER
-                                        if not hasattr(self, '_top5_to_recover'):
-                                            self._top5_to_recover = []
-                                        self._top5_to_recover.append((troop, e.activity, rank))
                         else:
                             # RULE 2: No Top 5 involved - use original priority logic
                             def sort_key(e):
@@ -844,8 +862,9 @@ class LegacyPart06Mixin:
                     # Find what's in this slot for this troop
                     blocking = [e for e in self.schedule.entries if e.troop == troop and e.time_slot == recovery_slot]
 
-                    # Only displace if ALL blocking activities are non-Top 5 (rank > 5)
-                    if blocking and all(troop.get_priority(e.activity.name) > 5 for e in blocking):
+                    # Only displace if ALL blocking activities are non-Top 5.
+                    # Ranks are zero-based, so rank 5 is Top 6 and may be displaced.
+                    if blocking and all(troop.get_priority(e.activity.name) >= 5 for e in blocking):
                         # Temporarily remove and check if we can schedule
                         removed_blocking = []
                         for b in list(blocking):
@@ -965,6 +984,13 @@ class LegacyPart06Mixin:
                     if e_to_remove in entries_to_remove:
                         return
                     entries_to_remove.append(e_to_remove)
+                    removal_rank = e_to_remove.troop.get_priority(e_to_remove.activity.name)
+                    if removal_rank < 5:
+                        if not hasattr(self, "_top5_to_recover"):
+                            self._top5_to_recover = []
+                        recovery_item = (e_to_remove.troop, e_to_remove.activity, removal_rank)
+                        if recovery_item not in self._top5_to_recover:
+                            self._top5_to_recover.append(recovery_item)
 
                     # If multi-slot, remove ALL other entries for this activity on this day
                     effective_slots = self.schedule._get_effective_slots(e_to_remove.activity, e_to_remove.troop)
@@ -1916,7 +1942,10 @@ class LegacyPart06Mixin:
                 if self._is_pair_protected_delta(entry):
                     continue
 
-                # Force move to best day (ignore most constraints)
+                # Force move to best day. F-10: still route through _can_schedule with
+                # relax_constraints=True so soft rules are bypassed but the HARD
+                # Delta/Tower-ODS adjacency, back-to-back, and capacity invariants
+                # (which add_entry does not enforce) are never violated by a forced move.
                 for best_day in best_days:
                     for slot in self.time_slots:
                         if slot.day != best_day: continue
@@ -1924,7 +1953,8 @@ class LegacyPart06Mixin:
 
                         old_slot = entry.time_slot
                         if self._remove_from_schedule(entry):
-                            if self._add_to_schedule(slot, entry.activity, entry.troop):
+                            if (self._can_schedule(entry.troop, entry.activity, slot, best_day, relax_constraints=True)
+                                    and self._add_to_schedule(slot, entry.activity, entry.troop)):
                                 total_forced += 1
                                 print(f"  [Force Cluster] {entry.troop.name}: {act_name} {old_slot.day.name[:3]} -> {best_day.name[:3]}")
                                 break
@@ -3330,6 +3360,27 @@ class LegacyPart06Mixin:
         return None
 
 
+    def _compute_staff_load_variance(self) -> float:
+        """Population variance of staffed-activity counts per occupied slot.
+
+        Mirrors the staff-variance metric used by the regression checker so a
+        guarded Phase-D step can roll back any move that fails to improve it.
+        """
+        from collections import defaultdict
+        all_staff_activities = set()
+        for acts in self.STAFF_ROLE_MAP.values():
+            all_staff_activities.update(acts)
+        slot_counts = defaultdict(int)
+        for entry in self.schedule.entries:
+            if entry.activity.name in all_staff_activities:
+                slot_counts[(entry.time_slot.day, entry.time_slot.slot_number)] += 1
+        counts = list(slot_counts.values())
+        if not counts:
+            return 0.0
+        avg = sum(counts) / len(counts)
+        return sum((c - avg) ** 2 for c in counts) / len(counts)
+
+
     def _optimize_staff_variance(self):
         """
         ENHANCED: Advanced staff variance optimization to achieve <1.0 variance.
@@ -3376,7 +3427,7 @@ class LegacyPart06Mixin:
             # ENHANCED: Multi-strategy approach
 
             # Strategy 1: Move from overloaded to underloaded slots
-            optimization_moves = self._balance_staff_loads(staff_entries, slot_counts, all_staff_activities)
+            optimization_moves = self._balance_staff_loads_across_slots(staff_entries, slot_counts, all_staff_activities)
             iteration_optimizations += optimization_moves
 
             # Strategy 2: Cross-day redistribution
@@ -3416,9 +3467,13 @@ class LegacyPart06Mixin:
         return optimizations
 
 
-    def _balance_staff_loads(self, staff_entries, slot_counts, all_staff_activities):
+    def _balance_staff_loads_across_slots(self, staff_entries, slot_counts, all_staff_activities):
         """
         ENHANCED: Ultra-aggressive staff load balancing to achieve <1.0 variance.
+
+        Note: deliberately distinct from the legacy ``_balance_staff_loads`` in
+        ``gap_fill_and_stats`` (LegacyPart05), which wins the MRO; this F-16
+        variance pass needs its own name so the call site resolves here.
 
         Strategy: Move activities from overloaded slots to underloaded slots,
         with priority-aware moves to protect Top 5 preferences.
@@ -3478,9 +3533,12 @@ class LegacyPart06Mixin:
                     if not target_time_slot:
                         continue
 
-                    # Check if move is possible
+                    # Check if move is possible. F-16: enforce hard adjacency/back-to-back/
+                    # capacity (not checked by add_entry) and protect Delta/Sailing pairs.
                     if (self.schedule.is_troop_free(target_time_slot, overloaded_entry.troop) and 
-                        self.schedule.is_activity_available(target_time_slot, overloaded_entry.activity, overloaded_entry.troop)):
+                        self.schedule.is_activity_available(target_time_slot, overloaded_entry.activity, overloaded_entry.troop) and
+                        not self._is_pair_protected_delta(overloaded_entry) and
+                        self._can_schedule(overloaded_entry.troop, overloaded_entry.activity, target_time_slot, target_time_slot.day, relax_constraints=True)):
 
                         # ENHANCED: Check if this move would improve variance significantly
                         current_variance = self._calculate_slot_variance(slot_counts)

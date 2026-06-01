@@ -2,12 +2,65 @@ import json
 
 from core.activities import get_activity_by_name
 from core.models import Day, Schedule, ScheduleEntry, TimeSlot, Troop
+from core.scheduler import config_loader
 from utils.regression_checker import (
     _calculate_at_sharing_misses,
     _calculate_delta_timing_penalty,
     DEFAULT_WEIGHTS,
     evaluate_week,
 )
+
+
+def test_voyageur_commissioner_alias_maps_commissioner_to_voyageur():
+    """F-05: the shared alias mirrors Commissioner A/B/C days onto Voyageur A/B/C."""
+    base = config_loader.get_commissioner_activity_days("Delta")
+    assert "Commissioner A" in base  # sanity: rotation defines a Delta day
+
+    aliased = config_loader.apply_voyageur_commissioner_alias(dict(base))
+    for suffix in ("A", "B", "C"):
+        if f"Commissioner {suffix}" in base:
+            assert aliased[f"Voyageur {suffix}"] == base[f"Commissioner {suffix}"]
+
+
+def test_evaluate_week_commissioner_pct_nonzero_for_voyageur(tmp_path):
+    """F-05: a Voyageur troop (commissioner 'Voyageur A') must produce real
+    commissioner-day checks, not collapse to 0 checks / 0.0% as before."""
+    week_name = "voyageur_alias_week"
+    troop_file = tmp_path / f"{week_name}.json"
+    schedule_file = tmp_path / f"{week_name}_schedule.json"
+
+    delta_day = config_loader.get_commissioner_activity_days("Delta")["Commissioner A"]
+
+    troop = {
+        "name": "Voyageur Troop",
+        "campsite": "Site",
+        "scouts": 10,
+        "adults": 2,
+        "commissioner": "Voyageur A",
+        "preferences": ["Delta", "Super Troop", "Reflection", "Fishing", "Gaga Ball"],
+    }
+    troop_file.write_text(json.dumps({"troops": [troop]}), encoding="utf-8")
+
+    # Schedule all five Top-5 preferences so the authoritative unscheduled
+    # payload ({}) matches the computed misses (0) and the cross-check passes.
+    entries = [
+        {"troop_name": "Voyageur Troop", "activity_name": "Delta", "day": delta_day.name, "slot": 1},
+        {"troop_name": "Voyageur Troop", "activity_name": "Fishing", "day": "TUESDAY", "slot": 1},
+        {"troop_name": "Voyageur Troop", "activity_name": "Gaga Ball", "day": "TUESDAY", "slot": 2},
+        {"troop_name": "Voyageur Troop", "activity_name": "Super Troop", "day": "FRIDAY", "slot": 2},
+        {"troop_name": "Voyageur Troop", "activity_name": "Reflection", "day": "FRIDAY", "slot": 3},
+    ]
+    schedule_file.write_text(
+        json.dumps({"troops": [troop], "entries": entries, "unscheduled": {}}),
+        encoding="utf-8",
+    )
+
+    metrics = evaluate_week(str(troop_file), schedules_dir=tmp_path)
+
+    # Before F-05 the Voyageur alias was absent in the checker, so no day-map key
+    # matched, commissioner_day_checks was 0, and compliance collapsed to 0.0.
+    assert metrics["commissioner_day_checks"] >= 1
+    assert metrics["commissioner_day_compliance_pct"] > 0.0
 
 
 def _entry(troop, activity_name, day, slot):

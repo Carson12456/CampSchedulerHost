@@ -4,7 +4,7 @@ ENHANCED Regression Checker - Automated Testing for Every Code Change
 
 This version ONLY analyzes the 10 actual week files, not all variants.
 Uses the authoritative unscheduled_analyzer.py service for top 5 detection.
-Now includes comprehensive schedule quality metrics from evaluate_week_success.py.
+Includes comprehensive schedule quality metrics through evaluate_week().
 """
 
 import sys
@@ -28,7 +28,11 @@ from core.io_handler import load_troops_from_json, load_schedule_from_json
 from core.models import Day, Schedule, TimeSlot, generate_time_slots
 from core.scheduler.constants import SchedulerConstants
 from core.scheduler import config_loader
-from core.services.unscheduled_source import summarize_non_exempt_misses
+from core.services.unscheduled_source import (
+    summarize_non_exempt_misses,
+    _get_two_hour_canoe_activities,
+    _top_n_requester_names,
+)
 from core.services.sailing_half_fills import build_sailing_half_fills, get_request_credit_fill_activities
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -40,20 +44,6 @@ EXCLUSIVE_AREAS = SchedulerConstants.EXCLUSIVE_ACTIVITIES # Wait, EXCLUSIVE_AREA
 # SchedulerConstants doesn't expose the dict directly?
 # config_loader.get_exclusive_areas() returns the dict.
 EXCLUSIVE_AREAS = config_loader.get_exclusive_areas()
-
-FREE_TIME_SOFT_ACTIVITIES = {"Trading Post", "Shower House", "Campsite Free Time"}
-FREE_TIME_SOFT_CONFLICTS = tuple(
-    tuple(pair)
-    for pair in SchedulerConstants.SOFT_SAME_DAY_CONFLICTS
-    if len(pair) == 2 and set(pair).issubset(FREE_TIME_SOFT_ACTIVITIES)
-)
-WATER_GAMES_SOFT_ACTIVITIES = {"Aqua Trampoline", "Water Polo", "Greased Watermelon"}
-WATER_GAMES_SOFT_CONFLICTS = tuple(
-    tuple(pair)
-    for pair in SchedulerConstants.SOFT_SAME_DAY_CONFLICTS
-    if len(pair) == 2 and set(pair).issubset(WATER_GAMES_SOFT_ACTIVITIES)
-)
-
 
 def _utc_timestamp() -> str:
     """Return an ISO-8601 UTC timestamp."""
@@ -87,23 +77,6 @@ def _resolve_troop_file(week_name: str, schedules_dir: str | Path | None = None)
             return candidate
     raise FileNotFoundError(f"Troop JSON not found for week '{week_name}'")
 
-
-def _get_free_time_same_day_conflicts(day_activities: set[str]) -> List[tuple[str, str]]:
-    """Return configured free-time soft conflict pairs present on a day."""
-    violations = []
-    for pair in FREE_TIME_SOFT_CONFLICTS:
-        if set(pair).issubset(day_activities):
-            violations.append(pair)
-    return violations
-
-
-def _get_water_games_same_day_conflicts(day_activities: set[str]) -> List[tuple[str, str]]:
-    """Return configured Water Games soft conflict pairs present on a day."""
-    violations = []
-    for pair in WATER_GAMES_SOFT_CONFLICTS:
-        if set(pair).issubset(day_activities):
-            violations.append(pair)
-    return violations
 
 # --- Configuration for Scoring (0-1000 perfect, can go negative) ---
 # Target: 1000 = perfect schedule
@@ -280,16 +253,35 @@ def _load_sailing_half_fills_from_schedule_json(schedule_file: str) -> Dict[str,
     return fills
 
 
-def _day_request_displaces_preference(troop, missing_activity_name: str, missing_rank: int, honored_names: set[str]) -> bool:
-    """Mirror core.services.unscheduled_source day-request displacement semantics."""
-    for activity_name in honored_names:
-        if activity_name == missing_activity_name:
-            continue
-        priority = troop.get_priority(activity_name) if hasattr(troop, "get_priority") else 999
-        honored_rank = priority + 1 if priority != 999 else 999
-        if honored_rank > missing_rank:
-            return True
-    return False
+def _load_day_request_displacements_from_schedule_json(schedule_file: str) -> set:
+    """Load MUST-HONOR day-request displacement provenance from schedule JSON.
+
+    Returns a set of ``(troop_name, activity_name)`` pairs recorded by the
+    scheduler's aggressive day-request seal. Absent on legacy JSON written
+    before F-02 (treated as empty); a fresh regeneration repopulates it.
+    """
+    if not os.path.exists(schedule_file):
+        return set()
+    with open(schedule_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    raw = data.get("day_request_displacements", []) or []
+    if not isinstance(raw, list):
+        raise ValueError(
+            f"Invalid day_request_displacements payload in {schedule_file}: expected list"
+        )
+    return {(pair[0], pair[1]) for pair in raw if isinstance(pair, (list, tuple)) and len(pair) == 2}
+
+
+def _day_request_displaces_preference(troop_name: str, missing_activity_name: str, day_request_displacements: set | None) -> bool:
+    """Mirror core.services.unscheduled_source day-request displacement semantics.
+
+    Provenance-driven (BRAIN §2 Exemption 4(b)): exempt only when the scheduler
+    recorded that an honored MUST-HONOR day request actually displaced this
+    preference for this troop.
+    """
+    if not day_request_displacements:
+        return False
+    return (troop_name, missing_activity_name) in day_request_displacements
 
 
 def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = None):
@@ -303,12 +295,15 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
     week_basename = os.path.splitext(os.path.basename(week_file))[0]
     schedule_file = _resolve_schedules_dir(schedules_dir) / f"{week_basename}_schedule.json"
     sailing_half_fills: Dict[str, Any] = {}
+    # F-02: MUST-HONOR day-request displacement provenance drives Exemption 4(b).
+    day_request_displacements: set = set()
 
     if schedule_file.exists():
         #print(f"Loading existing schedule from {schedule_file}...")
         try:
             schedule = load_schedule_from_json(str(schedule_file), troops, all_activities)
             sailing_half_fills = _load_sailing_half_fills_from_schedule_json(str(schedule_file))
+            day_request_displacements = _load_day_request_displacements_from_schedule_json(str(schedule_file))
             # Re-link schedule to valid objects if needed, but the loader handles mapping.
         except Exception as e:
             print(f"Error loading schedule: {e}")
@@ -316,11 +311,13 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
             scheduler = ConstrainedScheduler(troops, all_activities)
             schedule = scheduler.schedule_all()
             sailing_half_fills = getattr(scheduler, "sailing_balls_fills", {}) or {}
+            day_request_displacements = getattr(scheduler, "day_request_displacements", None) or set()
     else:
         print(f"No existing schedule found at {schedule_file}. Running fresh scheduler...")
         scheduler = ConstrainedScheduler(troops, all_activities)
         schedule = scheduler.schedule_all()
         sailing_half_fills = getattr(scheduler, "sailing_balls_fills", {}) or {}
+        day_request_displacements = getattr(scheduler, "day_request_displacements", None) or set()
 
     if not sailing_half_fills:
         sailing_half_fills = build_sailing_half_fills(troops, schedule)
@@ -442,6 +439,11 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
     tower_ods_activities = set(EXCLUSIVE_AREAS.get("Tower", []) + EXCLUSIVE_AREAS.get("Outdoor Skills", []))
     for act_name in tower_ods_activities:
         comm_day_maps.setdefault(act_name, tower_ods_map)
+    # F-05: mirror the scheduler's Voyageur alias so Voyageur troops (commissioner
+    # "Voyageur A/B/C") match the Commissioner A/B/C-keyed day maps. Without this
+    # no key matches, commissioner_checks stays 0, and compliance collapses to 0.0.
+    for _day_map in comm_day_maps.values():
+        config_loader.apply_voyageur_commissioner_alias(_day_map)
 
     commissioner_checks = 0
     commissioner_misses = 0
@@ -602,6 +604,7 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
     # Also track beach_slot_2_uses for score penalty (slot 2 is worse than 1/3 but better than missing Top 5)
     BEACH_SLOT_ACTS = set(SchedulerConstants.BEACH_SLOT_ACTIVITIES) - {"Sailing"}
     beach_slot_2_uses = 0
+    beach_slot_2_details: List[str] = []
     for e in schedule.entries:
         if e.activity.name in BEACH_SLOT_ACTS:
             is_multislot_continuation = (
@@ -615,20 +618,24 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
                 )
             )
             if e.time_slot.day != Day.THURSDAY and e.time_slot.slot_number == 2 and not is_multislot_continuation:
-                beach_slot_2_uses += 1  # Penalize every use of slot 2 for beach (worse than 1/3)
+                # F-08: single penalty channel. A beach slot-2 use is penalized only via
+                # the dedicated beach_slot_2 channel (beach_slot_2_penalty), never *also*
+                # as a generic soft_violation, so the same event is not double-counted
+                # (previously 10 + 3 = 13 pts). The Top-5/Top-10 contract is unaffected.
+                beach_slot_2_uses += 1
                 troop = e.troop
                 pref_rank = troop.get_priority(e.activity.name) if hasattr(troop, 'get_priority') else None
                 is_top5 = pref_rank is not None and pref_rank < 5
-                if is_top5:
-                    if e.activity.name == "Aqua Trampoline":
-                        if (troop.scouts + troop.adults) <= 16:
-                            soft_violations += 1  # SOFT: AT slot 2 requires exclusive (17+)
-                            soft_violation_details.append(f"{troop.name}: Aqua Trampoline in Slot 2 (small troop) on {e.time_slot.day.value}")
-                    # else: Top 5 other beach - no violation (relaxation applies)
-                else:
-                    soft_violations += 1  # SOFT: Not Top 5 - penalize but not invalid
-                    soft_violation_details.append(f"{troop.name}: Beach activity '{e.activity.name}' in Slot 2 (not Top 5) on {e.time_slot.day.value}")
+                if is_top5 and e.activity.name == "Aqua Trampoline" and (troop.scouts + troop.adults) <= 16:
+                    beach_slot_2_details.append(
+                        f"{troop.name}: Aqua Trampoline in Slot 2 (small troop) on {e.time_slot.day.value}"
+                    )
+                elif not is_top5:
+                    beach_slot_2_details.append(
+                        f"{troop.name}: Beach activity '{e.activity.name}' in Slot 2 (not Top 5) on {e.time_slot.day.value}"
+                    )
     metrics["beach_slot_2_uses"] = beach_slot_2_uses
+    metrics["beach_slot_2_details"] = beach_slot_2_details
 
     # Delta vs Tower/ODS - Spine: "can be same day but not back to back" (adjacent slots only)
     TOWER_ODS_ACTS = set(EXCLUSIVE_AREAS.get("Tower", [])) | set(EXCLUSIVE_AREAS.get("Outdoor Skills", []))
@@ -662,51 +669,27 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
             hard_violations += 1
             hard_violation_details.append(f"{t.name}: Missing Super Troop")
 
-    # Free-time soft same-day conflicts from SKULL.
-    # Count each configured pair separately, so a day with all three
-    # activities records all pairwise conflicts instead of just one.
+    # Soft same-day prohibited pairs (SKULL-driven single source of truth).
+    # F-09: a single generic loop over SKULL `soft_prohibited_pairs` replaces the
+    # former category-specific loops (free-time / water-games / canoe / accuracy),
+    # so every configured pair is scored exactly once per troop per day and no
+    # configured pair (Balls, Fishing, Accuracy+Archery) is silently unscored.
+    # F-23: canoe triples are now counted per-pair instead of collapsed to one,
+    # and Fishing pairs are no longer orphaned. F-06: Gaga Ball/9 Square scored here.
+    soft_pairs = [tuple(p) for p in config_loader.get_soft_prohibited_pairs() if len(p) == 2]
     for troop in troops:
-        troop_entries = [e for e in schedule.entries if e.troop == troop]
         by_day = defaultdict(set)
-        for e in troop_entries:
-            by_day[e.time_slot.day].add(e.activity.name)
-
-        for day, acts in by_day.items():
-            for act_a, act_b in _get_free_time_same_day_conflicts(acts):
-                soft_violations += 1
-                soft_violation_details.append(
-                    f"{troop.name}: {act_a} + {act_b} on same day ({day.value})"
-                )
-
-    # Water Games soft same-day conflicts from SKULL.
-    # Any pair among Aqua Trampoline, Water Polo, and Greased Watermelon is a
-    # soft violation: avoid it when possible, but do not invalidate schedules.
-    for troop in troops:
-        troop_entries = [e for e in schedule.entries if e.troop == troop]
-        by_day = defaultdict(set)
-        for e in troop_entries:
-            by_day[e.time_slot.day].add(e.activity.name)
-
-        for day, acts in by_day.items():
-            for act_a, act_b in _get_water_games_same_day_conflicts(acts):
-                soft_violations += 1
-                soft_violation_details.append(
-                    f"{troop.name}: Water Games same-day pair {act_a} + {act_b} on {day.value}"
-                )
-
-    # NEW: Canoe Pairing Conflicts (any 2 of these on same day)
-    CANOE_ACTIVITIES = list(SchedulerConstants.CANOE_ACTIVITIES)
-    for troop in troops:
-        troop_entries = [e for e in schedule.entries if e.troop == troop]
-        by_day = defaultdict(set)
-        for e in troop_entries:
-            if e.activity.name in CANOE_ACTIVITIES:
+        for e in schedule.entries:
+            if e.troop == troop:
                 by_day[e.time_slot.day].add(e.activity.name)
 
         for day, acts in by_day.items():
-            if len(acts) >= 2:
-                soft_violations += 1  # SOFT: Same-day boat pair
-                soft_violation_details.append(f"{troop.name}: Multiple canoe activities on {day.value} ({', '.join(acts)})")
+            for act_a, act_b in soft_pairs:
+                if act_a in acts and act_b in acts:
+                    soft_violations += 1
+                    soft_violation_details.append(
+                        f"{troop.name}: soft same-day pair {act_a} + {act_b} on {day.value}"
+                    )
 
     # NEW: Wet-Dry-Wet Pattern (Slot 1 wet, Slot 2 dry, Slot 3 wet)
     WET_ACTIVITIES = SchedulerConstants.WET_ACTIVITIES
@@ -766,6 +749,14 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
                     soft_violation_details.append(f"{troop.name}: Same area '{area_name}' twice on {day.value}")
                     break  # Count once per day per area
 
+    # Shower House on Monday: SOFT violation (BRAIN §4). Avoided by the scheduler but
+    # penalized here when present (e.g. honored Monday Shower House day request).
+    for troop in troops:
+        for e in schedule.entries:
+            if e.troop == troop and e.activity.name == "Shower House" and e.time_slot.day == Day.MONDAY:
+                soft_violations += 1
+                soft_violation_details.append(f"{troop.name}: Shower House on Monday")
+
     # NEW: Showerhouse before Super Troop or wet activity (same day)
     for troop in troops:
         troop_entries = [e for e in schedule.entries if e.troop == troop]
@@ -786,18 +777,9 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
                                 soft_violation_details.append(f"{troop.name}: Shower House before {later_act} on {day.value}")
                                 break  # Count once per violation
 
-    # Accuracy limit: max 1 per day (Rifle, Shotgun, Archery) - includes Rifle+Shotgun
-    ACCURACY_ACTIVITIES = list(SchedulerConstants.ACCURACY_ACTIVITIES)
-    for troop in troops:
-        day_acc = defaultdict(set)
-        for e in schedule.entries:
-            if e.troop == troop and e.activity.name in ACCURACY_ACTIVITIES:
-                day_acc[e.time_slot.day].add(e.activity.name)
-        for d, acts in day_acc.items():
-            if len(acts) >= 2:
-                # SOFT: More than 1 accuracy activity on same day
-                soft_violations += 1
-                soft_violation_details.append(f"{troop.name}: Multiple accuracy activities on {d.value} ({', '.join(acts)})")
+    # Accuracy same-day pairs (Rifle/Shotgun/Archery) are now scored by the generic
+    # SKULL soft_prohibited_pairs loop above (F-09); the dedicated accuracy loop was
+    # removed to avoid double-counting.
 
     # Exclusive double-book: one troop per slot for most activities.
     # Sailing exception (90-minute overlap model):
@@ -884,7 +866,9 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
     metrics["hard_violation_details"] = hard_violation_details
     metrics["soft_violation_details"] = soft_violation_details
     metrics["constraint_violations"] = hard_violations + soft_violations  # Total for backward compat
-    metrics["violation_details"] = hard_violation_details + soft_violation_details  # Combined for backward compat
+    # Combined for backward compat; beach slot-2 details are shown for visibility but
+    # are penalized via the dedicated beach_slot_2 channel (not the soft count) per F-08.
+    metrics["violation_details"] = hard_violation_details + soft_violation_details + beach_slot_2_details
 
     # 6. Top Preference Success (Innocent Until Proven Guilty Scoring)
     # -------------------------
@@ -902,32 +886,40 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
     missing_top14_count = 0
     missing_top15_count = 0
 
-    # HC/DG exemption: if all 3 Tuesday slots are HC or DG, missed HC/DG counts as exempt
-    tuesday_hc_dg_slots = set()
+    # Exemption context mirrors core.services.unscheduled_source so scoring
+    # deductions and the authoritative top5/top10 payload stay in lockstep
+    # (the cross-check below raises if they ever diverge). HC and DG occupy
+    # separate exclusive Tuesday areas, each with three slots, granted to their
+    # respective top-3 requesters; track them independently.
+    three_hour_activities = set(config_loader.get_three_hour_activities())
+    two_hour_canoe_activities = _get_two_hour_canoe_activities()
+    hc_tuesday_slots = set()
+    dg_tuesday_slots = set()
     for e in schedule.entries:
-        if e.time_slot.day == Day.TUESDAY and e.activity.name in ("History Center", "Disc Golf"):
-            tuesday_hc_dg_slots.add(e.time_slot.slot_number)
-    hc_dg_tuesday_full = tuesday_hc_dg_slots >= {1, 2, 3}
+        if e.time_slot.day != Day.TUESDAY:
+            continue
+        if e.activity.name == "History Center":
+            hc_tuesday_slots.add(e.time_slot.slot_number)
+        elif e.activity.name == "Disc Golf":
+            dg_tuesday_slots.add(e.time_slot.slot_number)
+    hc_saturated = len(hc_tuesday_slots) >= 3
+    dg_saturated = len(dg_tuesday_slots) >= 3
+    hc_top3_requesters = _top_n_requester_names(troops, "History Center", 3)
+    dg_top3_requesters = _top_n_requester_names(troops, "Disc Golf", 3)
 
     for troop in troops:
         troop_acts = set(e.activity.name for e in schedule.entries if e.troop == troop)
         troop_acts |= get_request_credit_fill_activities(troop, sailing_half_fills)
-        troop_entries = [e for e in schedule.entries if e.troop == troop]
+        # Authored day-request names drive Exemption 4(a); the displacement
+        # exemption 4(b) is provenance-driven (day_request_displacements), so the
+        # honored-on-day set is no longer needed here.
         day_requested_names = set()
-        honored_day_request_names = set()
         for day_name, activities in (getattr(troop, "day_requests", None) or {}).items():
-            day_key = str(day_name).upper()
             for activity_name in activities:
                 day_requested_names.add(activity_name)
-                if any(
-                    e.activity.name == activity_name
-                    and e.time_slot.day.name.upper() == day_key
-                    for e in troop_entries
-                ):
-                    honored_day_request_names.add(activity_name)
 
         # Check if troop has ANY 3-hour activity scheduled (exemption logic)
-        has_3hr_scheduled = any(e.activity.name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"]
+        has_3hr_scheduled = any(e.activity.name in three_hour_activities
                                for e in schedule.entries if e.troop == troop)
 
         # Iterate through preferences
@@ -946,30 +938,41 @@ def evaluate_week(week_file, weights=None, schedules_dir: str | Path | None = No
                     weight = weights["preference_weights"]["top11_14"][i-10]
 
                 if pref_name not in troop_acts:
-                    # Check exemptions before deducting
+                    # Check exemptions before deducting. These rules mirror
+                    # core.services.unscheduled_source._is_exempt_missing; the
+                    # top5/top10 cross-check below enforces they stay in sync.
                     is_exempt = False
 
-                    # 1. 3-Hour Mutually Exclusive Exemption (Generalized to all ranks)
-                    if pref_name in ["Tamarac Wildlife Refuge", "Itasca State Park", "Back of the Moon"] and has_3hr_scheduled:
+                    # 1. 3-Hour duplication: requested multiple 3-hour activities
+                    #    but already received one.
+                    if pref_name in three_hour_activities and has_3hr_scheduled:
                          is_exempt = True
 
-                    # 2. Tuesday HC/DG Saturation Exemption (Generalized to all ranks)
-                    elif pref_name in ("History Center", "Disc Golf") and hc_dg_tuesday_full:
-                         is_exempt = True
-                    # 3. Canoe-family duplication exemption
+                    # 2. Tuesday HC/DG saturation: HC and DG are separate areas,
+                    #    each granted to its top-3 requesters. A miss is exempt
+                    #    only when its own area is full AND this troop lost the
+                    #    ranked competition for that area.
+                    elif pref_name == "History Center":
+                         is_exempt = hc_saturated and troop.name not in hc_top3_requesters
+                    elif pref_name == "Disc Golf":
+                         is_exempt = dg_saturated and troop.name not in dg_top3_requesters
+                    # 3. Two-hour canoe duplication: both the miss and an already
+                    #    scheduled activity must be two-hour canoe activities.
                     elif (
-                        pref_name in SchedulerConstants.CANOE_ACTIVITIES
+                        pref_name in two_hour_canoe_activities
                         and any(
-                            e.activity.name in SchedulerConstants.CANOE_ACTIVITIES and e.activity.name != pref_name
+                            e.activity.name in two_hour_canoe_activities and e.activity.name != pref_name
                             for e in schedule.entries
                             if e.troop == troop
                         )
                     ):
                          is_exempt = True
                     # 4. MUST-HONOR day-request displacement exemption.
+                    #    (a) the missed activity is itself day-requested, or
+                    #    (b) provenance shows an honored request displaced it.
                     elif pref_name in day_requested_names:
                          is_exempt = True
-                    elif _day_request_displaces_preference(troop, pref_name, rank, honored_day_request_names):
+                    elif _day_request_displaces_preference(troop.name, pref_name, day_request_displacements):
                          is_exempt = True
 
                     if not is_exempt:
@@ -1509,7 +1512,7 @@ class EnhancedRegressionChecker:
             })
 
     def _add_quality_metrics(self, schedules_dir: str):
-        """Add comprehensive quality metrics using evaluate_week_success."""
+        """Add comprehensive quality metrics using evaluate_week."""
         schedules_path = _resolve_schedules_dir(schedules_dir)
         quality_metrics = []
         evaluation_failures = []

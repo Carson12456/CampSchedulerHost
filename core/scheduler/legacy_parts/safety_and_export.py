@@ -55,8 +55,13 @@ class LegacyPart07Mixin:
                         if slot.day != under_day:
                             continue
 
+                        # F-16: enforce hard adjacency/back-to-back/capacity (not checked
+                        # by add_entry) and never split a Delta/Sailing pair during a
+                        # staff-variance move.
                         if (self.schedule.is_troop_free(slot, entry.troop) and 
-                            self.schedule.is_activity_available(slot, entry.activity, entry.troop)):
+                            self.schedule.is_activity_available(slot, entry.activity, entry.troop) and
+                            not self._is_pair_protected_delta(entry) and
+                            self._can_schedule(entry.troop, entry.activity, slot, slot.day, relax_constraints=True)):
 
                             # Move the activity
                             old_day = entry.time_slot.day
@@ -120,8 +125,12 @@ class LegacyPart07Mixin:
                         if slot.day != under_day:
                             continue
 
+                        # F-16: enforce hard adjacency/back-to-back/capacity and protect
+                        # Delta/Sailing pairs (see _cross_day_staff_redistribution).
                         if (self.schedule.is_troop_free(slot, entry.troop) and 
-                            self.schedule.is_activity_available(slot, entry.activity, entry.troop)):
+                            self.schedule.is_activity_available(slot, entry.activity, entry.troop) and
+                            not self._is_pair_protected_delta(entry) and
+                            self._can_schedule(entry.troop, entry.activity, slot, slot.day, relax_constraints=True)):
 
                             # Move the activity
                             old_day = entry.time_slot.day
@@ -907,10 +916,13 @@ class LegacyPart07Mixin:
         max_moves = max(12, len(self.troops) * 3)
 
         # Work from lower-priority commissioner assignments first to protect top requests.
+        # BRAIN §11: never relocate a Sailing-paired Delta for commissioner-day ownership.
         candidates = sorted(
             [
                 e for e in self.schedule.entries
-                if e.activity.name in commissioner_activities and _is_single_slot_entry(e)
+                if e.activity.name in commissioner_activities
+                and _is_single_slot_entry(e)
+                and not self._is_pair_protected_delta(e)
             ],
             key=lambda e: (e.troop.get_priority(e.activity.name), e.troop.name),
             reverse=True,

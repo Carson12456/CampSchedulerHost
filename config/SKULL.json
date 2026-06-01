@@ -739,6 +739,7 @@
     "constraints": {
         "max_staff_global": 16,
         "target_staff_global": 14,
+        "clustering_staff_global": 24,
         "max_beach_staffed_activities": 4,
         "max_canoe_capacity": 26,
         "beach_staff_per_slot": 12,
@@ -919,6 +920,7 @@
             "Troop Canoe",
             "Canoe Snorkel",
             "Nature Canoe",
+            "Troop Kayak",
             "Float for Floats",
             "Troop Swim",
             "Underwater Obstacle Course",
@@ -938,6 +940,18 @@
         [
             "Troop Rifle",
             "Troop Shotgun"
+        ],
+        [
+            "Troop Rifle",
+            "Archery"
+        ],
+        [
+            "Troop Shotgun",
+            "Archery"
+        ],
+        [
+            "Gaga Ball",
+            "9 Square"
         ],
         [
             "Aqua Trampoline",

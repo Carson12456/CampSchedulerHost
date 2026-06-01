@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import math
 import os
 import random
@@ -109,6 +110,20 @@ class LegacyPart01Mixin:
         if hasattr(self, "cache") and self.cache:
             self.cache.invalidate_schedule_caches()
 
+    def _record_schedule_snapshot(
+        self,
+        label: str,
+        *,
+        reason: str = "checkpoint",
+        metadata: dict | None = None,
+        force: bool = False,
+    ) -> None:
+        """Record an opt-in snapshot without affecting scheduler behavior."""
+        recorder = getattr(self, "snapshot_recorder", None)
+        if not recorder:
+            return
+        recorder.record(self, label, reason=reason, metadata=metadata, force=force)
+
     def _rebuild_staff_tracking(self) -> None:
         """Recompute staff-load caches from schedule entries after direct mutations."""
         self.total_staff_by_slot = defaultdict(int)
@@ -132,6 +147,10 @@ class LegacyPart01Mixin:
             "troop_has_delta": dict(self.troop_has_delta),
             "troop_has_super_troop": dict(self.troop_has_super_troop),
             "delta_was_swapped": set(self.delta_was_swapped),
+            # F-22: the C.6b Sailing sidecar-fill map is mutable scheduler state; deep-copy
+            # it so a rolled-back guarded pass cannot leave the half-slot fills out of sync
+            # with the entries it was snapshotted alongside.
+            "sailing_balls_fills": copy.deepcopy(getattr(self, "sailing_balls_fills", None)),
         }
 
 
@@ -149,6 +168,8 @@ class LegacyPart01Mixin:
         self.troop_has_delta = dict(snapshot["troop_has_delta"])
         self.troop_has_super_troop = dict(snapshot["troop_has_super_troop"])
         self.delta_was_swapped = set(snapshot["delta_was_swapped"])
+        if snapshot.get("sailing_balls_fills") is not None:
+            self.sailing_balls_fills = copy.deepcopy(snapshot["sailing_balls_fills"])
         self._mark_schedule_changed()
 
 
@@ -585,6 +606,53 @@ class LegacyPart01Mixin:
         )
 
 
+    def _count_delta_sailing_pairing_misses(self) -> int:
+        """Count troops whose Delta and Sailing are scheduled on different days.
+
+        BRAIN §11: a troop that requested both Delta and Sailing should have them on
+        the same day. Counting split pairs lets the Phase-D quality snapshot roll back
+        any guarded move that drifts the pair apart (defense-in-depth behind the
+        per-pass `_is_pair_protected_delta` guards).
+        """
+        misses = 0
+        for troop in self.troops:
+            delta_days = {
+                e.time_slot.day for e in self.schedule.entries
+                if e.troop == troop and e.activity.name == "Delta"
+            }
+            sailing_days = {
+                e.time_slot.day for e in self.schedule.entries
+                if e.troop == troop and e.activity.name == "Sailing"
+            }
+            if delta_days and sailing_days and delta_days.isdisjoint(sailing_days):
+                misses += 1
+        return misses
+
+
+    def _count_beach_slot_2_uses(self) -> int:
+        """Count scored non-Thursday beach slot-2 starts."""
+        beach_activities = set(self.BEACH_SLOT_ACTIVITIES)
+        uses = 0
+        for entry in self.schedule.entries:
+            if entry.activity.name not in beach_activities:
+                continue
+            if entry.time_slot.day == Day.THURSDAY or entry.time_slot.slot_number != 2:
+                continue
+            is_multislot_continuation = (
+                self.schedule._get_effective_slots(entry.activity, entry.troop) > 1.0
+                and any(
+                    other.troop == entry.troop
+                    and other.activity.name == entry.activity.name
+                    and other.time_slot.day == entry.time_slot.day
+                    and other.time_slot.slot_number == entry.time_slot.slot_number - 1
+                    for other in self.schedule.entries
+                )
+            )
+            if not is_multislot_continuation:
+                uses += 1
+        return uses
+
+
     def _count_area_cluster_gaps(self) -> int:
         """Count area-level 1,-,3 cluster gaps without logging side effects."""
         cluster_areas = self._get_authoritative_gap_area_map()
@@ -630,6 +698,7 @@ class LegacyPart01Mixin:
         tp = self._count_global_tp_pair_violations()
         water_games = self._count_global_water_games_pair_violations()
         shower = self._count_global_shower_order_violations()
+        delta_sailing = self._count_delta_sailing_pairing_misses()
         soft_total = wet + accuracy + tp + water_games + shower
         composite = (
             25 * excess
@@ -639,6 +708,7 @@ class LegacyPart01Mixin:
             + 2 * tp
             + 2 * water_games
             + 2 * shower
+            + 6 * delta_sailing  # BRAIN §11: discourage drifting a Delta/Sailing pair apart
             + commissioner
         )
         return {
@@ -650,6 +720,7 @@ class LegacyPart01Mixin:
             "tp": tp,
             "water_games": water_games,
             "shower": shower,
+            "delta_sailing": delta_sailing,
             "soft_total": soft_total,
             "composite": composite,
         }
@@ -667,6 +738,9 @@ class LegacyPart01Mixin:
         if candidate["gaps"] > baseline["gaps"]:
             return False
         if candidate["soft_total"] > baseline["soft_total"]:
+            return False
+        # BRAIN §11: reject any candidate that drifts a Delta/Sailing pair apart.
+        if candidate.get("delta_sailing", 0) > baseline.get("delta_sailing", 0):
             return False
         if require_commissioner_improvement and candidate["commissioner"] >= baseline["commissioner"]:
             return False
@@ -1279,6 +1353,252 @@ class LegacyPart01Mixin:
         return fixes
 
 
+    def _targeted_shower_order_swaps(self) -> int:
+        """
+        Reduce Shower House-before-wet/Super Troop violations after late fills.
+
+        This runs as a same-troop strict swap pass so the troop keeps the same
+        activity set.  A candidate is accepted only when it reduces official
+        shower-order violations without worsening Top-5, clustering, or the
+        other tracked soft categories.
+        """
+        protected = self._get_protected_activity_names({"Sailing"})
+        fixes = 0
+        max_fixes = max(8, len(self.troops) * 2)
+
+        print("    [Shower Order] Starting targeted strict swaps...")
+
+        def _try_relaxed_swap_same_troop(entry_a, entry_b) -> bool:
+            if entry_a.troop != entry_b.troop:
+                return False
+            if entry_a.activity.slots > 1 or entry_b.activity.slots > 1:
+                return False
+            troop = entry_a.troop
+            slot_a = entry_a.time_slot
+            slot_b = entry_b.time_slot
+            act_a = entry_a.activity
+            act_b = entry_b.activity
+
+            self.schedule.remove_entry(entry_a)
+            self.schedule.remove_entry(entry_b)
+            if not self._can_schedule(troop, act_a, slot_b, slot_b.day, relax_constraints=True):
+                return False
+            if not self._can_schedule(troop, act_b, slot_a, slot_a.day, relax_constraints=True):
+                return False
+            return (
+                self.schedule.add_entry(slot_b, act_a, troop)
+                and self.schedule.add_entry(slot_a, act_b, troop)
+            )
+
+        improved = True
+        while improved and fixes < max_fixes:
+            improved = False
+            baseline_shower = self._count_global_shower_order_violations()
+            baseline_non_exempt, _ = self._count_non_exempt_top5_misses()
+            baseline_top10 = self._count_top10_in_schedule()
+            baseline_excess_days = self._count_excess_cluster_days()
+            baseline_cluster_gaps = self._count_area_cluster_gaps()
+            baseline_wet = self._count_wet_dry_violations()
+            baseline_accuracy = self._count_accuracy_same_day_violations()
+            baseline_tp_pairs = self._count_global_tp_pair_violations()
+            baseline_water_games = self._count_global_water_games_pair_violations()
+            baseline_beach_slot2 = self._count_beach_slot_2_uses()
+
+            if baseline_shower == 0:
+                break
+
+            for troop in sorted(self.troops, key=lambda t: t.name):
+                made_for_troop = False
+                for day in Day:
+                    if not self._has_shower_order_violation_on_day(troop, day):
+                        continue
+
+                    shower = next(
+                        (
+                            e for e in self.schedule.entries
+                            if e.troop == troop
+                            and e.time_slot.day == day
+                            and e.activity.name == "Shower House"
+                            and e.activity.slots <= 1
+                        ),
+                        None,
+                    )
+                    if not shower or shower.activity.name in protected:
+                        continue
+
+                    swap_candidates = [
+                        e for e in self.schedule.entries
+                        if e.troop == troop
+                        and e.time_slot.day != day
+                        and e.activity.slots <= 1
+                        and e.activity.name not in protected
+                        and e.activity.name != "Shower House"
+                    ]
+                    swap_candidates.sort(
+                        key=lambda e: (
+                            e.activity.name in self.WET_ACTIVITIES,
+                            troop.get_priority(e.activity.name) < 5,
+                            troop.get_priority(e.activity.name),
+                            e.time_slot.day.value,
+                            e.time_slot.slot_number,
+                        )
+                    )
+
+                    best_signature = None
+                    best_score = None
+                    for other in swap_candidates[:36]:
+                        slot_a = shower.time_slot
+                        act_a = shower.activity.name
+                        slot_b = other.time_slot
+                        act_b = other.activity.name
+                        trial_snapshot = self._snapshot_scheduler_state()
+                        used_relaxed = False
+                        if not self._try_strict_swap_same_troop(shower, other):
+                            self._restore_scheduler_state(trial_snapshot)
+                            trial_snapshot = self._snapshot_scheduler_state()
+                            shower_trial = next(
+                                (
+                                    e for e in self.schedule.entries
+                                    if e.troop == troop
+                                    and e.time_slot == slot_a
+                                    and e.activity.name == act_a
+                                ),
+                                None,
+                            )
+                            other_trial = next(
+                                (
+                                    e for e in self.schedule.entries
+                                    if e.troop == troop
+                                    and e.time_slot == slot_b
+                                    and e.activity.name == act_b
+                                ),
+                                None,
+                            )
+                            if (
+                                not shower_trial
+                                or not other_trial
+                                or not _try_relaxed_swap_same_troop(shower_trial, other_trial)
+                            ):
+                                self._restore_scheduler_state(trial_snapshot)
+                                continue
+                            used_relaxed = True
+
+                        if used_relaxed:
+                            self._rebuild_staff_tracking()
+
+                        if used_relaxed and self._count_non_exempt_top5_misses()[0] > baseline_non_exempt:
+                            self._restore_scheduler_state(trial_snapshot)
+                            continue
+
+                        new_shower = self._count_global_shower_order_violations()
+                        new_non_exempt, _ = self._count_non_exempt_top5_misses()
+                        new_top10 = self._count_top10_in_schedule()
+                        new_excess_days = self._count_excess_cluster_days()
+                        new_cluster_gaps = self._count_area_cluster_gaps()
+                        new_wet = self._count_wet_dry_violations()
+                        new_accuracy = self._count_accuracy_same_day_violations()
+                        new_tp_pairs = self._count_global_tp_pair_violations()
+                        new_water_games = self._count_global_water_games_pair_violations()
+                        new_beach_slot2 = self._count_beach_slot_2_uses()
+
+                        if (
+                            new_shower < baseline_shower
+                            and new_non_exempt <= baseline_non_exempt
+                            and new_top10 >= baseline_top10
+                            and new_excess_days <= baseline_excess_days
+                            and new_cluster_gaps <= baseline_cluster_gaps
+                            and new_wet <= baseline_wet
+                            and new_accuracy <= baseline_accuracy
+                            and new_tp_pairs <= baseline_tp_pairs
+                            and new_water_games <= baseline_water_games
+                            and new_beach_slot2 <= baseline_beach_slot2
+                        ):
+                            score = (
+                                baseline_shower - new_shower,
+                                baseline_excess_days - new_excess_days,
+                                baseline_cluster_gaps - new_cluster_gaps,
+                                baseline_wet - new_wet,
+                                baseline_accuracy - new_accuracy,
+                                baseline_tp_pairs - new_tp_pairs,
+                                baseline_water_games - new_water_games,
+                                baseline_beach_slot2 - new_beach_slot2,
+                                -troop.get_priority(act_b),
+                            )
+                            if best_score is None or score > best_score:
+                                best_score = score
+                                best_signature = (slot_a, act_a, slot_b, act_b, used_relaxed)
+
+                        self._restore_scheduler_state(trial_snapshot)
+
+                    if best_signature:
+                        slot_a, act_a, slot_b, act_b, use_relaxed = best_signature
+                        shower_now = next(
+                            (
+                                e for e in self.schedule.entries
+                                if e.troop == troop and e.time_slot == slot_a and e.activity.name == act_a
+                            ),
+                            None,
+                        )
+                        other_now = next(
+                            (
+                                e for e in self.schedule.entries
+                                if e.troop == troop and e.time_slot == slot_b and e.activity.name == act_b
+                            ),
+                            None,
+                        )
+                        applied = False
+                        if shower_now and other_now:
+                            if use_relaxed:
+                                apply_snapshot = self._snapshot_scheduler_state()
+                                applied = _try_relaxed_swap_same_troop(shower_now, other_now)
+                                if applied:
+                                    self._rebuild_staff_tracking()
+                                else:
+                                    self._restore_scheduler_state(apply_snapshot)
+                            else:
+                                applied = self._try_strict_swap_same_troop(shower_now, other_now)
+                        if applied:
+                            fixes += 1
+                            improved = True
+                            made_for_troop = True
+                            mode = "relaxed" if use_relaxed else "strict"
+                            print(
+                                f"      [Shower Order Swap:{mode}] {troop.name}: {act_a} "
+                                f"{slot_a.day.name[:3]}-{slot_a.slot_number} <-> "
+                                f"{act_b} {slot_b.day.name[:3]}-{slot_b.slot_number}"
+                            )
+                            break
+
+                    if made_for_troop or fixes >= max_fixes:
+                        break
+
+                if made_for_troop or fixes >= max_fixes:
+                    break
+
+        if fixes > 0:
+            print(f"    [Shower Order] Applied {fixes} strict swap fix(es)")
+        else:
+            print("    [Shower Order] No safe swaps found")
+        return fixes
+
+
+    def _final_soft_constraint_cleanup(self) -> int:
+        """Run late guarded soft-cleanup passes after final gap/filler mutation."""
+        before = self._schedule_quality_snapshot()
+        fixes = 0
+        fixes += self._targeted_water_games_day_dedup_swaps()
+        fixes += self._targeted_wet_dry_dedup_swaps()
+        fixes += self._targeted_shower_order_swaps()
+        self._final_shower_trading_soft_cleanup()
+        after = self._schedule_quality_snapshot()
+        if after["soft_total"] < before["soft_total"]:
+            print(
+                "    [Final Soft Cleanup] "
+                f"soft_total {before['soft_total']}->{after['soft_total']}"
+            )
+        return fixes
+
+
     def _comprehensive_final_cleanup(self):
         """
         Single comprehensive cleanup phase that handles all final validation
@@ -1587,7 +1907,7 @@ class LegacyPart01Mixin:
         # Enforce hard adjacency rule: Delta cannot be adjacent to Tower/ODS.
         self._fix_delta_tower_ods_adjacency()
         self._fix_beach_activity_saturation()
-        self._final_shower_trading_soft_cleanup()
+        self._final_soft_constraint_cleanup()
         self._guarantee_no_gaps()
         # Late hard-normalization passes belong inside final validation so the returned
         # schedule is not mutated again after being marked valid.
@@ -1701,6 +2021,12 @@ class LegacyPart01Mixin:
                 "Final acceptance failed: feasible day request(s) remain unfulfilled. "
                 f"Examples: {preview}"
             )
+        # F-04A: snapshot the honored MUST-HONOR placements at seal time. Every
+        # post-seal mutator (here and in the pipeline tail) is protected from
+        # removing these, and _revalidate_sealed_day_requests fails closed if one
+        # is dropped anyway. Recorded unconditionally so the attribute is fresh
+        # for the no-day-request fast path too (it is simply empty there).
+        self._sealed_honored_day_requests = self._collect_honored_day_requests()
         # Fast-path: skip terminal re-sanitization work when no day-request
         # seal moves were made. This keeps the no-day-request troop path
         # identical to the pre-seal legacy behavior and avoids disrupting
@@ -1892,6 +2218,71 @@ class LegacyPart01Mixin:
             print(f"    [Delta/Tower-ODS] Fixed {fixes} adjacency issue(s)")
 
 
+    def _is_honored_day_request_entry(self, entry) -> bool:
+        """True when this entry satisfies one of its troop's authored day requests.
+
+        Such entries are honored MUST-HONOR placements (BRAIN §10.1). Post-seal
+        mutators (final filler audit, beach saturation fixer) must not remove or
+        replace them, or the delivered schedule would silently drop a MUST-HONOR
+        request while still passing the Top-5 gate (F-04A).
+        """
+        day_requests = getattr(entry.troop, "day_requests", None)
+        if not day_requests:
+            return False
+        entry_day = entry.time_slot.day.name.upper()
+        for day_name, activities in day_requests.items():
+            if str(day_name).upper() == entry_day and entry.activity.name in activities:
+                return True
+        return False
+
+    def _collect_honored_day_requests(self) -> set:
+        """Set of ``(troop_name, DAY, activity_name)`` day requests currently honored.
+
+        A request is honored when the troop has an entry for that activity on the
+        requested day. Requests that were never placed (logged INFEASIBLE/
+        UNFULFILLED and tolerated per BRAIN §10.5) are intentionally excluded, so
+        the seal-time snapshot only records what must be preserved.
+        """
+        honored: set = set()
+        for troop in self.troops:
+            day_requests = getattr(troop, "day_requests", None)
+            if not day_requests:
+                continue
+            for day_name, activities in day_requests.items():
+                day_key = str(day_name).upper()
+                for activity_name in activities:
+                    if any(
+                        e.troop == troop
+                        and e.activity.name == activity_name
+                        and e.time_slot.day.name.upper() == day_key
+                        for e in self.schedule.entries
+                    ):
+                        honored.add((troop.name, day_key, activity_name))
+        return honored
+
+    def _revalidate_sealed_day_requests(self) -> None:
+        """Fail closed if a post-seal mutator silently undid a honored day request.
+
+        BRAIN §10.1: the aggressive seal is the authoritative MUST-HONOR
+        placement point; nothing after it may drop a honored request without an
+        explicit INFEASIBLE/UNFULFILLED classification. The entry-level
+        protection guards in the post-seal mutators should prevent this; this
+        audit is the fail-closed safety net (F-04A).
+        """
+        sealed = getattr(self, "_sealed_honored_day_requests", None)
+        if not sealed:
+            return
+        still_honored = self._collect_honored_day_requests()
+        lost = sealed - still_honored
+        if lost:
+            preview = ", ".join(
+                f"{troop}/{activity} on {day}" for troop, day, activity in sorted(lost)[:5]
+            )
+            raise ValueError(
+                "Final acceptance failed: post-seal mutation removed honored "
+                f"MUST-HONOR day request(s). Examples: {preview}"
+            )
+
     def _fix_beach_activity_saturation(self):
         """Enforce hard cap for staffed beach activities per slot."""
         max_beach_acts = config_loader.get_constraints().get("max_beach_staffed_activities", 4)
@@ -1916,7 +2307,14 @@ class LegacyPart01Mixin:
                     return (is_top5, -rank, entry.troop.name)
 
                 beach_entries.sort(key=displacement_key)
-                victim = beach_entries[0]
+                # F-04A: never displace a honored MUST-HONOR day request. BRAIN
+                # §10.3 lets force_day_request bypass the beach staff cap, so an
+                # over-cap slot held only by day requests is tolerated (it is a
+                # soft warning, not a hard violation) rather than dropping one.
+                eligible = [e for e in beach_entries if not self._is_honored_day_request_entry(e)]
+                if not eligible:
+                    break
+                victim = eligible[0]
                 troop = victim.troop
 
                 moved = False
@@ -2399,6 +2797,27 @@ class LegacyPart01Mixin:
         else:
             print("    [OK] Exclusive areas")
 
+        # Aggregate canoe capacity (physical, HARD): total people across the
+        # canoe family sharing a slot must not exceed MAX_CANOE_CAPACITY. This
+        # cap is enforced by _check_activity_capacity during placement but is not
+        # backstopped by Schedule.add_entry(), so a forced/relaxed placement
+        # could otherwise overflow it. Validate fail-closed here.
+        canoe_family = set(self.CANOE_ACTIVITIES)
+        canoe_overflow = 0
+        for slot in self.time_slots:
+            people = sum(
+                e.troop.scouts + e.troop.adults
+                for e in self.schedule.entries
+                if e.time_slot == slot and e.activity.name in canoe_family
+            )
+            if people > self.MAX_CANOE_CAPACITY:
+                canoe_overflow += 1
+        if canoe_overflow > 0:
+            print(f"    [WARNING] {canoe_overflow} canoe capacity violations (> {self.MAX_CANOE_CAPACITY})")
+            hard_errors.append(f"{canoe_overflow} canoe capacity violation(s) (> {self.MAX_CANOE_CAPACITY})")
+        else:
+            print("    [OK] Canoe capacity")
+
         # Check beach slot violations using SKULL-driven beach slot restrictions.
         # Sailing is intentionally excluded here; it has a separate slot-2 exception path.
         beach_activities = set(self.BEACH_SLOT_ACTIVITIES)
@@ -2438,6 +2857,7 @@ class LegacyPart01Mixin:
             self.troops,
             self.schedule,
             getattr(self, "sailing_balls_fills", None),
+            getattr(self, "day_request_displacements", None),
         )
         misses = []
         for troop_name, troop_data in unscheduled.items():
@@ -2496,6 +2916,10 @@ class LegacyPart01Mixin:
                 displacement_cost = 0
                 for entry in troop_day_entries:
                     if entry.activity.name in protected_names:
+                        blocked = True
+                        break
+                    # BRAIN §11: never split a Delta/Sailing pair during window clearing.
+                    if self._is_pair_protected_delta(entry):
                         blocked = True
                         break
                     entry_rank = self._get_troop_activity_priority(troop, entry.activity.name)
@@ -2586,6 +3010,9 @@ class LegacyPart01Mixin:
                 continue
             if entry.activity.name in protected_names:
                 continue
+            # BRAIN §11: do not reclaim a Sailing-paired Delta holder's protected pair.
+            if self._is_pair_protected_delta(entry):
+                continue
 
             other_rank = self._get_troop_activity_priority(entry.troop, activity.name)
             # Only reclaim from non-Top5 or lower-priority requests to avoid creating new Top5 misses.
@@ -2621,6 +3048,10 @@ class LegacyPart01Mixin:
             ]
             for conflict in target_conflicts:
                 if conflict.activity.name in protected_names:
+                    blocked = True
+                    break
+                # BRAIN §11: preserve the target troop's Delta/Sailing pair in place.
+                if self._is_pair_protected_delta(conflict):
                     blocked = True
                     break
                 if self._get_troop_activity_priority(target_troop, conflict.activity.name) <= required_rank:
@@ -2698,6 +3129,8 @@ class LegacyPart01Mixin:
 
                 if occupant and occupant.activity.name in protected:
                     continue
+                if occupant and self._is_pair_protected_delta(occupant):
+                    continue
                 if occupant:
                     self._remove_from_schedule(occupant)
 
@@ -2724,6 +3157,9 @@ class LegacyPart01Mixin:
                 ]
 
                 if any(e.activity.name in protected_names for e in troop_day_entries):
+                    continue
+                # BRAIN §11: never displace a Delta/Sailing pair to recover another Top-5.
+                if any(self._is_pair_protected_delta(e) for e in troop_day_entries):
                     continue
 
                 snapshot = self._snapshot_scheduler_state()

@@ -511,6 +511,12 @@ class LegacyPart02Mixin:
             # Clear any other Thursday entries for this troop first.
             for e in existing_thu:
                 if e in self.schedule.entries:
+                    # F-02 provenance: the opt-out consumes the troop's whole
+                    # Thursday, so any preference it evicts is exempt per
+                    # BRAIN §2 Exemption 4(b) if it stays missing.
+                    if (e.activity.name != activity.name
+                            and e.activity.name in troop.preferences):
+                        self.day_request_displacements.add((troop.name, e.activity.name))
                     self._remove_from_schedule(e)
 
             thu1 = TimeSlot(day=Day.THURSDAY, slot_number=1)
@@ -560,9 +566,14 @@ class LegacyPart02Mixin:
                             and int(float(getattr(activity, "slots", 1.0)) + 0.5) >= 3):
                         slot = _force_place_thursday_3slot(troop, activity)
                         if slot is None:
-                            reason = "blocked by protected Thursday anchor"
-                            unfulfilled.append((troop.name, activity_name, day_name, reason))
-                            print(f"  [UNFULFILLED] {troop.name}: {activity_name} on {day_name} ({reason})")
+                            # F-14 / BRAIN §10.5: a Thursday 3-hour opt-out blocked by a
+                            # protected anchor (e.g. Super Troop + Reflection both on
+                            # Thursday) is architecturally unavoidable. Classify it as
+                            # INFEASIBLE (tolerated + logged), not UNFULFILLED, so the
+                            # final seal does not abort an otherwise-valid week.
+                            reason = "blocked by protected Thursday anchor (architecturally unavoidable)"
+                            infeasible.append((troop.name, activity_name, day_name, reason))
+                            print(f"  [INFEASIBLE] {troop.name}: {activity_name} on {day_name} ({reason})")
                         else:
                             honored += 1
                             forced += 1
@@ -676,6 +687,14 @@ class LegacyPart02Mixin:
                                 relax_constraints=True, force_day_request=True,
                             ) and self._add_to_schedule(target_slot, activity, troop):
                                 self._update_progress(troop, activity_name)
+                                # F-02 provenance: a MUST-HONOR day request just
+                                # evicted this occupant. If the occupant was one of
+                                # the troop's preferences and stays missing, its
+                                # Top-5/Top-10 miss is exempt per BRAIN §2 Ex.4(b).
+                                if occupant.activity.name in troop.preferences:
+                                    self.day_request_displacements.add(
+                                        (troop.name, occupant.activity.name)
+                                    )
                                 honored += 1
                                 forced += 1
                                 if pulled:
@@ -887,6 +906,11 @@ class LegacyPart02Mixin:
         largest_top5 = None
         # Filter for Top 5 only first
         top5_demand = [x for x in troops_demand if x[1] <= 5]
+        # F-19: BRAIN §11 — a troop that also wants Delta must keep Delta+Sailing pairable
+        # on a Mon/Tue/Wed day. Thursday Sailing occupies both Thursday slots, forfeiting
+        # the pair, so exclude Delta-wanters from the Thursday pick; section B pairs them
+        # via the configured Delta commissioner day.
+        top5_demand = [x for x in top5_demand if "Delta" not in x[0].preferences]
         if top5_demand:
             # Sort by Size DESC
             top5_demand.sort(key=lambda x: -x[2])
@@ -2729,8 +2753,11 @@ class LegacyPart02Mixin:
 
                 # Only displace activities LOWER priority than the missing Top 5 we're placing.
                 # Never displace another Top 5 (would create a new miss and prevent near-100% Top 5).
+                # BRAIN §11: never displace a Sailing-paired Delta (keep the pair same-day).
                 displaceable = [e for e in troop_entries
-                               if e.activity.name not in PROTECTED and get_priority(e) > rank]
+                               if e.activity.name not in PROTECTED
+                               and not self._is_pair_protected_delta(e)
+                               and get_priority(e) > rank]
 
                 # Sort by priority (lowest priority = best to displace)
                 displaceable.sort(key=get_priority, reverse=True)

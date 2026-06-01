@@ -101,6 +101,12 @@
       "slot": 1
     },
     {
+      "troop_name": "Black Hawk",
+      "activity_name": "Disc Golf",
+      "day": "TUESDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Taskalusa",
       "activity_name": "Itasca State Park",
       "day": "MONDAY",
@@ -215,9 +221,15 @@
       "slot": 1
     },
     {
-      "troop_name": "Black Hawk",
+      "troop_name": "Massasoit",
       "activity_name": "Campsite Free Time",
-      "day": "WEDNESDAY",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
       "slot": 1
     },
     {
@@ -227,10 +239,22 @@
       "slot": 2
     },
     {
-      "troop_name": "Massasoit",
-      "activity_name": "Campsite Free Time",
-      "day": "TUESDAY",
+      "troop_name": "Black Hawk",
+      "activity_name": "Gaga Ball",
+      "day": "WEDNESDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Troop Rifle",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Campsite Free Time",
+      "day": "WEDNESDAY",
+      "slot": 1
     },
     {
       "troop_name": "Massasoit",
@@ -248,6 +272,12 @@
       "troop_name": "Massasoit",
       "activity_name": "Archery",
       "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Massasoit",
+      "activity_name": "Hemp Craft",
+      "day": "WEDNESDAY",
       "slot": 3
     },
     {
@@ -277,26 +307,8 @@
     {
       "troop_name": "Black Hawk",
       "activity_name": "Greased Watermelon",
-      "day": "WEDNESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Gaga Ball",
-      "day": "TUESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Shower House",
       "day": "FRIDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 1
     },
     {
       "troop_name": "Massasoit",
@@ -309,20 +321,20 @@
       "activity_name": "Sauna",
       "day": "MONDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Troop Rifle",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Massasoit",
-      "activity_name": "Hemp Craft",
-      "day": "WEDNESDAY",
-      "slot": 3
     }
   ],
-  "unscheduled": {},
-  "sailing_half_fills": {}
+  "unscheduled": {
+    "Black Hawk": {
+      "top5": [],
+      "top10": [
+        {
+          "name": "Shower House",
+          "rank": 10,
+          "is_exempt": false
+        }
+      ]
+    }
+  },
+  "sailing_half_fills": {},
+  "day_request_displacements": []
 }

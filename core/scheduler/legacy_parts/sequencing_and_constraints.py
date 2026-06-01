@@ -807,16 +807,18 @@ class LegacyPart04Mixin:
             'Ultimate Survivor', "What's Cooking", 'Chopped!'
         }
 
-        # Use higher limit for staff clustering to improve efficiency
-        # But also consider clustering quality impact
-        base_staff_limit = 20 if activity.name in STAFF_CLUSTERING_ACTIVITIES else 16
+        # F-24: per-slot staff caps come from SKULL (constraints.max_staff_global /
+        # clustering_staff_global) instead of hardcoded 16 / 24. Staff-clustering
+        # activities use the elevated clustering cap to improve setup efficiency.
+        _caps = config_loader.get_capacity_limits()
+        staff_limit = (
+            _caps.get("clustering_staff_global", 24)
+            if activity.name in STAFF_CLUSTERING_ACTIVITIES
+            else _caps.get("max_staff_global", 16)
+        )
 
         # Check current clustering quality impact
         current_staff = self._count_all_staff_in_slot(slot)
-
-        # Allow higher limits if it improves clustering
-        clustering_bonus = 4 if activity.name in STAFF_CLUSTERING_ACTIVITIES else 0
-        staff_limit = base_staff_limit + clustering_bonus
 
         # Calculate what total staff would be if we add this activity
         # Allow adding unstaffed activities (staff=0) even if slot is already full/overfull
@@ -943,6 +945,22 @@ class LegacyPart04Mixin:
             elif not self.schedule.is_activity_available(slot, activity, troop):
                 return False
 
+        # MUST-HONOR day requests (BRAIN §10.3) may bypass only the SOFT beach
+        # slot/staff rules in the block above. Physical capacity and exclusivity
+        # stay HARD even under force_day_request:
+        #   - aggregate canoe capacity (and the other physical per-activity caps)
+        #     is NOT enforced by Schedule.add_entry(), so it is re-checked here;
+        #   - exclusive-area double-booking stays blocked for non-beach areas
+        #     (beach staff saturation is the one soft cap force may bypass, so
+        #     beach activities are intentionally left to the soft block above).
+        if force_day_request and activity.name not in self.CONCURRENT_ACTIVITIES:
+            if activity.name in SchedulerConstants.CAPACITY_CHECK_ACTIVITIES:
+                if not self._check_activity_capacity(slot, activity, troop):
+                    return False
+            elif activity.zone != Zone.BEACH:
+                if not self.schedule.is_activity_available(slot, activity, troop):
+                    return False
+
         # SAME-DAY CONFLICT CHECK (Trading Post + Campsite/Shower, Canoe pairs, etc.)
         # Spine: AT/WP/GM same-day prohibited - always enforced
         if self._has_same_day_conflict(troop, activity, day, relax_constraints=False):
@@ -956,21 +974,39 @@ class LegacyPart04Mixin:
         #  are scheduled separately before this check runs anyway)
 
         # GENERAL CAMP RULES (Both TC and Voyageur)
-        # Rule: No Showerhouse on Monday (both camps)
-        if activity.name == "Shower House" and day == Day.MONDAY:
+        # Shower House on Monday: SOFT (BRAIN §4) but actively avoided. There are
+        # always alternative fill activities, so the scheduler never self-inflicts a
+        # Monday Shower House even under relax (fill) — the filler simply picks a
+        # different activity. Only an explicit MUST-HONOR day request may place it,
+        # and the judge then applies the soft point penalty (contract-exempt).
+        if activity.name == "Shower House" and day == Day.MONDAY and not force_day_request:
             return False
 
-        # NEW CONSTRAINT: Showerhouse should ideally not be before Super Troop or a wet activity
-        # Check if Showerhouse is being scheduled before Super Troop or wet activities on the same day
-        if activity.name == "Shower House" and not relax_constraints:
+        # Shower House is an exclusive area (one troop per slot). A non-requested
+        # *filler* Shower House must not consume that day's exclusive Shower House
+        # capacity when another troop has explicitly MUST-HONOR day-requested
+        # Shower House on the same day — otherwise the filler can saturate the only
+        # open slots and leave the authored request unplaceable. Fillers always
+        # have alternative activities, so reserve the day for the requester.
+        if activity.name == "Shower House" and not force_day_request:
+            for other in getattr(self, "troops", []):
+                if other is troop:
+                    continue
+                for req_day, req_acts in (getattr(other, "day_requests", {}) or {}).items():
+                    if "Shower House" in req_acts and str(req_day).lower() == day.name.lower():
+                        return False
+
+        # Shower House must never be placed before a later Super Troop or wet activity
+        # on the same day (a shower before getting sweaty/wet defeats its purpose).
+        # This is enforced even under relax (fill) so a *filler* Shower House is simply
+        # swapped for a different fill activity rather than creating the bad ordering;
+        # only an explicit MUST-HONOR day request (force_day_request) may override it,
+        # in which case the resulting soft violation is contract-exempt.
+        if activity.name == "Shower House" and not force_day_request:
             day_slots = [s for s in self.time_slots if s.day == day]
-            # Check if there's a Super Troop or wet activity later in the day
             for entry in self.schedule.get_troop_schedule(troop):
                 if entry.time_slot in day_slots and entry.time_slot.slot_number > slot.slot_number:
-                    # There's an activity later in the day
                     if entry.activity.name == "Super Troop" or entry.activity.name in self.WET_ACTIVITIES:
-                        # Showerhouse would be before Super Troop or wet activity - this violates the constraint
-                        # This is a HARD constraint: Showerhouse should NOT be before Super Troop or wet activities
                         return False
 
         # SOFT CONSTRAINT: Avoid Tower/ODS activities immediately before wet activities
@@ -1090,6 +1126,12 @@ class LegacyPart04Mixin:
             if day != Day.TUESDAY:
                 return False
 
+        # F-21: Reflection is a Friday-only mandatory anchor (BRAIN §4). Enforce it as a
+        # placement predicate (the rule was previously only counted post-hoc), so no pass
+        # can ever place Reflection off Friday. Hard for all callers, incl. MUST-HONOR.
+        if activity.name == "Reflection" and day != Day.FRIDAY:
+            return False
+
         # VOYAGEUR SPECIFIC RULES (other than HC/DG)
         if self.voyageur_mode:
             # Rule: Fond Du Lac and Hibbing shouldn't have rifle or shotgun as their first activity any day
@@ -1121,7 +1163,7 @@ class LegacyPart04Mixin:
                 return False
 
         # BEACH SLOT RULE: Beach activities must be in slot 1 or 3 (except Thursday allows slot 2)
-        # This is a HARD constraint per .cursorrules - ALWAYS ENFORCED (even with relax_constraints)
+        # This is a HARD constraint per BRAIN - ALWAYS ENFORCED (even with relax_constraints)
         # Exception: Sailing is allowed in Slot 2 (due to 1.5 slot duration) - handled separately
         beach_slot_activities = set(self.BEACH_SLOT_ACTIVITIES)
         if activity.name in beach_slot_activities:
@@ -1164,7 +1206,7 @@ class LegacyPart04Mixin:
                         return False  # Adjacent slots - violation
 
         # RIFLE + SHOTGUN SAME DAY: Cannot have both on same day
-        # This is a SOFT constraint per .cursorrules - allow if relax_constraints is True
+        # This is a SOFT constraint per BRAIN - allow if relax_constraints is True
         if not relax_constraints:
             if activity.name == "Troop Rifle":
                 if self._troop_has_activity_on_day(troop, "Troop Shotgun", slot.day):
@@ -1174,7 +1216,7 @@ class LegacyPart04Mixin:
                     return False
 
         # ACCURACY LIMIT: Max 1 accuracy activity per day (Rifle, Shotgun, or Archery)
-        # This is a SOFT constraint per .cursorrules - allow if relax_constraints is True
+        # This is a SOFT constraint per BRAIN - allow if relax_constraints is True
         if not relax_constraints:
             if activity.name in self.ACCURACY_ACTIVITIES:
                 day_entries = [e for e in self.schedule.entries if e.troop == troop and e.time_slot.day == slot.day]
@@ -1183,7 +1225,7 @@ class LegacyPart04Mixin:
                         return False  # Already has another accuracy activity today
 
         # SAME PLACE SAME DAY: A troop should never do two activities from the same exclusive area on the same day
-        # This is a HARD constraint per .cursorrules - ALWAYS ENFORCED (even with relax_constraints)
+        # This is a HARD constraint per BRAIN - ALWAYS ENFORCED (even with relax_constraints)
         # EXCEPTION: Rifle Range (Rifle + Shotgun) is a SOFT constraint, so allow if relax_constraints is True
         day_entries = [e for e in self.schedule.entries if e.troop == troop and e.time_slot.day == slot.day]
         for area_name, area_activities in EXCLUSIVE_AREAS.items():
@@ -1238,7 +1280,7 @@ class LegacyPart04Mixin:
 
         # NEW: Wet → Tower/ODS blocking (cannot schedule Tower/ODS after wet activity)
         # Also: Cannot schedule Tower/ODS right before a wet activity
-        # This is a HARD constraint per .cursorrules - ALWAYS ENFORCED (even with relax_constraints)
+        # This is a HARD constraint per BRAIN - ALWAYS ENFORCED (even with relax_constraints)
         if activity.name in self.TOWER_ODS_ACTIVITIES:
             if self._has_wet_before_slot(troop, slot):
                 return False
@@ -1253,7 +1295,7 @@ class LegacyPart04Mixin:
                     return False
 
         # NEW: Tower/ODS → Wet blocking (cannot schedule wet activity right after Tower/ODS)
-        # This is a HARD constraint per .cursorrules - ALWAYS ENFORCED (even with relax_constraints)
+        # This is a HARD constraint per BRAIN - ALWAYS ENFORCED (even with relax_constraints)
         if activity.name in self.WET_ACTIVITIES:
             if self._has_tower_ods_before_slot(troop, slot):
                 return False
@@ -1271,14 +1313,14 @@ class LegacyPart04Mixin:
                 return False
 
         # NEW: Wet beach 1-2-3 slot pattern (no wet in slot 3 if slot 1 was wet and slot 2 was not wet)
-        # This is a HARD constraint per .cursorrules - ALWAYS ENFORCED (even with relax_constraints)
+        # This is a HARD constraint per BRAIN - ALWAYS ENFORCED (even with relax_constraints)
         if activity.name in self.WET_ACTIVITIES:
             if self._violates_wet_slot_pattern(troop, activity, slot):
                 return False
 
         # NEW CHECK: If scheduling NON-WET in Slot 2, check if it BREAKS the pattern (Wet-X-Wet)
         # If Slot 1 is Wet and Slot 3 is Wet, Slot 2 MUST be Wet (or at least cannot be Dry if rules require valid pattern)
-        # This is a HARD constraint per .cursorrules - ALWAYS ENFORCED (even with relax_constraints)
+        # This is a HARD constraint per BRAIN - ALWAYS ENFORCED (even with relax_constraints)
         if slot.slot_number == 2 and activity.name not in self.WET_ACTIVITIES:
             # Check Slot 1
             slot1 = next((s for s in self.time_slots if s.day == slot.day and s.slot_number == 1), None)
@@ -1304,10 +1346,14 @@ class LegacyPart04Mixin:
             if not self._can_schedule_sailing(troop, slot, day if slot.day == day else slot.day):
                 return False
 
-        # Canoe capacity check - max 26 people (13 canoes) per slot
-        if not relax_constraints and activity.name in self.CANOE_ACTIVITIES:
+        # Canoe capacity (BRAIN §4 hard safety limit): the whole canoe family shares
+        # ≤26 people (13 canoes) per slot. F-20: unified to a single HARD check that
+        # (a) sums scouts+adults (the real headcount), (b) sums every canoe-family entry
+        # in the slot, and (c) applies even under relax fills and MUST-HONOR placements —
+        # capacity is never bypassable. Mirrors _check_activity_capacity exactly.
+        if activity.name in self.CANOE_ACTIVITIES:
             current_canoe_people = self._count_people_in_canoe_activities(slot)
-            if current_canoe_people + troop.scouts > self.MAX_CANOE_CAPACITY:
+            if current_canoe_people + troop.scouts + troop.adults > self.MAX_CANOE_CAPACITY:
                 return False  # Would exceed canoe capacity
 
         # Float for Floats capacity - only 1 troop at a time unless combined <10 scouts
@@ -1369,11 +1415,15 @@ class LegacyPart04Mixin:
 
 
     def _count_people_in_canoe_activities(self, slot: TimeSlot) -> int:
-        """Count total people (scouts) in canoe activities in this slot."""
+        """Count total people (scouts + adults) across the canoe family in this slot.
+
+        F-20: counts scouts+adults to match the authoritative canoe-26 cap in
+        ``_check_activity_capacity`` (was scouts-only, which under-counted headcount).
+        """
         count = 0
         for entry in self.schedule.entries:
             if entry.time_slot == slot and entry.activity.name in self.CANOE_ACTIVITIES:
-                count += entry.troop.scouts
+                count += entry.troop.scouts + entry.troop.adults
         return count
 
 
@@ -1459,8 +1509,16 @@ class LegacyPart04Mixin:
             return len(existing) == 0
 
         elif activity.name in self.CANOE_ACTIVITIES:
-            # Check total capacity (max 26 people = 13 canoes)
-            total_people = sum(e.troop.scouts + e.troop.adults for e in existing)
+            # Canoes (max 26 people = 13 canoes) are shared across the WHOLE
+            # canoe family in a slot, so capacity must sum every canoe-family
+            # entry — not just other entries of the same activity. The previous
+            # same-name `existing` filter let two different canoe activities
+            # (e.g. Float for Floats + Canoe Snorkel) co-occupy a slot past 26.
+            canoe_family_entries = [
+                e for e in self.schedule.entries
+                if e.time_slot == slot and e.activity.name in self.CANOE_ACTIVITIES
+            ]
+            total_people = sum(e.troop.scouts + e.troop.adults for e in canoe_family_entries)
             total_people += troop.scouts + troop.adults
             return total_people <= self.MAX_CANOE_CAPACITY
 
@@ -1893,13 +1951,11 @@ class LegacyPart04Mixin:
         if activity.name == "Trading Post" and day == Day.MONDAY:
             return False
 
-        # Gaga Ball and 9 Square: NOT on same day
-        if activity.name == "Gaga Ball":
-            if self._troop_has_activity_on_day(troop, "9 Square", day):
-                return False
-        if activity.name == "9 Square":
-            if self._troop_has_activity_on_day(troop, "Gaga Ball", day):
-                return False
+        # Gaga Ball / 9 Square (Balls): BRAIN §4.1 makes this a SOFT same-day pair,
+        # not a hard block. The relax-gated soft avoidance is handled by
+        # _has_soft_same_day_conflict (SKULL soft_prohibited_pairs); do not hard-reject
+        # here or the scheduler can be forced into a non-exempt Top-5 miss to avoid a
+        # mere soft penalty.
 
         # Rifle/Shotgun should NOT be immediately before or after Delta
         if activity.name in EXCLUSIVE_AREAS.get("Rifle Range", []):

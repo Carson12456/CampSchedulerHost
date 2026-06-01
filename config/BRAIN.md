@@ -129,24 +129,35 @@ Failing any of these will immediately scrap the schedule.
   (`Reflection`, `Super Troop`, `History Center`, `Disc Golf`) are never
   displaced. See §10 for the full solver contract and Thursday 3-hour
   opt-out semantics.
-* **Shower House Hard Rules:**
-    * No Shower House on Monday.
-    * Do not place Shower House before a later Super Troop or wet activity on the same day (strict mode).
 
 ### 🟡 SOFT Constraints (Score Deductions)
 Violating these will lower the schedule's quality score, but will not break the build.
 
 #### 1. Prohibited Same-Day Pairs
+Each configured same-day pair (SKULL `soft_prohibited_pairs`) is a soft violation,
+scored exactly once per troop per day. Groups below expand to all pairwise combinations.
 * *Accuracy:* Troop Rifle / Troop Shotgun / Archery
 * *Boats:* Paired boating activities
 * *Water Games:* Aqua Trampoline / Water Polo / Greased Watermelon. Any same-day pair among these three is a soft violation.
-* *Free Time:* Trading Post / Shower House / Campsite Free Time
-* *Balls:* Nine Square / Gaga Ball
+* *Free Time:* Trading Post / Shower House / Campsite Free Time (and Fishing with Trading Post / Campsite Free Time)
+* *Balls:* Nine Square / Gaga Ball (soft only — never a hard block)
 
 #### 2. Wet/Dry Flow & Transitions
 * Avoid "Wet-Dry-Wet" sandwiches.
 * Avoid direct transitions between Wet activities and Tower/ODS.
 * Beach activities should preferably land in Slot 1 or Slot 3 (Slot 2 is acceptable on Thursdays only).
+
+#### 2a. Shower House Timing
+* **Shower House on Monday** is a soft violation: the scheduler should avoid it,
+  and it costs points, but it does not invalidate the build (it may still occur
+  under a MUST-HONOR day request or as a last-resort fill).
+* **Shower House must not precede a later Super Troop or wet activity on the same
+  day** (a shower before getting sweaty/wet defeats its purpose). The scheduler
+  never self-inflicts this: when Shower House is a fill activity (not explicitly
+  requested), it is swapped for a different fill rather than placed before a later
+  Super Troop / wet activity. This ordering may only occur to honor an explicit
+  MUST-HONOR Shower House day request, in which case the resulting soft violation
+  is contract-exempt. The judge scores it as a soft violation when present.
 
 #### 3. Activity Consecutiveness
 * `Tie Dye`, `Rifle`, and `Shotgun` should actively seek to run back-to-back within area schedules to minimize setup/teardown time.

@@ -5,19 +5,14 @@ alwaysApply: true
 
 # CampScheduler AI Defaults
 
-- `config/BRAIN.md` is authoritative; code behavior must align with it.
-- Never accept `non_exempt_top5_misses > 0`; this is a failed schedule.
-- Preserve BRAIN priority ladder: hard constraints -> Top 5 contract -> soft constraints.
-- Start scheduler investigations from `core/constrained_scheduler.py` and `core/scheduler/pipeline.py`.
-- Use `core/scheduler/legacy_parts/README.md` to pick the right split module before editing.
-- Preserve root compatibility imports (`constrained_scheduler.py`, `models.py`) unless explicitly removing legacy support.
-- When behavior changes are intended, verify with:
-  - `pytest -q tests/unit`
-  - `python utils/regression_checker.py`
-- For official regression reporting, run fresh-cycle evaluation:
-  - `python utils/regression_checker.py --fresh-eval --detailed --show-violations`
-- Treat `config/BRAIN.md` as the source of scheduling intent and constraints.
-- Preserve mandatory anchors and hard constraints from BRAIN (Reflection, Super Troop, Tuesday HC/DG, no empty slots).
-- Miss reporting must come from `schedule_json.unscheduled`; do not reconstruct from preference lists.
-- Prefer focused edits in split modules over large cross-file rewrites.
-- For baseline-sensitive changes, report metric deltas from `analysis_results.json`.
+- Treat `config/BRAIN.md` as the scheduling contract. Code behavior, tests, and reports must align with it.
+- Treat `config/SKULL.json` as the home for scheduler lists/configuration. Do not add new hardcoded activity, area, staff, or priority lists without checking SKULL first.
+- Preserve the priority ladder: hard constraints -> non-exempt Top-5 success -> soft constraints and optimization.
+- Never accept `non_exempt_top5_misses > 0`; that schedule has failed.
+- Preserve mandatory anchors: Friday `Reflection`, weekly `Super Troop`, Tuesday-only `History Center`/`Disc Golf`, and no empty troop slots.
+- Start scheduler investigations from `core/constrained_scheduler.py` and `core/scheduler/pipeline.py`; use `core/scheduler/legacy_parts/README.md` to choose the split module before editing.
+- Prefer focused edits in `core/scheduler/legacy_parts/` over broad rewrites in composition files.
+- Preserve root compatibility imports (`constrained_scheduler.py`, `models.py`, `activities.py`, `io_handler.py`) unless explicitly removing legacy support.
+- Report Top-5/Top-10 misses from `schedule_json.unscheduled`; do not reconstruct authoritative misses from raw preference lists.
+- Use `utils/regression_checker.py` as the schedule-quality authority. For scheduler behavior changes, run `pytest -q tests/unit` and `python utils/regression_checker.py`.
+- For official regression reporting, run `python utils/regression_checker.py --fresh-eval --detailed --show-violations`; for baseline-sensitive changes, report deltas from `analysis_results.json`.

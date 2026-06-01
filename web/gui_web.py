@@ -2,7 +2,7 @@
 Web-based GUI for Summer Camp Scheduler using Flask.
 This generates an HTML interface that properly displays 1.5-slot activities.
 """
-from flask import Flask, render_template, send_from_directory, request, jsonify, Response
+from flask import Flask, render_template, send_from_directory, request, jsonify, Response, has_request_context, abort
 from pathlib import Path
 import json
 import sys
@@ -37,7 +37,9 @@ def add_header(response):
 print("Loading schedules...")
 
 SCHEDULES_DIR = SCRIPT_DIR.parent / "data/schedules"
+SNAPSHOTS_DIR = SCRIPT_DIR.parent / "artifacts/snapshots"
 WEEK_DATA = {}
+SNAPSHOT_DATA = {}
 activities = get_all_activities()
 time_slots = generate_time_slots()
 
@@ -136,11 +138,16 @@ def load_schedule_from_json(schedule_file):
     sailing_half_fills = data.get('sailing_half_fills', {}) or {}
     if not sailing_half_fills:
         sailing_half_fills = build_sailing_half_fills(troops, schedule)
+    # MUST-HONOR day-request displacement provenance drives Exemption 4(b).
+    day_request_displacements = {
+        tuple(p) for p in (data.get('day_request_displacements', []) or [])
+        if isinstance(p, (list, tuple)) and len(p) == 2
+    }
     # Rebuild authoritative unscheduled payload on load so cached schedules
     # always reflect the current request-credit semantics for Sailing half-fills.
-    unscheduled = build_unscheduled_data(troops, schedule, sailing_half_fills)
+    unscheduled = build_unscheduled_data(troops, schedule, sailing_half_fills, day_request_displacements)
     
-    return troops, schedule, unscheduled, sailing_half_fills
+    return troops, schedule, unscheduled, sailing_half_fills, day_request_displacements
 
 def generate_schedule(troops_file):
     """Generate schedule from troops file (fallback)."""
@@ -153,11 +160,14 @@ def generate_schedule(troops_file):
     sailing_half_fills = getattr(scheduler, 'sailing_balls_fills', {}) or {}
     if not sailing_half_fills:
         sailing_half_fills = build_sailing_half_fills(scheduler.troops, schedule)
+    day_request_displacements = getattr(scheduler, 'day_request_displacements', None)
     # Authoritative unscheduled payload for all Top-5/Top-10 miss reporting.
-    unscheduled_data = build_unscheduled_data(scheduler.troops, schedule, sailing_half_fills)
+    unscheduled_data = build_unscheduled_data(
+        scheduler.troops, schedule, sailing_half_fills, day_request_displacements
+    )
             
     # vital: return scheduler.troops because they might have been split
-    return scheduler.troops, schedule, unscheduled_data, sailing_half_fills
+    return scheduler.troops, schedule, unscheduled_data, sailing_half_fills, (day_request_displacements or set())
 
 # Auto-discover all troop files (LAZY LOADING - only get names, don't load yet)
 print("Discovering available weeks...")
@@ -189,10 +199,112 @@ WEEK_DATA = {}
 # Performance optimization: Pre-warm cache for commonly used weeks
 PREWARM_WEEKS = ['tc_week1_troops', 'tc_week2_troops', 'tc_week3_troops']
 
+
+def _list_snapshot_runs(week_id):
+    """Return local snapshot bundles available for a week."""
+    if not SNAPSHOTS_DIR.exists():
+        return []
+
+    runs = []
+    for bundle_path in sorted(SNAPSHOTS_DIR.glob(f"*/{week_id}.json"), reverse=True):
+        try:
+            with open(bundle_path, 'r', encoding='utf-8') as f:
+                bundle = json.load(f)
+            runs.append({
+                'run_id': bundle.get('run_id') or bundle_path.parent.name,
+                'week_id': week_id,
+                'created_at': bundle.get('created_at'),
+                'snapshot_count': bundle.get('snapshot_count', len(bundle.get('snapshots', []))),
+                'path': str(bundle_path),
+            })
+        except Exception as e:
+            print(f"  Snapshot bundle skipped ({bundle_path}): {e}")
+    return runs
+
+
+def _load_snapshot_week_data(week_id, run_id, step_index):
+    """Load one snapshot as if it were the active week schedule."""
+    cache_key = (week_id, run_id, int(step_index))
+    if cache_key in SNAPSHOT_DATA:
+        return SNAPSHOT_DATA[cache_key]
+
+    bundle_path = SNAPSHOTS_DIR / run_id / f"{week_id}.json"
+    if not bundle_path.exists():
+        return None
+
+    with open(bundle_path, 'r', encoding='utf-8') as f:
+        bundle = json.load(f)
+
+    snapshots = bundle.get('snapshots', [])
+    if not snapshots:
+        return None
+
+    step_index = max(0, min(int(step_index), len(snapshots) - 1))
+    snapshot = snapshots[step_index]
+    meta = WEEK_METADATA.get(week_id, {})
+
+    troops = []
+    for t_data in bundle.get('troops') or snapshot.get('troops', []):
+        troop = Troop(
+            name=t_data['name'],
+            scouts=t_data.get('scouts', 10),
+            adults=t_data.get('adults', 2),
+            campsite=t_data.get('campsite', t_data['name']),
+            commissioner=t_data.get('commissioner'),
+            preferences=t_data.get('preferences', []),
+            day_requests=t_data.get('day_requests', {})
+        )
+        troops.append(troop)
+
+    troop_map = {t.name: t for t in troops}
+    activity_map = {a.name: a for a in activities}
+    slot_map = {(ts.day.name, ts.slot_number): ts for ts in time_slots}
+    schedule = Schedule()
+    for entry_data in snapshot.get('entries', []):
+        troop = troop_map.get(entry_data.get('troop_name'))
+        activity = activity_map.get(entry_data.get('activity_name'))
+        time_slot = slot_map.get((entry_data.get('day'), entry_data.get('slot')))
+        if not troop or not activity or not time_slot:
+            continue
+        schedule.entries.append(ScheduleEntry(time_slot=time_slot, activity=activity, troop=troop))
+
+    sailing_half_fills = snapshot.get('sailing_half_fills', {}) or {}
+    day_request_displacements = {
+        tuple(p) for p in (snapshot.get('day_request_displacements', []) or [])
+        if isinstance(p, (list, tuple)) and len(p) == 2
+    }
+    unscheduled_data = build_unscheduled_data(troops, schedule, sailing_half_fills, day_request_displacements)
+    data = {
+        'troops': troops,
+        'schedule': schedule,
+        'unscheduled': unscheduled_data,
+        'sailing_half_fills': sailing_half_fills,
+        'week_number': meta.get('week_number', week_id),
+        'file': f'snapshot:{run_id}:{step_index}',
+        'snapshot': {
+            'run_id': run_id,
+            'step_index': step_index,
+            'snapshot_count': len(snapshots),
+            'label': snapshot.get('label'),
+            'phase': snapshot.get('phase'),
+            'reason': snapshot.get('reason'),
+            'metrics': snapshot.get('metrics', {}),
+            'diff': snapshot.get('diff', {}),
+        },
+    }
+    SNAPSHOT_DATA[cache_key] = data
+    return data
+
 def get_week_data(week_id):
     """Lazy load a week's data on demand, with cache invalidation."""
     if week_id not in WEEK_METADATA:
         return None
+
+    if has_request_context():
+        snapshot_run = request.args.get('snapshot_run')
+        snapshot_step = request.args.get('snapshot_step')
+        if snapshot_run is not None and snapshot_step is not None:
+            return _load_snapshot_week_data(week_id, snapshot_run, snapshot_step)
     
     meta = WEEK_METADATA[week_id]
     troops_file = meta['file']
@@ -218,13 +330,13 @@ def get_week_data(week_id):
     
     if schedule_file.exists():
         try:
-            troops, schedule, unscheduled_data, sailing_half_fills = load_schedule_from_json(schedule_file)
+            troops, schedule, unscheduled_data, sailing_half_fills, day_request_displacements = load_schedule_from_json(schedule_file)
             schedule_mtime = schedule_file.stat().st_mtime
             print(f"  Loaded from cache")
         except Exception as e:
             print(f"  Cache failed: {e}, regenerating...")
             try:
-                troops, schedule, unscheduled_data, sailing_half_fills = generate_schedule(troops_file)
+                troops, schedule, unscheduled_data, sailing_half_fills, day_request_displacements = generate_schedule(troops_file)
             except Exception as e2:
                 print(f"  Schedule generation failed: {e2}")
                 # Return empty data rather than crashing
@@ -241,7 +353,7 @@ def get_week_data(week_id):
     else:
         try:
             print(f"  Generating fresh schedule...")
-            troops, schedule, unscheduled_data, sailing_half_fills = generate_schedule(troops_file)
+            troops, schedule, unscheduled_data, sailing_half_fills, day_request_displacements = generate_schedule(troops_file)
         except Exception as e:
             print(f"  Schedule generation failed: {e}")
             # Return empty data rather than crashing
@@ -261,6 +373,7 @@ def get_week_data(week_id):
         'schedule': schedule,
         'unscheduled': unscheduled_data,
         'sailing_half_fills': sailing_half_fills,
+        'day_request_displacements': day_request_displacements,
         'week_number': meta['week_number'],
         'file': troops_file.name,
         '_mtime': schedule_mtime  # Track file modification time
@@ -284,6 +397,19 @@ for week_id in PREWARM_WEEKS:
         print(f"  Pre-warming {week_id}...")
         get_week_data(week_id)
 print("Cache pre-warming complete.")
+
+
+def _require_week_data(week_id):
+    """Return loaded week data or abort with a clean 404 (F-15).
+
+    Several grid routes previously accessed ``get_week_data(week)['schedule']``
+    with no null guard, raising a 500 when the week id was unknown or its data
+    failed to load. This shared guard turns that into a proper 404.
+    """
+    data = get_week_data(week_id)
+    if not data:
+        abort(404, description=f"Week data not available for '{week_id}'")
+    return data
 
 
 @app.route('/')
@@ -317,6 +443,23 @@ def get_weeks():
         'weeks': [{'key': k, 'name': v['week_number']} for k, v in WEEK_METADATA.items()],
         'current': current_week
     })
+
+
+@app.route('/api/snapshots/<week_id>')
+def get_snapshot_runs(week_id):
+    """List local snapshot traces generated for a week."""
+    if week_id not in WEEK_METADATA:
+        return jsonify({'error': 'Week not found'}), 404
+    return jsonify({'week_id': week_id, 'runs': _list_snapshot_runs(week_id)})
+
+
+@app.route('/api/snapshot/<week_id>/<run_id>/<int:step_index>')
+def get_snapshot_metadata(week_id, run_id, step_index):
+    """Return metadata for one snapshot step without the full schedule grid."""
+    data = _load_snapshot_week_data(week_id, run_id, step_index)
+    if not data:
+        return jsonify({'error': 'Snapshot not found'}), 404
+    return jsonify(data.get('snapshot', {}))
 
 
 def _build_soft_deductions(metrics, score_diagnostics):
@@ -1020,10 +1163,11 @@ def regenerate_week(week_id):
     
     # Regenerate schedule
     print(f"Regenerating schedule for {week_id}...")
-    troops, schedule, unscheduled_data, sailing_half_fills = generate_schedule(troops_file)
+    troops, schedule, unscheduled_data, sailing_half_fills, day_request_displacements = generate_schedule(troops_file)
     
     # Save to cache using io_handler
-    save_schedule_to_json(schedule, troops, str(schedule_file), unscheduled_data, sailing_half_fills)
+    save_schedule_to_json(schedule, troops, str(schedule_file), unscheduled_data, sailing_half_fills,
+                          day_request_displacements)
     
     # Update memory cache
     WEEK_DATA[week_id] = {
@@ -1031,6 +1175,7 @@ def regenerate_week(week_id):
         'schedule': schedule,
         'unscheduled': unscheduled_data,
         'sailing_half_fills': sailing_half_fills,
+        'day_request_displacements': day_request_displacements,
         'week_number': meta['week_number'],
         'file': troops_file.name
     }
@@ -1206,7 +1351,7 @@ def get_area_schedule(area_name):
     week = request.args.get('week', current_week)
     if week not in WEEK_METADATA:
         week = current_week
-    data = get_week_data(week)
+    data = _require_week_data(week)
     schedule = data['schedule']
     sailing_half_fills = data.get('sailing_half_fills', {}) or {}
     troops = data.get('troops', [])
@@ -1369,7 +1514,7 @@ def get_commissioner_schedule(commissioner_name):
     week = request.args.get('week', current_week)
     if week not in WEEK_METADATA:
         week = current_week
-    data = get_week_data(week)
+    data = _require_week_data(week)
     schedule = data['schedule']
     
     # Build COMMISSIONER_TROOPS dynamically from actual troop data (supports TC and Voyageur)
@@ -1690,7 +1835,7 @@ def get_beach_board():
     week = request.args.get('week', current_week)
     if week not in WEEK_METADATA:
         week = current_week
-    data = get_week_data(week)
+    data = _require_week_data(week)
     schedule = data['schedule']
     
     # Define beach activities to display (NO BALLS - those have their own area)
@@ -1761,7 +1906,7 @@ def get_balls_schedule():
     week = request.args.get('week', current_week)
     if week not in WEEK_METADATA:
         week = current_week
-    data = get_week_data(week)
+    data = _require_week_data(week)
     schedule = data['schedule']
     troops = data['troops']
     sailing_half_fills = data.get('sailing_half_fills', {}) or {}
@@ -1828,7 +1973,7 @@ def get_reflection_schedule():
     week = request.args.get('week', current_week)
     if week not in WEEK_METADATA:
         week = current_week
-    data = get_week_data(week)
+    data = _require_week_data(week)
     schedule = data['schedule']
     
     
@@ -1928,7 +2073,7 @@ def get_staff_schedule(staff_name):
     week = request.args.get('week', current_week)
     if week not in WEEK_METADATA:
         week = current_week
-    data = get_week_data(week)
+    data = _require_week_data(week)
     schedule = data['schedule']
     
     # Map staff names to their activities
@@ -2052,7 +2197,7 @@ def get_staff_requirements():
     week = request.args.get('week', current_week)
     if week not in WEEK_METADATA:
         week = current_week
-    data = get_week_data(week)
+    data = _require_week_data(week)
     schedule = data['schedule']
     
     # Map activities to their staff director (and count)

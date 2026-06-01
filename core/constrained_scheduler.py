@@ -143,5 +143,12 @@ class ConstrainedScheduler(
     MOVABLE_FILL_ACTIVITIES = SchedulerConstants.MOVABLE_FILL_ACTIVITIES
     STAFF_ROLE_MAP = SchedulerConstants.STAFF_ROLE_MAP
     
-    def __init__(self, troops: list[Troop], activities: list[Activity] = None, voyageur_mode: bool = False):
+    def __init__(
+        self,
+        troops: list[Troop],
+        activities: list[Activity] = None,
+        voyageur_mode: bool = False,
+        snapshot_recorder=None,
+    ):
         self._initialize_state(troops, activities, voyageur_mode)
+        self.snapshot_recorder = snapshot_recorder
