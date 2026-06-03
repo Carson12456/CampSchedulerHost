@@ -114,6 +114,22 @@ class Troop(BaseModel):
                     kwargs[arg_keys[idx]] = value
         super().__init__(**kwargs)
 
+    def __hash__(self):
+        # Troop name is the de-facto identity across the scheduler: all state
+        # tracking dicts key by ``troop.name`` and ScheduleEntry compares troops
+        # by name. Hashing by name keeps that contract and is hashable for sets.
+        return hash(self.name)
+
+    def __eq__(self, other):
+        # Name-based equality (mirrors Activity). The default pydantic __eq__
+        # deep-compares every field (preferences list, day_requests dict, ...),
+        # which dominated runtime in the Phase-D swap evaluation hot loops
+        # (millions of ``e.troop == troop`` comparisons). Name identity is what
+        # the rest of the codebase already relies on.
+        if isinstance(other, Troop):
+            return self.name == other.name
+        return False
+
     @property
     def size(self) -> int:
         """Total troop size (scouts + adults)."""
