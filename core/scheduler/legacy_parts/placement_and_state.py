@@ -1371,7 +1371,7 @@ class LegacyPart01Mixin:
         def _try_relaxed_swap_same_troop(entry_a, entry_b) -> bool:
             if entry_a.troop != entry_b.troop:
                 return False
-            if entry_a.activity.slots > 1 or entry_b.activity.slots > 1:
+            if self._entry_spans_multiple_slots(entry_a) or self._entry_spans_multiple_slots(entry_b):
                 return False
             troop = entry_a.troop
             slot_a = entry_a.time_slot
@@ -2354,11 +2354,40 @@ class LegacyPart01Mixin:
             print(f"    [Beach Saturation] Fixed {fixes} saturation issue(s)")
 
 
+    def _entry_spans_multiple_slots(self, entry) -> bool:
+        """True when ``entry`` is part of an activity occupying >1 physical slot.
+
+        A raw ``activity.slots > 1`` check is insufficient: the troop-size-aware
+        effective duration can be 2 while ``activity.slots`` is 1 (e.g. Climbing
+        Tower for large troops via ``_get_effective_slots``). Same-troop cleanup
+        swaps must never move or displace such a half-block, otherwise the
+        orphaned remnant gets removed by ``_fix_multislot_integrity`` — which
+        drops the activity's slot count, lowers its ``ceil(n/3)`` cluster bar,
+        and manufactures an excess cluster day.
+        """
+        if entry.activity.slots > 1:
+            return True
+        try:
+            if self.schedule._get_effective_slots(entry.activity, entry.troop) > 1:
+                return True
+        except Exception:
+            pass
+        # Defensive: the same activity is already placed in more than one slot
+        # on this day for this troop (a contiguous multi-slot block), regardless
+        # of how that footprint arose.
+        return sum(
+            1
+            for e in self.schedule.entries
+            if e.troop == entry.troop
+            and e.time_slot.day == entry.time_slot.day
+            and e.activity.name == entry.activity.name
+        ) > 1
+
     def _try_strict_swap_same_troop(self, entry_a, entry_b) -> bool:
         """Swap two entries for same troop only if strict constraints still pass."""
         if entry_a.troop != entry_b.troop:
             return False
-        if entry_a.activity.slots > 1 or entry_b.activity.slots > 1:
+        if self._entry_spans_multiple_slots(entry_a) or self._entry_spans_multiple_slots(entry_b):
             return False
         troop = entry_a.troop
         slot_a = entry_a.time_slot

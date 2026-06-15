@@ -599,9 +599,21 @@
     },
     {
       "troop_name": "Fond Du Lac",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Fond Du Lac",
       "activity_name": "Water Polo",
       "day": "THURSDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Fond Du Lac",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 2
     },
     {
       "troop_name": "Fond Du Lac",
@@ -670,27 +682,9 @@
       "slot": 1
     },
     {
-      "troop_name": "Fond Du Lac",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Fond Du Lac",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Quetico",
       "activity_name": "Archery",
       "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Hibbing 2",
-      "activity_name": "Archery",
-      "day": "WEDNESDAY",
       "slot": 2
     },
     {
@@ -821,12 +815,6 @@
     },
     {
       "troop_name": "Hibbing 2",
-      "activity_name": "Shower House",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Hibbing 2",
       "activity_name": "Aqua Trampoline",
       "day": "FRIDAY",
       "slot": 1
@@ -841,6 +829,18 @@
       "troop_name": "Ft. William",
       "activity_name": "Greased Watermelon",
       "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Hibbing 2",
+      "activity_name": "Archery",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Hibbing 2",
+      "activity_name": "Shower House",
+      "day": "WEDNESDAY",
       "slot": 2
     },
     {

@@ -176,6 +176,18 @@
       "slot": 2
     },
     {
+      "troop_name": "Samoset",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Black Hawk",
       "activity_name": "Canoe Snorkel",
       "day": "WEDNESDAY",
@@ -185,6 +197,18 @@
       "troop_name": "Black Hawk",
       "activity_name": "Canoe Snorkel",
       "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
       "slot": 2
     },
     {
@@ -216,12 +240,6 @@
       "activity_name": "Climbing Tower",
       "day": "MONDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Ultimate Survivor",
-      "day": "MONDAY",
-      "slot": 2
     },
     {
       "troop_name": "Tecumseh",
@@ -303,18 +321,6 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "Gaga Ball",
       "day": "WEDNESDAY",
       "slot": 3
@@ -327,12 +333,6 @@
     },
     {
       "troop_name": "Samoset",
-      "activity_name": "Woggle Neckerchief Slide",
-      "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Samoset",
       "activity_name": "Delta",
       "day": "FRIDAY",
       "slot": 2
@@ -342,18 +342,6 @@
       "activity_name": "Fishing",
       "day": "MONDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Climbing Tower",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Climbing Tower",
-      "day": "WEDNESDAY",
-      "slot": 2
     },
     {
       "troop_name": "Samoset",
@@ -371,6 +359,30 @@
       "troop_name": "Taskalusa",
       "activity_name": "Water Polo",
       "day": "THURSDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Troop Shotgun",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Aqua Trampoline",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Troop Shotgun",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Greased Watermelon",
+      "day": "TUESDAY",
       "slot": 1
     },
     {
@@ -398,30 +410,6 @@
       "slot": 3
     },
     {
-      "troop_name": "Black Hawk",
-      "activity_name": "Troop Shotgun",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Black Hawk",
-      "activity_name": "Aqua Trampoline",
-      "day": "THURSDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Troop Shotgun",
-      "day": "THURSDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Greased Watermelon",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Tecumseh",
       "activity_name": "Climbing Tower",
       "day": "THURSDAY",
@@ -444,6 +432,18 @@
       "activity_name": "Gaga Ball",
       "day": "FRIDAY",
       "slot": 1
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "GPS & Geocaching",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Ultimate Survivor",
+      "day": "MONDAY",
+      "slot": 1
     }
   ],
   "unscheduled": {
@@ -453,11 +453,6 @@
         {
           "name": "Troop Shotgun",
           "rank": 8,
-          "is_exempt": false
-        },
-        {
-          "name": "GPS & Geocaching",
-          "rank": 9,
           "is_exempt": false
         }
       ]

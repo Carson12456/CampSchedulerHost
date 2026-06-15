@@ -414,6 +414,30 @@
       "slot": 2
     },
     {
+      "troop_name": "Tamanend",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tamanend",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Climbing Tower",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Massasoit",
       "activity_name": "Canoe Snorkel",
       "day": "TUESDAY",
@@ -507,12 +531,6 @@
       "troop_name": "Joseph",
       "activity_name": "GPS & Geocaching",
       "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Joseph",
-      "activity_name": "Knots and Lashings",
-      "day": "TUESDAY",
       "slot": 1
     },
     {
@@ -646,12 +664,6 @@
       "activity_name": "Troop Swim",
       "day": "FRIDAY",
       "slot": 1
-    },
-    {
-      "troop_name": "Joseph",
-      "activity_name": "Trading Post",
-      "day": "FRIDAY",
-      "slot": 3
     },
     {
       "troop_name": "Joseph",
@@ -828,84 +840,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Taskalusa",
-      "activity_name": "Greased Watermelon",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Tie Dye",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "Campsite Free Time",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tecumseh",
-      "activity_name": "Tie Dye",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Skenandoa",
-      "activity_name": "Tie Dye",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Skenandoa",
-      "activity_name": "9 Square",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Pontiac",
-      "activity_name": "Greased Watermelon",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Pontiac",
-      "activity_name": "Tie Dye",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Pontiac",
-      "activity_name": "Aqua Trampoline",
-      "day": "MONDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Cochise",
-      "activity_name": "Troop Rifle",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Cochise",
-      "activity_name": "Knots and Lashings",
-      "day": "THURSDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Joseph",
-      "activity_name": "Sauna",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Cochise",
-      "activity_name": "Sauna",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
       "troop_name": "Cochise",
       "activity_name": "Canoe Snorkel",
       "day": "MONDAY",
@@ -1014,12 +948,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Tecumseh",
-      "activity_name": "Archery",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Massasoit",
       "activity_name": "Canoe Snorkel",
       "day": "TUESDAY",
@@ -1057,14 +985,92 @@
     },
     {
       "troop_name": "Taskalusa",
+      "activity_name": "Float for Floats",
+      "day": "MONDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Greased Watermelon",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Tie Dye",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Taskalusa",
       "activity_name": "Troop Shotgun",
       "day": "TUESDAY",
       "slot": 3
     },
     {
-      "troop_name": "Taskalusa",
-      "activity_name": "Float for Floats",
+      "troop_name": "Tecumseh",
+      "activity_name": "Campsite Free Time",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Tie Dye",
       "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Archery",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Skenandoa",
+      "activity_name": "Tie Dye",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Skenandoa",
+      "activity_name": "9 Square",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Greased Watermelon",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Tie Dye",
+      "day": "FRIDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Pontiac",
+      "activity_name": "Aqua Trampoline",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Cochise",
+      "activity_name": "Troop Rifle",
+      "day": "WEDNESDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Cochise",
+      "activity_name": "Knots and Lashings",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "9 Square",
+      "day": "WEDNESDAY",
       "slot": 2
     },
     {
@@ -1093,19 +1099,13 @@
     },
     {
       "troop_name": "Joseph",
-      "activity_name": "Hemp Craft",
-      "day": "THURSDAY",
+      "activity_name": "Knots and Lashings",
+      "day": "WEDNESDAY",
       "slot": 2
     },
     {
-      "troop_name": "Cochise",
-      "activity_name": "GPS & Geocaching",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Campsite Free Time",
+      "troop_name": "Joseph",
+      "activity_name": "Sauna",
       "day": "TUESDAY",
       "slot": 1
     },
@@ -1134,9 +1134,45 @@
       "slot": 3
     },
     {
+      "troop_name": "Joseph",
+      "activity_name": "Hemp Craft",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Joseph",
+      "activity_name": "Trading Post",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Gaga Ball",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
       "troop_name": "Tamanend",
       "activity_name": "Archery",
       "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Campsite Free Time",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Cochise",
+      "activity_name": "GPS & Geocaching",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Cochise",
+      "activity_name": "Sauna",
+      "day": "FRIDAY",
       "slot": 3
     },
     {
@@ -1147,26 +1183,14 @@
     },
     {
       "troop_name": "Powhatan",
-      "activity_name": "9 Square",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Archery",
-      "day": "WEDNESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Powhatan",
       "activity_name": "Greased Watermelon",
       "day": "THURSDAY",
       "slot": 1
     },
     {
       "troop_name": "Powhatan",
-      "activity_name": "Gaga Ball",
-      "day": "FRIDAY",
+      "activity_name": "Archery",
+      "day": "WEDNESDAY",
       "slot": 3
     },
     {
@@ -1191,30 +1215,6 @@
       "troop_name": "Tamanend",
       "activity_name": "Shower House",
       "day": "THURSDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Tamanend",
-      "activity_name": "Climbing Tower",
-      "day": "WEDNESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tamanend",
-      "activity_name": "Climbing Tower",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Climbing Tower",
-      "day": "MONDAY",
       "slot": 2
     }
   ],

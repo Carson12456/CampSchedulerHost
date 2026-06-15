@@ -925,12 +925,6 @@
     },
     {
       "troop_name": "Black Hawk",
-      "activity_name": "Archery",
-      "day": "TUESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Black Hawk",
       "activity_name": "Aqua Trampoline",
       "day": "THURSDAY",
       "slot": 2
@@ -942,12 +936,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Black Hawk",
-      "activity_name": "Campsite Free Time",
-      "day": "FRIDAY",
-      "slot": 3
-    },
-    {
       "troop_name": "Tecumseh",
       "activity_name": "Delta",
       "day": "MONDAY",
@@ -955,20 +943,8 @@
     },
     {
       "troop_name": "Tecumseh",
-      "activity_name": "Archery",
-      "day": "TUESDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Tecumseh",
       "activity_name": "Ultimate Survivor",
       "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Samoset",
-      "activity_name": "Monkey's Fist",
-      "day": "MONDAY",
       "slot": 3
     },
     {
@@ -1164,12 +1140,6 @@
       "slot": 2
     },
     {
-      "troop_name": "Tecumseh",
-      "activity_name": "Trading Post",
-      "day": "FRIDAY",
-      "slot": 2
-    },
-    {
       "troop_name": "Red Cloud",
       "activity_name": "Shower House",
       "day": "WEDNESDAY",
@@ -1200,9 +1170,39 @@
       "slot": 3
     },
     {
+      "troop_name": "Black Hawk",
+      "activity_name": "Chopped!",
+      "day": "TUESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Black Hawk",
+      "activity_name": "Archery",
+      "day": "FRIDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Samoset",
+      "activity_name": "Trading Post",
+      "day": "THURSDAY",
+      "slot": 2
+    },
+    {
       "troop_name": "Samoset",
       "activity_name": "Water Polo",
-      "day": "THURSDAY",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Gaga Ball",
+      "day": "TUESDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Tecumseh",
+      "activity_name": "Archery",
+      "day": "FRIDAY",
       "slot": 2
     }
   ],
@@ -1311,8 +1311,8 @@
       "top5": [],
       "top10": [
         {
-          "name": "Gaga Ball",
-          "rank": 7,
+          "name": "Trading Post",
+          "rank": 9,
           "is_exempt": false
         }
       ]

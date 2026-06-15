@@ -498,18 +498,6 @@
     },
     {
       "troop_name": "Taskalusa",
-      "activity_name": "Sauna",
-      "day": "WEDNESDAY",
-      "slot": 2
-    },
-    {
-      "troop_name": "Taskalusa",
-      "activity_name": "Trading Post",
-      "day": "WEDNESDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Taskalusa",
       "activity_name": "Greased Watermelon",
       "day": "FRIDAY",
       "slot": 1
@@ -620,12 +608,6 @@
       "troop_name": "Red Cloud",
       "activity_name": "9 Square",
       "day": "FRIDAY",
-      "slot": 3
-    },
-    {
-      "troop_name": "Red Cloud",
-      "activity_name": "Greased Watermelon",
-      "day": "WEDNESDAY",
       "slot": 3
     },
     {
@@ -759,12 +741,6 @@
       "activity_name": "Delta",
       "day": "WEDNESDAY",
       "slot": 2
-    },
-    {
-      "troop_name": "Red Cloud",
-      "activity_name": "Fishing",
-      "day": "MONDAY",
-      "slot": 3
     },
     {
       "troop_name": "Tamanend",
@@ -911,6 +887,18 @@
       "slot": 1
     },
     {
+      "troop_name": "Powhatan",
+      "activity_name": "Troop Shotgun",
+      "day": "MONDAY",
+      "slot": 1
+    },
+    {
+      "troop_name": "Powhatan",
+      "activity_name": "Greased Watermelon",
+      "day": "WEDNESDAY",
+      "slot": 1
+    },
+    {
       "troop_name": "Samoset",
       "activity_name": "Troop Rifle",
       "day": "WEDNESDAY",
@@ -933,18 +921,6 @@
       "activity_name": "Gaga Ball",
       "day": "WEDNESDAY",
       "slot": 3
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Troop Shotgun",
-      "day": "MONDAY",
-      "slot": 1
-    },
-    {
-      "troop_name": "Powhatan",
-      "activity_name": "Greased Watermelon",
-      "day": "WEDNESDAY",
-      "slot": 1
     },
     {
       "troop_name": "Black Hawk",
@@ -993,6 +969,30 @@
       "activity_name": "Shower House",
       "day": "WEDNESDAY",
       "slot": 3
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Gaga Ball",
+      "day": "MONDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Red Cloud",
+      "activity_name": "Fishing",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Climbing Tower",
+      "day": "WEDNESDAY",
+      "slot": 3
+    },
+    {
+      "troop_name": "Taskalusa",
+      "activity_name": "Trading Post",
+      "day": "WEDNESDAY",
+      "slot": 2
     }
   ],
   "unscheduled": {
@@ -1015,8 +1015,8 @@
       "top5": [],
       "top10": [
         {
-          "name": "Climbing Tower",
-          "rank": 9,
+          "name": "Sauna",
+          "rank": 10,
           "is_exempt": false
         }
       ]
@@ -1108,7 +1108,7 @@
       "troop_name": "Powhatan",
       "day": "WEDNESDAY",
       "slot": 2,
-      "activity_name": "Trading Post",
+      "activity_name": "Campsite Free Time",
       "fill_half": "top",
       "requested_rank": null,
       "counts_as_request": false

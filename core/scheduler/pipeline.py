@@ -10,6 +10,15 @@ from ..models import Day, Schedule
 class SchedulingPipelineMixin:
     """Coordinates the full scheduling lifecycle across all phases."""
 
+    # F-17: run-wide Top-10 budget. Each guarded Phase-D step may lose at most
+    # ``top10_lost > 2`` on its own, but without a run-level cap the per-step
+    # tolerance compounds across D.2/D.3/D.4/D.8/D.9 (up to ~10 Top-10
+    # placements can erode the 450 bucket with no rollback). This budget bounds
+    # the *cumulative* Top-10 loss attributable to guarded steps over the whole
+    # run; once exhausted, any further guarded step that loses Top-10 is rolled
+    # back.
+    PHASE_D_TOP10_RUN_BUDGET = 2
+
     def _enforce_sailing_slot_exclusivity(self) -> None:
         """
         Normalize final Sailing occupancy to the BRAIN 90-minute capacity model.
@@ -108,6 +117,24 @@ class SchedulingPipelineMixin:
                     count += 1
         return count
 
+    def _count_sailing_same_day_misses(self) -> int:
+        """Count Sailing days that hold only one troop (judge §cluster metric).
+
+        Mirrors ``regression_checker`` ``sailing_same_day_misses``: every day
+        that has at least one Sailing start but fewer than two troops sailing is
+        a missed "2 sails per day" consolidation opportunity. Used to guard the
+        F-18 consolidation pass so it only commits when it strictly reduces the
+        penalty.
+        """
+        sailing_day_troops = {}
+        for entry in self.schedule.entries:
+            if entry.activity.name != "Sailing":
+                continue
+            sailing_day_troops.setdefault(entry.time_slot.day, set()).add(entry.troop.name)
+        total = len(sailing_day_troops)
+        paired = sum(1 for troops in sailing_day_troops.values() if len(troops) >= 2)
+        return max(0, total - paired)
+
     def _safe_phase_d_step(
         self,
         step_name: str,
@@ -116,6 +143,7 @@ class SchedulingPipelineMixin:
         guard_top10: bool = True,
         guard_soft_metrics: bool = True,
         guard_staff_variance: bool = False,
+        guard_sailing_same_day: bool = False,
     ) -> None:
         """Run a Phase D optimization step with Top-5/Top-10 rollback protection.
 
@@ -127,6 +155,15 @@ class SchedulingPipelineMixin:
         ``guard_staff_variance`` (F-16): additionally roll back unless the step
         strictly *reduces* staffed-slot load variance — used for the staff
         balancing pass, whose moves are otherwise invisible to the guard.
+
+        ``guard_sailing_same_day`` (F-18): additionally roll back unless the
+        step strictly *reduces* the Sailing same-day miss count, and never let
+        it drift a Delta/Sailing pair apart (BRAIN §11) — used for the Sailing
+        consolidation pass, whose benefit is otherwise invisible to the guard.
+
+        F-17: Top-10 loss is bounded both per-step (``top10_lost > 2``) and
+        run-wide via ``self._phase_d_top10_budget_remaining``; once the run
+        budget is exhausted, any guarded step that loses Top-10 is rolled back.
         """
         self._rebuild_staff_tracking()
         snapshot = self._snapshot_scheduler_state()
@@ -135,6 +172,8 @@ class SchedulingPipelineMixin:
         before_excess = self._count_excess_cluster_days()
         before_gaps = self._count_area_cluster_gaps()
         before_variance = self._compute_staff_load_variance() if guard_staff_variance else 0.0
+        before_sailing = self._count_sailing_same_day_misses() if guard_sailing_same_day else 0
+        before_delta_pair = self._count_delta_sailing_pairing_misses() if guard_sailing_same_day else 0
 
         step_fn()
         self._rebuild_staff_tracking()
@@ -149,7 +188,13 @@ class SchedulingPipelineMixin:
         after_excess = self._count_excess_cluster_days()
         after_gaps = self._count_area_cluster_gaps()
         after_variance = self._compute_staff_load_variance() if guard_staff_variance else 0.0
+        after_sailing = self._count_sailing_same_day_misses() if guard_sailing_same_day else 0
+        after_delta_pair = self._count_delta_sailing_pairing_misses() if guard_sailing_same_day else 0
         top10_lost = before_top10 - after_top10
+
+        # F-17: run-wide Top-10 budget (cumulative loss attributable to guarded
+        # steps). Defensive getattr keeps the method usable outside schedule_all.
+        budget_remaining = getattr(self, "_phase_d_top10_budget_remaining", self.PHASE_D_TOP10_RUN_BUDGET)
 
         if after_top5 > before_top5:
             print(f"  [{step_name}] ROLLED BACK — Top-5 misses increased ({before_top5} -> {after_top5})")
@@ -159,6 +204,11 @@ class SchedulingPipelineMixin:
             print(f"  [{step_name}] ROLLED BACK — lost {top10_lost} Top-10 placements ({before_top10} -> {after_top10})")
             self._restore_scheduler_state(snapshot)
             status = "rolled-back-top10"
+        elif guard_top10 and top10_lost > budget_remaining:
+            print(f"  [{step_name}] ROLLED BACK — run-wide Top-10 budget exhausted "
+                  f"(step lost {top10_lost}, budget {budget_remaining} remaining)")
+            self._restore_scheduler_state(snapshot)
+            status = "rolled-back-top10-budget"
         elif guard_soft_metrics and after_excess > before_excess:
             print(f"  [{step_name}] ROLLED BACK — excess cluster days increased ({before_excess} -> {after_excess})")
             self._restore_scheduler_state(snapshot)
@@ -171,7 +221,22 @@ class SchedulingPipelineMixin:
             print(f"  [{step_name}] ROLLED BACK — staff variance increased ({before_variance:.2f} -> {after_variance:.2f})")
             self._restore_scheduler_state(snapshot)
             status = "rolled-back-staff-variance"
+        elif guard_sailing_same_day and after_delta_pair > before_delta_pair:
+            print(f"  [{step_name}] ROLLED BACK — Delta/Sailing pairing worsened ({before_delta_pair} -> {after_delta_pair})")
+            self._restore_scheduler_state(snapshot)
+            status = "rolled-back-delta-pair"
+        elif guard_sailing_same_day and after_sailing >= before_sailing:
+            print(f"  [{step_name}] ROLLED BACK — Sailing same-day misses not improved ({before_sailing} -> {after_sailing})")
+            self._restore_scheduler_state(snapshot)
+            status = "rolled-back-sailing-same-day"
         else:
+            # Step committed: charge the run-wide Top-10 budget (gains refund it,
+            # capped at the initial budget so they can't bank extra headroom).
+            if guard_top10 and hasattr(self, "_phase_d_top10_budget_remaining"):
+                self._phase_d_top10_budget_remaining = min(
+                    self.PHASE_D_TOP10_RUN_BUDGET,
+                    self._phase_d_top10_budget_remaining - top10_lost,
+                )
             delta_label = f"Top10: {before_top10}->{after_top10}" if top10_lost != 0 else "Top10: stable"
             cluster_label = f"Excess: {before_excess}->{after_excess}, Gaps: {before_gaps}->{after_gaps}"
             print(f"  [{step_name}] OK ({delta_label}; {cluster_label})")
@@ -387,6 +452,10 @@ class SchedulingPipelineMixin:
         #   * D.10 is self-guarded (internal non-exempt/gap baselines).
         # =================================================================
         self.current_pipeline_phase = "polish"
+        # F-17: reset the run-wide Top-10 loss budget entering the guarded
+        # Phase-D swap phase. Guarded steps draw down this budget so their
+        # individually-tolerated (<=2) Top-10 losses cannot compound run-wide.
+        self._phase_d_top10_budget_remaining = self.PHASE_D_TOP10_RUN_BUDGET
         self.logger.section("PHASE D: FINAL POLISH & VERIFICATION")
 
         # D.1: Friday Reflection Optimization (self-contained safe-swap)
@@ -461,6 +530,18 @@ class SchedulingPipelineMixin:
             guard_staff_variance=True,
         )
 
+        # D.9c: Sailing Same-Day Consolidation (F-18). Previously orphaned (cut
+        # A.9); now wired as a guarded step that only commits if it strictly
+        # reduces Sailing same-day misses (the judge's "2 sails per day"
+        # cluster metric) without losing Top-5/Top-10, worsening clustering, or
+        # drifting a Delta/Sailing pair apart (BRAIN §11).
+        self.logger.subsection("D.9c Sailing Same-Day Consolidation")
+        self._safe_phase_d_step(
+            "D.9c Sailing Consolidation",
+            self._consolidate_sailing_same_day,
+            guard_sailing_same_day=True,
+        )
+
         # D.10: Post-Fill Cluster Gap Optimization (self-guarded internally)
         self.logger.subsection("D.10 Post-Fill Cluster Gap Optimization")
         self._optimize_cluster_gaps_post_fill()
@@ -526,6 +607,7 @@ class SchedulingPipelineMixin:
         self._record_schedule_snapshot("Final filler audit complete", reason="final-step")
         final_cluster_snapshot = self._snapshot_scheduler_state()
         final_cluster_top5, _ = self._count_non_exempt_top5_misses()
+        final_cluster_top10 = self._count_top10_in_schedule()
         final_cluster_excess = self._count_excess_cluster_days()
         final_cluster_gaps = self._count_area_cluster_gaps()
         if final_cluster_top5 == 0 and (final_cluster_excess > 0 or final_cluster_gaps > 0):
@@ -535,10 +617,14 @@ class SchedulingPipelineMixin:
             self._fix_multislot_integrity()
             self._guarantee_no_gaps()
             after_cluster_top5, _ = self._count_non_exempt_top5_misses()
+            after_cluster_top10 = self._count_top10_in_schedule()
             after_cluster_excess = self._count_excess_cluster_days()
             after_cluster_gaps = self._count_area_cluster_gaps()
+            # F-17: terminal cluster repair must not erode the Top-10 (450)
+            # bucket — roll back if Top-10 placements drop.
             if (
                 after_cluster_top5 > final_cluster_top5
+                or after_cluster_top10 < final_cluster_top10
                 or after_cluster_excess > final_cluster_excess
                 or after_cluster_gaps > final_cluster_gaps
             ):
@@ -550,6 +636,7 @@ class SchedulingPipelineMixin:
         self._record_schedule_snapshot("Terminal filler audit complete", reason="final-step")
         terminal_cluster_snapshot = self._snapshot_scheduler_state()
         terminal_cluster_top5, _ = self._count_non_exempt_top5_misses()
+        terminal_cluster_top10 = self._count_top10_in_schedule()
         terminal_cluster_excess = self._count_excess_cluster_days()
         terminal_cluster_gaps = self._count_area_cluster_gaps()
         if terminal_cluster_top5 == 0 and (terminal_cluster_excess > 0 or terminal_cluster_gaps > 0):
@@ -559,10 +646,14 @@ class SchedulingPipelineMixin:
             self._fix_multislot_integrity()
             self._guarantee_no_gaps()
             after_terminal_top5, _ = self._count_non_exempt_top5_misses()
+            after_terminal_top10 = self._count_top10_in_schedule()
             after_terminal_excess = self._count_excess_cluster_days()
             after_terminal_gaps = self._count_area_cluster_gaps()
+            # F-17: terminal cluster repair must not erode the Top-10 (450)
+            # bucket — roll back if Top-10 placements drop.
             if (
                 after_terminal_top5 > terminal_cluster_top5
+                or after_terminal_top10 < terminal_cluster_top10
                 or after_terminal_excess > terminal_cluster_excess
                 or after_terminal_gaps > terminal_cluster_gaps
             ):
@@ -572,6 +663,29 @@ class SchedulingPipelineMixin:
                 self._finalize_filler_replacement_audit()
                 self._fix_multislot_integrity()
                 self._guarantee_no_gaps()
+
+        # Guarded preference upgrade (Thread 1). Runs on the near-final, fully
+        # populated schedule: trades a low-rank entry (genuine preference or
+        # filler) for a higher-ranked unscheduled preference, with an optional
+        # single same-troop cross-slot relocation. Self-guarded so it cannot
+        # raise excess/gaps/soft, drop Top-10, or break Top-5; it only commits
+        # when realized preference value strictly improves.
+        self.logger.subsection("Terminal guarded preference upgrade")
+        self._preference_upgrade_pass()
+        self._fix_multislot_integrity()
+        self._guarantee_no_gaps()
+        self._record_schedule_snapshot("Terminal preference upgrade complete", reason="final-step")
+
+        # Universal Campsite Free Time coverage (Thread 2 / BRAIN §1a). Gives each
+        # troop without a Campsite Free Time block one by replacing its worst
+        # non-anchor occupant, committing only when score-neutral-or-better and
+        # Top-5/Top-10 safe.
+        self.logger.subsection("Terminal Campsite Free Time coverage")
+        self._ensure_campsite_free_time_coverage()
+        self._fix_multislot_integrity()
+        self._guarantee_no_gaps()
+        self._record_schedule_snapshot("Terminal CFT coverage complete", reason="final-step")
+
         self.logger.subsection("Terminal guarded soft-constraint cleanup")
         self._final_soft_constraint_cleanup()
         self._fix_multislot_integrity()

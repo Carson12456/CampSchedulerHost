@@ -1779,6 +1779,356 @@ class LegacyPart05Mixin:
             print(f"  [Final Audit] rank histogram: {ranks_str}")
         return stats
 
+    # Realized-preference scoring contract (mirrors regression_checker
+    # DEFAULT_WEIGHTS["preference_weights"]; guarded by tests/unit/
+    # test_scoring_contract.py). Ranks 1-14 (0-based 0-13) are miss *penalties*
+    # that a scheduled preference avoids; ranks 15-20 (0-based 14-19) are hit
+    # *bonuses*; ranks 21+ contribute nothing to the official score. Using these
+    # exact weights keeps the upgrade/CFT guards aligned with "score-neutral-or-
+    # better" instead of an arbitrary linear proxy.
+    _PREFERENCE_RANK_VALUE = (
+        [5.4, 4.7, 4.1, 3.4, 2.7]      # ranks 1-5
+        + [2.6, 2.4, 2.3, 2.2, 2.0]    # ranks 6-10
+        + [1.8, 1.6, 1.4, 1.2]         # ranks 11-14
+        + [1.0, 0.8, 0.6, 0.4, 0.2, 0.0]  # ranks 15-20 (hit bonuses)
+    )
+
+    def _scheduled_preference_value(self) -> float:
+        """Realized preference score across the schedule (higher == better).
+
+        Each scheduled ranked preference contributes its official scoring weight
+        (see ``_PREFERENCE_RANK_VALUE``): a better-ranked preference is worth at
+        least as much as a worse-ranked one, and preferences beyond rank 20 (or
+        unranked filler) contribute nothing — so replacing them is score-neutral.
+        """
+        total = 0.0
+        table = self._PREFERENCE_RANK_VALUE
+        cap = len(table)
+        for entry in self.schedule.entries:
+            r = entry.troop.get_priority(entry.activity.name)
+            if r is not None and 0 <= r < cap:
+                total += table[r]
+        return total
+
+    def _preference_upgrade_pass(self, rank_window: int = 20, max_per_troop: int = 6) -> dict:
+        """Guarded preference upgrade: trade a low-rank entry for a higher pref.
+
+        The final filler audit only drops ``FILLER_SET`` activities into the SAME
+        slot. This pass closes the remaining gap the audit cannot reach (e.g. WK5
+        Samoset, where Troop Swim #7 is unscheduled while a genuine low-rank
+        preference such as Loon Lore #17 holds a beach-legal slot):
+
+          * it may drop a *genuine* low-rank preference (not just generic filler)
+            when a strictly higher-ranked unscheduled preference can take a valid
+            slot, and
+          * it permits a single same-troop cross-slot relocation so a
+            slot-restricted preference (e.g. a beach activity barred from slot 2)
+            can land in a legal slot freed elsewhere.
+
+        Every move is transactional and commits only when ALL guards hold versus
+        the immediately-preceding state:
+          * non-exempt Top-5 misses NOT increased,
+          * Top-10 placements NOT decreased,
+          * excess cluster days / cluster gaps / soft_total / Delta-Sailing NOT
+            worsened, and
+          * total realized preference value strictly improves.
+
+        Multi-slot blocks (raw or effective, e.g. Climbing Tower for large troops)
+        are never moved or displaced — see ``_entry_spans_multiple_slots``.
+        """
+        anchors = self._get_protected_activity_names({"Honor Camper", "Director's Game", "Delta"})
+        stats = {"committed": 0, "attempts": 0, "blocked": 0}
+
+        def droppable(entry, troop) -> bool:
+            if entry.activity.name in anchors:
+                return False
+            if self._entry_spans_multiple_slots(entry):
+                return False
+            if getattr(entry, "is_continuation", False):
+                return False
+            if self._is_honored_day_request_entry(entry):
+                return False
+            return True
+
+        def try_upgrade(troop, pref_name, d_sig) -> bool:
+            """d_sig = (day, slot_number, activity_name) of the entry to drop."""
+            pref_activity = get_activity_by_name(pref_name)
+            if not pref_activity or pref_activity.slots > 1:
+                return False
+
+            before_top5, _ = self._count_non_exempt_top5_misses()
+            before_top10 = self._count_top10_in_schedule()
+            before_q = self._schedule_quality_snapshot()
+            before_pref = self._scheduled_preference_value()
+
+            def guards_ok() -> bool:
+                after_top5, _ = self._count_non_exempt_top5_misses()
+                if after_top5 > before_top5:
+                    return False
+                if self._count_top10_in_schedule() < before_top10:
+                    return False
+                after_q = self._schedule_quality_snapshot()
+                if after_q["excess"] > before_q["excess"]:
+                    return False
+                if after_q["gaps"] > before_q["gaps"]:
+                    return False
+                if after_q["soft_total"] > before_q["soft_total"]:
+                    return False
+                if after_q.get("delta_sailing", 0) > before_q.get("delta_sailing", 0):
+                    return False
+                if self._scheduled_preference_value() <= before_pref:
+                    return False
+                return True
+
+            d_day, d_slotnum, d_actname = d_sig
+
+            def find_entry(day, slotnum, actname):
+                return next(
+                    (
+                        e for e in self.schedule.entries
+                        if e.troop == troop
+                        and e.time_slot.day == day
+                        and e.time_slot.slot_number == slotnum
+                        and e.activity.name == actname
+                    ),
+                    None,
+                )
+
+            # Plan A: place the preference directly in the dropped entry's slot.
+            snap = self._snapshot_scheduler_state()
+            d_entry = find_entry(d_day, d_slotnum, d_actname)
+            if d_entry is not None:
+                d_slot = d_entry.time_slot
+                self._remove_from_schedule(d_entry)
+                if (
+                    self._can_schedule(troop, pref_activity, d_slot, d_slot.day, relax_constraints=False)
+                    and self._add_to_schedule(d_slot, pref_activity, troop)
+                    and guards_ok()
+                ):
+                    return True
+            self._restore_scheduler_state(snap)
+
+            # Plan B: one same-troop cross-slot relocation. Move a single-slot,
+            # non-anchor activity M out of a preference-legal slot S into the
+            # dropped slot, then place the preference at S.
+            for relocate_slot in self.time_slots:
+                if relocate_slot.day == d_day and relocate_slot.slot_number == d_slotnum:
+                    continue
+                snap = self._snapshot_scheduler_state()
+                d_entry = find_entry(d_day, d_slotnum, d_actname)
+                m_entry = next(
+                    (e for e in self.schedule.entries if e.troop == troop and e.time_slot == relocate_slot),
+                    None,
+                )
+                if d_entry is None or m_entry is None or not droppable(m_entry, troop):
+                    self._restore_scheduler_state(snap)
+                    continue
+                d_slot = d_entry.time_slot
+                m_activity = m_entry.activity
+                self._remove_from_schedule(d_entry)
+                self._remove_from_schedule(m_entry)
+                if (
+                    self._can_schedule(troop, pref_activity, relocate_slot, relocate_slot.day, relax_constraints=False)
+                    and self._can_schedule(troop, m_activity, d_slot, d_slot.day, relax_constraints=False)
+                    and self._add_to_schedule(relocate_slot, pref_activity, troop)
+                    and self._add_to_schedule(d_slot, m_activity, troop)
+                    and guards_ok()
+                ):
+                    return True
+                self._restore_scheduler_state(snap)
+            return False
+
+        print("  [Pref Upgrade] Starting guarded preference-upgrade pass...")
+        for troop in sorted(self.troops, key=lambda t: t.name):
+            prefs = troop.preferences or []
+            committed_here = 0
+            progress = True
+            while progress and committed_here < max_per_troop:
+                progress = False
+                scheduled_names = {e.activity.name for e in self.schedule.entries if e.troop == troop}
+                unscheduled = [
+                    (idx, name)
+                    for idx, name in enumerate(prefs)
+                    if idx < rank_window and name not in scheduled_names
+                ]
+                if not unscheduled:
+                    break
+
+                droppables = [
+                    e for e in self.schedule.entries
+                    if e.troop == troop and droppable(e, troop)
+                ]
+
+                def drop_key(e):
+                    r = troop.get_priority(e.activity.name)
+                    return r if (r is not None and r < 999) else 9999
+
+                # Worst-ranked (or non-preference) entries are dropped first.
+                droppables.sort(key=drop_key, reverse=True)
+
+                made = False
+                for pref_idx, pref_name in unscheduled:
+                    for d_entry in droppables:
+                        d_rank = drop_key(d_entry)
+                        if pref_idx >= d_rank:
+                            continue
+                        stats["attempts"] += 1
+                        d_sig = (
+                            d_entry.time_slot.day,
+                            d_entry.time_slot.slot_number,
+                            d_entry.activity.name,
+                        )
+                        if try_upgrade(troop, pref_name, d_sig):
+                            stats["committed"] += 1
+                            committed_here += 1
+                            made = True
+                            print(
+                                f"  [Pref Upgrade] {troop.name}: {d_entry.activity.name}"
+                                f"(#{d_rank + 1 if d_rank < 9999 else 'NA'}) -> {pref_name}"
+                                f"(#{pref_idx + 1})"
+                            )
+                            break
+                        stats["blocked"] += 1
+                    if made:
+                        progress = True
+                        break
+
+        print(
+            f"  [Pref Upgrade] committed={stats['committed']}, "
+            f"attempts={stats['attempts']}, blocked={stats['blocked']}"
+        )
+        return stats
+
+    def _ensure_campsite_free_time_coverage(self) -> dict:
+        """Universal Campsite Free Time policy (Thread 2 / BRAIN §1a).
+
+        ``Campsite Free Time`` is concurrent, needs no staff, and is universally
+        placeable, so every troop should get at least one. For each troop without
+        it, replace its worst non-anchor occupant with Campsite Free Time, but
+        commit only when the swap is score-neutral-or-better and Top-5/Top-10 are
+        preserved:
+
+          * non-exempt Top-5 misses NOT increased,
+          * Top-10 placements NOT decreased,
+          * excess cluster days / cluster gaps / soft_total / Delta-Sailing NOT
+            worsened, and
+          * realized preference value NOT decreased (so a genuine preference is
+            never sacrificed for free time — only generic filler is replaced).
+
+        Among all valid replacements for a troop, the most beneficial is chosen
+        (lowest resulting composite, then highest preference value), which makes
+        the pass naturally prefer clearing a soft violation, then reducing an
+        excess day, then dropping the lowest-value filler.
+        """
+        cft = get_activity_by_name("Campsite Free Time")
+        if not cft:
+            return {"committed": 0, "already": 0, "skipped": 0}
+
+        anchors = self._get_protected_activity_names({"Honor Camper", "Director's Game", "Delta"})
+
+        def replaceable(entry) -> bool:
+            if entry.activity.name == "Campsite Free Time":
+                return False
+            if entry.activity.name in anchors:
+                return False
+            if self._entry_spans_multiple_slots(entry):
+                return False
+            if getattr(entry, "is_continuation", False):
+                return False
+            if self._is_honored_day_request_entry(entry):
+                return False
+            return True
+
+        stats = {"committed": 0, "already": 0, "skipped": 0}
+        print("  [CFT Coverage] Ensuring universal Campsite Free Time coverage...")
+
+        for troop in sorted(self.troops, key=lambda t: t.name):
+            if any(
+                e.activity.name == "Campsite Free Time" and e.troop == troop
+                for e in self.schedule.entries
+            ):
+                stats["already"] += 1
+                continue
+
+            before_top5, _ = self._count_non_exempt_top5_misses()
+            before_top10 = self._count_top10_in_schedule()
+            before_q = self._schedule_quality_snapshot()
+            before_pref = self._scheduled_preference_value()
+
+            candidates = [
+                e for e in self.schedule.entries
+                if e.troop == troop and replaceable(e)
+            ]
+
+            best = None  # (sort_key, signature)
+            for cand in candidates:
+                slot = cand.time_slot
+                sig = (slot.day, slot.slot_number, cand.activity.name)
+                snap = self._snapshot_scheduler_state()
+                self._remove_from_schedule(cand)
+                placed = (
+                    self._can_schedule(troop, cft, slot, slot.day, relax_constraints=False)
+                    and self._add_to_schedule(slot, cft, troop)
+                )
+                if placed:
+                    after_top5, _ = self._count_non_exempt_top5_misses()
+                    after_top10 = self._count_top10_in_schedule()
+                    after_q = self._schedule_quality_snapshot()
+                    after_pref = self._scheduled_preference_value()
+                    if (
+                        after_top5 <= before_top5
+                        and after_top10 >= before_top10
+                        and after_q["excess"] <= before_q["excess"]
+                        and after_q["gaps"] <= before_q["gaps"]
+                        and after_q["soft_total"] <= before_q["soft_total"]
+                        and after_q.get("delta_sailing", 0) <= before_q.get("delta_sailing", 0)
+                        and after_pref >= before_pref
+                    ):
+                        sort_key = (after_q["composite"], -after_pref)
+                        if best is None or sort_key < best[0]:
+                            best = (sort_key, sig)
+                self._restore_scheduler_state(snap)
+
+            if not best:
+                stats["skipped"] += 1
+                continue
+
+            _, (d_day, d_slotnum, d_actname) = best
+            cand = next(
+                (
+                    e for e in self.schedule.entries
+                    if e.troop == troop
+                    and e.time_slot.day == d_day
+                    and e.time_slot.slot_number == d_slotnum
+                    and e.activity.name == d_actname
+                ),
+                None,
+            )
+            if cand is None:
+                stats["skipped"] += 1
+                continue
+            slot = cand.time_slot
+            self._remove_from_schedule(cand)
+            if (
+                self._can_schedule(troop, cft, slot, slot.day, relax_constraints=False)
+                and self._add_to_schedule(slot, cft, troop)
+            ):
+                stats["committed"] += 1
+                print(
+                    f"  [CFT Coverage] {troop.name}: {d_actname} -> Campsite Free Time "
+                    f"@ {d_day.name[:3]}-{d_slotnum}"
+                )
+            else:
+                # Defensive: restore the original occupant if CFT placement failed.
+                self._add_to_schedule(slot, cand.activity, troop)
+                stats["skipped"] += 1
+
+        print(
+            f"  [CFT Coverage] committed={stats['committed']}, "
+            f"already_had={stats['already']}, skipped={stats['skipped']}"
+        )
+        return stats
+
 
     def _guarantee_no_gaps(self):
         """

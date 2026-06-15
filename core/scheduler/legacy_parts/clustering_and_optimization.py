@@ -2499,7 +2499,7 @@ class LegacyPart06Mixin:
         def _try_relaxed_swap_same_troop(entry_a, entry_b) -> bool:
             if entry_a.troop != entry_b.troop:
                 return False
-            if entry_a.activity.slots > 1 or entry_b.activity.slots > 1:
+            if self._entry_spans_multiple_slots(entry_a) or self._entry_spans_multiple_slots(entry_b):
                 return False
             troop = entry_a.troop
             slot_a = entry_a.time_slot

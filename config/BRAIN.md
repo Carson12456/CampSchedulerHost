@@ -142,6 +142,22 @@ scored exactly once per troop per day. Groups below expand to all pairwise combi
 * *Free Time:* Trading Post / Shower House / Campsite Free Time (and Fishing with Trading Post / Campsite Free Time)
 * *Balls:* Nine Square / Gaga Ball (soft only — never a hard block)
 
+#### 1a. Campsite Free Time Coverage (Universal)
+`Campsite Free Time` is concurrent (no shared capacity), requires no staff, and is
+universally placeable in any slot on any day. Because it can be added at no
+scheduling cost, **every troop should receive at least one `Campsite Free Time`
+block** where it fits cleanly.
+* This is a soft *policy*, not a hard anchor. A guarded terminal pass gives each
+  troop that lacks `Campsite Free Time` one, by replacing its worst non-anchor
+  occupant. Replacement priority follows: an occupant that **causes a soft
+  violation** → a cluster activity on an **excess day** → the **lowest-ranked
+  filler**.
+* The pass commits a replacement only when it is **score-neutral or better** and
+  preserves the Top-5 / Top-10 contract. It never displaces a protected anchor
+  (`Reflection`, `Super Troop`, `History Center`, `Disc Golf`), a multi-slot
+  block, an honored MUST-HONOR day request, or a higher-value preference, and it
+  never creates a Free Time same-day soft pair (§1).
+
 #### 2. Wet/Dry Flow & Transitions
 * Avoid "Wet-Dry-Wet" sandwiches.
 * Avoid direct transitions between Wet activities and Tower/ODS.
